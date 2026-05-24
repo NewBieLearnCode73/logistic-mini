@@ -1,0 +1,1172 @@
+{
+	"info": {
+		"_postman_id": "f512b9a7-96c2-401d-b6a4-2e9dbf07e59b",
+		"name": "logistic-mini",
+		"description": "Bộ sưu tập API cho dự án Mini Logistic bao gồm Xác thực, Quản lý hạ tầng mạng lưới Nodes, Lô hàng Batches và Quản lý tài khoản Users.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"description": "Nhóm API xác thực và phiên làm việc người dùng.",
+			"item": [
+				{
+					"name": "Đăng Nhập Hệ Thống",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@logistic.com\",\n  \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "**Quyền truy cập**: Public (Công khai)\n\nXác thực tài khoản người dùng bằng Email và Mật khẩu. Trả về JWT Access Token để sử dụng trong các API tiếp theo. Cập nhật giá trị vào biến `token` trong Postman."
+					},
+					"response": []
+				},
+				{
+					"name": "Lấy Thông Tin Người Dùng Hiện Tại",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"me"
+							]
+						},
+						"description": "**Quyền truy cập**: Mọi User đã đăng nhập thành công (JwtAuthGuard)\n\nLấy thông tin tài khoản người dùng đang đăng nhập dựa trên JWT token được gửi kèm trong Header Authorization."
+					},
+					"response": []
+				},
+				{
+					"name": "Đăng Xuất",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/auth/logout",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"logout"
+							]
+						},
+						"description": "**Quyền truy cập**: Mọi User đã đăng nhập thành công (JwtAuthGuard)\n\nĐăng xuất tài khoản người dùng và vô hiệu hóa phiên làm việc."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Nodes",
+			"description": "Nhóm API quản lý các điểm mạng lưới (Nodes) trong chuỗi cung ứng.",
+			"item": [
+				{
+					"name": "Tạo Điểm Mạng Lưới Mới",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Nhà máy Sản xuất A\",\n  \"nodeType\": \"MANUFACTURER\",\n  \"address\": \"123 Đường Láng, Hà Nội\",\n  \"latitude\": 21.0285,\n  \"longitude\": 105.8542\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/nodes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"nodes"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin\n\nTạo điểm nút hạ tầng mạng lưới mới trong chuỗi cung ứng (phân biệt NodeType: MANUFACTURER, DISTRIBUTOR, RETAILER, WAREHOUSE)."
+					},
+					"response": []
+				},
+				{
+					"name": "Lấy Danh Sách Điểm Mạng Lưới",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/nodes?page=1&limit=10&includeInventory=true",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"nodes"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Số trang (bắt đầu từ 1)"
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Số lượng bản ghi trên mỗi trang"
+								},
+								{
+									"key": "includeInventory",
+									"value": "true",
+									"description": "Nếu truyền true, trả về thêm danh sách và tổng số tồn kho tại node đó"
+								}
+							]
+						},
+						"description": "**Quyền truy cập**: Admin, Manufacturer, Distributor, Retailer\n\nLấy danh sách các điểm mạng lưới kèm phân trang. Có thể lọc thêm tồn kho qua tham số includeInventory=true."
+					},
+					"response": []
+				},
+				{
+					"name": "Chỉnh Sửa Thông Tin Điểm Mạng Lưới",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Nhà máy Sản xuất A - Đã Sửa\",\n  \"nodeType\": \"MANUFACTURER\",\n  \"address\": \"456 Đường Láng, Hà Nội\",\n  \"latitude\": 21.0285,\n  \"longitude\": 105.8542,\n  \"version\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/nodes/e3000000-0000-0000-0000-000000000001",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"nodes",
+								"e3000000-0000-0000-0000-000000000001"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin\n\nChỉnh sửa thông tin điểm mạng lưới. Áp dụng cơ chế khóa lạc quan (optimistic locking) bằng cách so khớp trường version truyền trong body với database."
+					},
+					"response": []
+				},
+				{
+					"name": "Vô Hiệu Hóa Điểm Mạng Lưới",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/nodes/e3000000-0000-0000-0000-000000000001",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"nodes",
+								"e3000000-0000-0000-0000-000000000001"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin\n\nVô hiệu hóa điểm mạng lưới bằng cơ chế Soft Delete. Bắt buộc kiểm tra điều kiện an toàn kho bãi: nếu node đó vẫn còn chứa hàng tồn kho (quantityAvailable > 0), hệ thống sẽ từ chối xóa."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Products",
+			"description": "Nhóm API quản lý sản phẩm thương mại.",
+			"item": [
+				{
+					"name": "Tạo Sản Phẩm Mới",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Sản phẩm A\",\n  \"sku\": \"SKU-PROD-A\",\n  \"unit\": \"Hộp\",\n  \"description\": \"Mô tả chi tiết sản phẩm A\",\n  \"category\": \"Dược phẩm\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin\n\nTạo sản phẩm thương mại mới trong hệ thống."
+					},
+					"response": []
+				},
+				{
+					"name": "Lấy Danh Sách Sản Phẩm",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/products?page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Số trang"
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Số bản ghi mỗi trang"
+								},
+								{
+									"key": "search",
+									"value": "Sản phẩm A",
+									"description": "Tìm kiếm theo tên hoặc SKU",
+									"disabled": true
+								},
+								{
+									"key": "category",
+									"value": "Dược phẩm",
+									"description": "Lọc theo danh mục",
+									"disabled": true
+								},
+								{
+									"key": "isActive",
+									"value": "true",
+									"description": "Lọc theo trạng thái hoạt động",
+									"disabled": true
+								}
+							]
+						},
+						"description": "**Quyền truy cập**: Admin, Manufacturer, Distributor, Retailer, Consumer\n\nLấy danh sách sản phẩm có phân trang, hỗ trợ tìm kiếm và các bộ lọc."
+					},
+					"response": []
+				},
+				{
+					"name": "Xem Chi Tiết Sản Phẩm",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/products/p0000000-0000-0000-0000-000000000001",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"p0000000-0000-0000-0000-000000000001"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin, Manufacturer, Distributor, Retailer, Consumer\n\nXem chi tiết một sản phẩm."
+					},
+					"response": []
+				},
+				{
+					"name": "Cập Nhật Sản Phẩm",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Sản phẩm A - Đã Sửa\",\n  \"description\": \"Cập nhật mô tả mới\",\n  \"category\": \"Thiết bị y tế\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/products/p0000000-0000-0000-0000-000000000001",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"p0000000-0000-0000-0000-000000000001"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin\n\nCập nhật thông tin chi tiết của một sản phẩm."
+					},
+					"response": []
+				},
+				{
+					"name": "Xóa Sản Phẩm",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/products/p0000000-0000-0000-0000-000000000001",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"products",
+								"p0000000-0000-0000-0000-000000000001"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin\n\nXóa mềm một sản phẩm khỏi hệ thống."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Batches",
+			"description": "Nhóm API quản lý lô hàng và sinh mã QR truy xuất nguồn gốc.",
+			"item": [
+				{
+					"name": "Khởi Tạo Lô Hàng Mới",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productId\": \"p0000000-0000-0000-0000-000000000001\",\n  \"quantity\": 500,\n  \"unit\": \"Hộp\",\n  \"manufactureDate\": \"2026-05-22T00:00:00.000Z\",\n  \"expiryDate\": \"2027-05-22T00:00:00.000Z\",\n  \"originNodeId\": \"e3000000-0000-0000-0000-000000000001\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/batches",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"batches"
+							]
+						},
+						"description": "**Quyền truy cập**: Manufacturer, Admin\n\nTạo lô hàng mới cho sản phẩm. Hệ thống tự sinh mã QR SVG/PNG và khởi tạo tồn kho tại Node tương ứng."
+					},
+					"response": []
+				},
+				{
+					"name": "Bán Lẻ Sản Phẩm Từ Lô Hàng",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": 50\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/batches/b3000000-0000-0000-0000-000000000001/sell",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"batches",
+								"b3000000-0000-0000-0000-000000000001",
+								"sell"
+							]
+						},
+						"description": "**Quyền truy cập**: Retailer, Admin\n\nBán lẻ hàng hóa từ lô hàng tại cửa hàng bán lẻ, trừ tồn kho khả dụng tương ứng. Nếu tồn kho của lô hàng tại node giảm về 0, chuyển trạng thái lô hàng thành SOLD."
+					},
+					"response": []
+				},
+				{
+					"name": "Tra Cứu Danh Sách Lô Hàng",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/batches?page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"batches"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "**Quyền truy cập**: Admin, Manufacturer, Distributor, Retailer\n\nTra cứu danh sách lô hàng có phân trang. Áp dụng Row-level Security."
+					},
+					"response": []
+				},
+				{
+					"name": "Xem Chi Tiết Lô Hàng",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/batches/b3000000-0000-0000-0000-000000000001",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"batches",
+								"b3000000-0000-0000-0000-000000000001"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin, Manufacturer, Distributor, Retailer\n\nXem thông tin chi tiết lô hàng kèm hình ảnh mã QR dán trên bao bì."
+					},
+					"response": []
+				},
+				{
+					"name": "Xem Lịch Sử Lô Hàng (Timeline)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/batches/b3000000-0000-0000-0000-000000000001/timeline",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"batches",
+								"b3000000-0000-0000-0000-000000000001",
+								"timeline"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin, Manufacturer, Distributor, Retailer\n\nTrả về lịch sử vòng đời sự kiện của lô hàng theo thứ tự thời gian tăng dần."
+					},
+					"response": []
+				},
+				{
+					"name": "Cấp Lại Mã QR Cho Lô Hàng",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/batches/b3000000-0000-0000-0000-000000000001/regenerate-qr",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"batches",
+								"b3000000-0000-0000-0000-000000000001",
+								"regenerate-qr"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin, Manufacturer\n\nCấp lại mã QR mới trong trường hợp hỏng vật lý hoặc mất file."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Shipments",
+			"description": "Nhóm API quản lý vận đơn và xuất kho liên kết.",
+			"item": [
+				{
+					"name": "Khởi Tạo Vận Đơn Xuất Kho",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"batchId\": \"b3000000-0000-0000-0000-000000000001\",\n  \"destinationNodeId\": \"e3000000-0000-0000-0000-000000000002\",\n  \"quantityShipped\": 150,\n  \"notes\": \"Chuyển giao hàng tồn kho bổ sung cho cửa hàng bán lẻ\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/shipments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"shipments"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin, Manufacturer, Distributor\n\nXuất kho lô hàng từ kho nguồn sang kho đích và khởi tạo vận đơn tracking mới."
+					},
+					"response": []
+				},
+				{
+					"name": "Xác Nhận Nhận Hàng",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/shipments/s3000000-0000-0000-0000-000000000001/receive",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"shipments",
+								"s3000000-0000-0000-0000-000000000001",
+								"receive"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin, Distributor, Retailer tại Node nhận\n\nXác nhận đã nhận hàng thành công từ vận đơn. Thực hiện cộng dồn tồn kho tại node nhận bằng câu lệnh UPSERT ON CONFLICT DO UPDATE và chuyển trạng thái lô hàng thành RECEIVED."
+					},
+					"response": []
+				},
+				{
+					"name": "Tra Cứu Danh Sách Vận Đơn",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/shipments?page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"shipments"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "**Quyền truy cập**: Admin, Manufacturer, Distributor, Retailer\n\nXem danh sách các vận đơn luân chuyển trong chuỗi. Áp dụng Row-level Security."
+					},
+					"response": []
+				},
+				{
+					"name": "Xem Chi Tiết Vận Đơn",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/shipments/s3000000-0000-0000-0000-000000000001",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"shipments",
+								"s3000000-0000-0000-0000-000000000001"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin, Manufacturer, Distributor, Retailer\n\nXem thông tin chi tiết một vận đơn cụ thể bao gồm số lượng xuất, số lượng thực nhận, người ký nhận và các sự cố đính kèm."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"description": "Nhóm API quản lý tài khoản nhân sự và điều động công tác.",
+			"item": [
+				{
+					"name": "Tạo Tài Khoản Nhân Sự Mới",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"staff.manufacturer@logistic.com\",\n  \"fullName\": \"Nguyen Van B\",\n  \"role\": \"Manufacturer\",\n  \"nodeId\": \"e3000000-0000-0000-0000-000000000001\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin\n\nTạo tài khoản nhân sự mới, liên kết với vai trò và địa điểm làm việc. Trả về mật khẩu kích hoạt ngẫu nhiên."
+					},
+					"response": []
+				},
+				{
+					"name": "Lấy Danh Sách Tài Khoản Nhân Sự",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Số trang (bắt đầu từ 1)"
+								},
+								{
+									"key": "limit",
+									"value": "10",
+									"description": "Số lượng bản ghi trên trang"
+								},
+								{
+									"key": "role",
+									"value": "Manufacturer",
+									"description": "Lọc theo vai trò",
+									"disabled": true
+								},
+								{
+									"key": "nodeId",
+									"value": "e3000000-0000-0000-0000-000000000001",
+									"description": "Lọc theo Node liên kết",
+									"disabled": true
+								},
+								{
+									"key": "isActive",
+									"value": "true",
+									"description": "Lọc theo trạng thái hoạt động (true/false)",
+									"disabled": true
+								}
+							]
+						},
+						"description": "**Quyền truy cập**: Admin\n\nLấy danh sách nhân sự kèm theo phân trang và lọc theo các tiêu chí role, nodeId, isActive."
+					},
+					"response": []
+				},
+				{
+					"name": "Cập Nhật Thông Tin Nhân Sự",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fullName\": \"Nguyen Van B - Chỉnh Sửa\",\n  \"role\": \"Distributor\",\n  \"nodeId\": \"e3000000-0000-0000-0000-000000000002\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/users/a0000000-0000-0000-0000-000000000003",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"a0000000-0000-0000-0000-000000000003"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin\n\nCập nhật thông tin cá nhân, vai trò, hoặc thuyên chuyển node làm việc của nhân sự."
+					},
+					"response": []
+				},
+				{
+					"name": "Kích Hoạt / Vô Hiệu Hóa Nhân Sự",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/a0000000-0000-0000-0000-000000000003/toggle-active",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"a0000000-0000-0000-0000-000000000003",
+								"toggle-active"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin\n\nVô hiệu hóa (Soft disable) hoặc kích hoạt lại tài khoản nhân sự được chọn."
+					},
+					"response": []
+				},
+				{
+					"name": "Cấp Lại Mật Khẩu Ngẫu Nhiên",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/users/a0000000-0000-0000-0000-000000000003/reset-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"users",
+								"a0000000-0000-0000-0000-000000000003",
+								"reset-password"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin\n\nCấp lại mật khẩu ngẫu nhiên cho nhân sự được chọn. Không áp dụng cho tài khoản Admin."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Incidents",
+			"description": "Nhóm API quản lý sự cố rủi ro và phê duyệt kép xác nhận mất hàng.",
+			"item": [
+				{
+					"name": "Tạo Hồ Sơ Báo Cáo Sự Cố",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"shipmentId\": \"s3000000-0000-0000-0000-000000000001\",\n  \"incidentType\": \"MISSING\",\n  \"description\": \"Nghi ngờ thất lạc hàng hóa do xe tải mất tín hiệu định vị quá 12 giờ.\",\n  \"priority\": \"HIGH\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/incidents",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"incidents"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin\n\nAdmin 1 tạo hồ sơ sự cố để đóng băng tạm thời lô hàng (chuyển sang trạng thái INVESTIGATING)."
+					},
+					"response": []
+				},
+				{
+					"name": "Phê Duyệt Xác Nhận Thất Lạc",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/incidents/i3000000-0000-0000-0000-000000000001/confirm-lost",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"incidents",
+								"i3000000-0000-0000-0000-000000000001",
+								"confirm-lost"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin (khác Admin 1 báo cáo sự cố)\n\nAdmin 2 phê duyệt xác nhận mất hàng. Hệ thống kiểm tra Two-Man Rule, rollback hàng về node nguồn, tạo InventoryAdjustment, và đánh dấu LOST cho Batch & Shipment."
+					},
+					"response": []
+				},
+				{
+					"name": "Lấy Danh Sách Sự Cố",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/incidents?page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"incidents"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "**Quyền truy cập**: Admin\n\nLấy danh sách toàn bộ các hồ sơ sự cố phát sinh có phân trang."
+					},
+					"response": []
+				},
+				{
+					"name": "Xác Nhận Tìm Thấy Hàng Hóa",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/incidents/i3000000-0000-0000-0000-000000000001/confirm-found",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"incidents",
+								"i3000000-0000-0000-0000-000000000001",
+								"confirm-found"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin\n\nXác nhận tìm lại được lô hàng thất lạc, đóng hồ sơ sự cố, cập nhật lô hàng & vận đơn thành RECEIVED và nhập kho đích."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Traceability",
+			"description": "Nhóm API truy xuất nguồn gốc lô hàng công cộng dành cho người tiêu dùng.",
+			"item": [
+				{
+					"name": "Truy Xuất Lô Hàng Công Cộng",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/public/trace/BCH-20260523-xyz?lat=21.0285&lng=105.8542",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"public",
+								"trace",
+								"BCH-20260523-xyz"
+							],
+							"query": [
+								{
+									"key": "lat",
+									"value": "21.0285"
+								},
+								{
+									"key": "lng",
+									"value": "105.8542"
+								}
+							]
+						},
+						"description": "**Quyền truy cập**: Công khai (Không cần token)\n\nTruy vấn thông tin hành trình và lịch sử sự kiện của lô hàng dựa trên mã QR/batchCode."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Dashboard & Reports",
+			"description": "Nhóm API thống kê, kiểm toán và báo cáo xuất file.",
+			"item": [
+				{
+					"name": "Lấy Dữ Liệu Dashboard Thống Kê",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/dashboard/stats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dashboard",
+								"stats"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin, Manufacturer, Distributor, Retailer\n\nTrả về dữ liệu tổng số lượng tồn kho, vận đơn đang vận chuyển và cảnh báo sự cố hoạt động."
+					},
+					"response": []
+				},
+				{
+					"name": "Xem Nhật Ký Kiểm Toán (Audit Logs)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/audit-logs?page=1&limit=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"audit-logs"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "**Quyền truy cập**: Admin\n\nTruy xuất dữ liệu nhật ký hoạt động hệ thống kèm snapshot trước/sau thay đổi."
+					},
+					"response": []
+				},
+				{
+					"name": "Xuất Báo Cáo Dữ Liệu",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{token}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"format\": \"csv\",\n  \"reportType\": \"inventory\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/reports/export",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"reports",
+								"export"
+							]
+						},
+						"description": "**Quyền truy cập**: Admin, Manufacturer\n\nXuất dữ liệu báo cáo sang định dạng CSV hoặc PDF."
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:3000/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "your_jwt_access_token_here",
+			"type": "string"
+		}
+	]
+}
