@@ -153,6 +153,15 @@ let BatchesService = class BatchesService {
         else {
             qb.andWhere('1=0');
         }
+        if (query.status) {
+            qb.andWhere('batch.status = :status', { status: query.status });
+        }
+        if (query.productId) {
+            qb.andWhere('batch.productId = :productId', { productId: query.productId });
+        }
+        if (query.search) {
+            qb.andWhere('(batch.batchCode ILIKE :search OR product.name ILIKE :search OR product.sku ILIKE :search)', { search: `%${query.search}%` });
+        }
         const page = parseInt(query.page || '1', 10);
         const limit = parseInt(query.limit || '10', 10);
         const skip = (page - 1) * limit;

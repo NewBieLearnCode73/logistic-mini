@@ -1,6 +1,7 @@
 import { Controller, Post, Body, Get, UseGuards, Request, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { Public } from '../../common/decorators/public.decorator';
 import { UsersService } from '../users/users.service';
@@ -31,9 +32,21 @@ export class AuthController {
     return result;
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  @HttpCode(HttpStatus.OK)
+  async changePassword(
+    @Request() req: { user: { userId: string } },
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    await this.usersService.changePassword(req.user.userId, changePasswordDto);
+    return { message: 'Thay đổi mật khẩu thành công' };
+  }
+
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   async logout() {
     return { message: 'Đăng xuất thành công' };
   }
 }
+

@@ -263,4 +263,22 @@ export class UsersService {
       temporaryPassword,
     };
   }
+
+  async changePassword(id: string, changePasswordDto: any): Promise<void> {
+    const user = await this.userRepository.findOne({
+      where: { id, isActive: true },
+    });
+    if (!user) {
+      throw new NotFoundException('Tài khoản không tồn tại hoặc đã bị khóa');
+    }
+
+    const isMatch = await bcrypt.compare(changePasswordDto.oldPassword, user.passwordHash);
+    if (!isMatch) {
+      throw new BadRequestException('Mật khẩu cũ không chính xác');
+    }
+
+    user.passwordHash = await bcrypt.hash(changePasswordDto.newPassword, 12);
+    await this.userRepository.save(user);
+  }
 }
+

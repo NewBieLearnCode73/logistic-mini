@@ -5,7 +5,13 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
+  // Enable CORS for frontend dev server
+  app.enableCors({
+    origin: ['http://localhost:5174', 'http://localhost:5173'],
+    credentials: true,
+  });
+
   // Set global API prefix
   app.setGlobalPrefix('api/v1', {
     exclude: ['/'],

@@ -22,7 +22,7 @@ export class ShipmentsService {
   constructor(private readonly dataSource: DataSource) {}
 
   async findAll(
-    query: { page?: string; limit?: string },
+    query: any,
     currentUser: any,
   ): Promise<{ data: ShipmentEntity[]; total: number; page: number; limit: number; totalPages: number }> {
     const qb = this.dataSource.getRepository(ShipmentEntity).createQueryBuilder('shipment')
@@ -40,6 +40,10 @@ export class ShipmentsService {
           { nodeId: currentUser.nodeId },
         );
       }
+    }
+
+    if (query.status) {
+      qb.andWhere('shipment.status = :status', { status: query.status });
     }
 
     const page = parseInt(query.page || '1', 10);

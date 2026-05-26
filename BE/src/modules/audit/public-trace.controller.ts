@@ -83,6 +83,8 @@ export class PublicTraceController {
           name: event.node.name,
           nodeType: event.node.nodeType,
           address: event.node.address,
+          latitude: event.node.latitude,
+          longitude: event.node.longitude,
         } : null,
         actor: event.actor ? {
           fullName: event.actor.fullName,

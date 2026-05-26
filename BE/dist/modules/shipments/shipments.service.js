@@ -41,6 +41,9 @@ let ShipmentsService = class ShipmentsService {
                 qb.andWhere('(shipment.sourceNodeId = :nodeId OR shipment.destinationNodeId = :nodeId)', { nodeId: currentUser.nodeId });
             }
         }
+        if (query.status) {
+            qb.andWhere('shipment.status = :status', { status: query.status });
+        }
         const page = parseInt(query.page || '1', 10);
         const limit = parseInt(query.limit || '10', 10);
         const skip = (page - 1) * limit;

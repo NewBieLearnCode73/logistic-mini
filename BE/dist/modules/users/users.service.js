@@ -237,6 +237,20 @@ let UsersService = class UsersService {
             temporaryPassword,
         };
     }
+    async changePassword(id, changePasswordDto) {
+        const user = await this.userRepository.findOne({
+            where: { id, isActive: true },
+        });
+        if (!user) {
+            throw new common_1.NotFoundException('Tài khoản không tồn tại hoặc đã bị khóa');
+        }
+        const isMatch = await bcrypt.compare(changePasswordDto.oldPassword, user.passwordHash);
+        if (!isMatch) {
+            throw new common_1.BadRequestException('Mật khẩu cũ không chính xác');
+        }
+        user.passwordHash = await bcrypt.hash(changePasswordDto.newPassword, 12);
+        await this.userRepository.save(user);
+    }
 };
 exports.UsersService = UsersService;
 exports.UsersService = UsersService = __decorate([

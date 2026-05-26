@@ -36,4 +36,5 @@ export declare class UsersService {
         user: UserEntity;
         temporaryPassword: string;
     }>;
+    changePassword(id: string, changePasswordDto: any): Promise<void>;
 }

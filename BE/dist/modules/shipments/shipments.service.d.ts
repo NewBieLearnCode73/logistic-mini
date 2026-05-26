@@ -4,10 +4,7 @@ import { CreateShipmentDto } from './dto/create-shipment.dto';
 export declare class ShipmentsService {
     private readonly dataSource;
     constructor(dataSource: DataSource);
-    findAll(query: {
-        page?: string;
-        limit?: string;
-    }, currentUser: any): Promise<{
+    findAll(query: any, currentUser: any): Promise<{
         data: ShipmentEntity[];
         total: number;
         page: number;

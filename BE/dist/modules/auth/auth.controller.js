@@ -16,6 +16,7 @@ exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
 const login_dto_1 = require("./dto/login.dto");
+const change_password_dto_1 = require("./dto/change-password.dto");
 const jwt_auth_guard_1 = require("../../common/guards/jwt-auth.guard");
 const public_decorator_1 = require("../../common/decorators/public.decorator");
 const users_service_1 = require("../users/users.service");
@@ -36,6 +37,10 @@ let AuthController = class AuthController {
         }
         const { passwordHash, ...result } = user;
         return result;
+    }
+    async changePassword(req, changePasswordDto) {
+        await this.usersService.changePassword(req.user.userId, changePasswordDto);
+        return { message: 'Thay đổi mật khẩu thành công' };
     }
     async logout() {
         return { message: 'Đăng xuất thành công' };
@@ -59,6 +64,16 @@ __decorate([
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "getMe", null);
+__decorate([
+    (0, common_1.UseGuards)(jwt_auth_guard_1.JwtAuthGuard),
+    (0, common_1.Post)('change-password'),
+    (0, common_1.HttpCode)(common_1.HttpStatus.OK),
+    __param(0, (0, common_1.Request)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, change_password_dto_1.ChangePasswordDto]),
+    __metadata("design:returntype", Promise)
+], AuthController.prototype, "changePassword", null);
 __decorate([
     (0, common_1.Post)('logout'),
     (0, common_1.HttpCode)(common_1.HttpStatus.OK),

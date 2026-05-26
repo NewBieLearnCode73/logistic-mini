@@ -38,6 +38,8 @@ export declare class PublicTraceController {
                 name: string;
                 nodeType: import("../../common/enums/node-type.enum").NodeType;
                 address: string | null;
+                latitude: number | null;
+                longitude: number | null;
             } | null;
             actor: {
                 fullName: string;
