@@ -38,19 +38,19 @@ export enum NodeType {
 
 // Muted status dot + text styling. No bg color — just a dot indicator.
 export const STATUS_CONFIG: Record<string, { dot: string; text: string }> = {
-  CREATED:       { dot: 'bg-gray-400', text: 'text-gray-600 dark:text-gray-400' },
-  IN_TRANSIT:    { dot: 'bg-amber-500', text: 'text-amber-700 dark:text-amber-400' },
-  RECEIVED:      { dot: 'bg-emerald-500', text: 'text-emerald-700 dark:text-emerald-400' },
-  SOLD:          { dot: 'bg-blue-500', text: 'text-blue-700 dark:text-blue-400' },
-  DELAYED:       { dot: 'bg-orange-500', text: 'text-orange-700 dark:text-orange-400' },
-  INVESTIGATING: { dot: 'bg-red-500', text: 'text-red-700 dark:text-red-400' },
-  LOST:          { dot: 'bg-red-600', text: 'text-red-800 dark:text-red-300' },
-  DISCARDED:     { dot: 'bg-gray-400', text: 'text-gray-500 dark:text-gray-500' },
-  CANCELLED:     { dot: 'bg-gray-400', text: 'text-gray-500 dark:text-gray-500' },
-  OPEN:          { dot: 'bg-amber-500', text: 'text-amber-700 dark:text-amber-400' },
-  IN_PROGRESS:   { dot: 'bg-blue-500', text: 'text-blue-700 dark:text-blue-400' },
-  RESOLVED:      { dot: 'bg-emerald-500', text: 'text-emerald-700 dark:text-emerald-400' },
-  CLOSED:        { dot: 'bg-gray-400', text: 'text-gray-500 dark:text-gray-500' },
+  CREATED:       { dot: 'bg-status-created-dot', text: 'text-status-created-text' },
+  IN_TRANSIT:    { dot: 'bg-status-intransit-dot', text: 'text-status-intransit-text' },
+  RECEIVED:      { dot: 'bg-status-received-dot', text: 'text-status-received-text' },
+  SOLD:          { dot: 'bg-status-sold-dot', text: 'text-status-sold-text' },
+  DELAYED:       { dot: 'bg-status-lost-dot', text: 'text-status-lost-text' },
+  INVESTIGATING: { dot: 'bg-status-discarded-dot', text: 'text-status-discarded-text' },
+  LOST:          { dot: 'bg-status-lost-dot', text: 'text-status-lost-text' },
+  DISCARDED:     { dot: 'bg-status-discarded-dot', text: 'text-status-discarded-text' },
+  CANCELLED:     { dot: 'bg-status-created-dot', text: 'text-status-created-text' },
+  OPEN:          { dot: 'bg-status-lost-dot', text: 'text-status-lost-text' },
+  IN_PROGRESS:   { dot: 'bg-status-intransit-dot', text: 'text-status-intransit-text' },
+  RESOLVED:      { dot: 'bg-status-received-dot', text: 'text-status-received-text' },
+  CLOSED:        { dot: 'bg-status-created-dot', text: 'text-status-created-text' },
 };
 
 export const NODE_TYPE_LABELS: Record<string, string> = {

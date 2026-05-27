@@ -1,0 +1,133 @@
+/**
+ * 🎨 theme.css
+ * Core theme variables for Light and Dark modes.
+ * Implements a clean, high-contrast, linear-depth system.
+ */
+
+:root {
+  /* Light Theme Variables */
+  --bg-background: #fafafa;       /* Zinc-50 */
+  --bg-surface: #ffffff;          /* Pure White */
+  --bg-card: #ffffff;
+  --bg-popover: #ffffff;
+  --bg-muted: #f4f4f5;            /* Zinc-100 */
+  
+  --text-primary: #18181b;        /* Zinc-900 */
+  --text-secondary: #52525b;      /* Zinc-600 */
+  --text-muted: #a1a1aa;           /* Zinc-400 */
+  --text-inverse: #ffffff;
+
+  --border-primary: rgba(228, 228, 231, 0.8); /* Zinc-200/80 */
+  --border-muted: rgba(228, 228, 231, 0.4);   /* Zinc-200/40 */
+  
+  --brand-accent: #4f46e5;        /* Deep Indigo */
+  --brand-accent-hover: #4338ca;
+  --brand-accent-glow: rgba(79, 70, 229, 0.15);
+
+  /* Status Tokens (Light mode) */
+  --status-created-text: #71717a;
+  --status-created-bg: #f4f4f5;
+  --status-created-dot: #a1a1aa;
+
+  --status-intransit-text: #1d4ed8;
+  --status-intransit-bg: #eff6ff;
+  --status-intransit-dot: #3b82f6;
+
+  --status-received-text: #047857;
+  --status-received-bg: #ecfdf5;
+  --status-received-dot: #10b981;
+
+  --status-sold-text: #6d28d9;
+  --status-sold-bg: #f5f3ff;
+  --status-sold-dot: #8b5cf6;
+
+  --status-discarded-text: #b91c1c;
+  --status-discarded-bg: #fef2f2;
+  --status-discarded-dot: #ef4444;
+
+  --status-lost-text: #c2410c;
+  --status-lost-bg: #fff7ed;
+  --status-lost-dot: #f97316;
+
+  /* Glassmorphism system */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(228, 228, 231, 0.6);
+  --glass-blur: 12px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+}
+
+.dark {
+  /* Dark Theme Variables (Pure dark slate aesthetics) */
+  --bg-background: #09090b;       /* Zinc-950 (Vercel dark style) */
+  --bg-surface: #09090b;
+  --bg-card: #09090b;
+  --bg-popover: #09090b;
+  --bg-muted: #18181b;            /* Zinc-900 */
+  
+  --text-primary: #f4f4f5;        /* Zinc-100 */
+  --text-secondary: #a1a1aa;      /* Zinc-400 */
+  --text-muted: #52525b;          /* Zinc-600 */
+  --text-inverse: #09090b;
+
+  --border-primary: rgba(39, 39, 42, 0.6);   /* Zinc-800/60 */
+  --border-muted: rgba(39, 39, 42, 0.3);     /* Zinc-800/30 */
+  
+  --brand-accent: #ffffff;        /* High-contrast brand primary for dark mode */
+  --brand-accent-hover: #e4e4e7;  /* Zinc-200 */
+  --brand-accent-glow: rgba(255, 255, 255, 0.1);
+
+  /* Status Tokens (Dark mode) */
+  --status-created-text: #a1a1aa;
+  --status-created-bg: #18181b;
+  --status-created-dot: #71717a;
+
+  --status-intransit-text: #60a5fa;
+  --status-intransit-bg: rgba(30, 58, 138, 0.3);
+  --status-intransit-dot: #3b82f6;
+
+  --status-received-text: #34d399;
+  --status-received-bg: rgba(6, 78, 59, 0.3);
+  --status-received-dot: #10b981;
+
+  --status-sold-text: #a78bfa;
+  --status-sold-bg: rgba(46, 16, 101, 0.3);
+  --status-sold-dot: #8b5cf6;
+
+  --status-discarded-text: #f87171;
+  --status-discarded-bg: rgba(127, 29, 29, 0.3);
+  --status-discarded-dot: #ef4444;
+
+  --status-lost-text: #fb923c;
+  --status-lost-bg: rgba(124, 45, 18, 0.3);
+  --status-lost-dot: #f97316;
+
+  /* Glassmorphism system */
+  --glass-bg: rgba(9, 9, 11, 0.7);
+  --glass-border: rgba(39, 39, 42, 0.4);
+  --glass-blur: 16px;
+
+  /* Shadows */
+  --shadow-sm: 0 0 0 1px rgba(0, 0, 0, 0.8);
+  --shadow-md: 0 0 0 1px rgba(0, 0, 0, 0.8), 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 0 0 1px rgba(0, 0, 0, 0.8), 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+}
+
+/* Glassmorphism helper class */
+.glass-panel {
+  background-color: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+}
+
+/* Base utility for thin SaaS borders */
+.border-thin {
+  border: 1px solid var(--border-muted);
+}
+.border-thin-active {
+  border: 1px solid var(--border-primary);
+}

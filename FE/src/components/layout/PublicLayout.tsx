@@ -19,10 +19,10 @@ export default function PublicLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <header className="border-b border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
+    <div className="min-h-screen bg-background">
+      <header className="border-b border-border bg-surface">
         <div className="mx-auto flex h-12 max-w-3xl items-center justify-between px-4">
-          <Link to="/" className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">
+          <Link to="/" className="text-[13px] font-semibold text-text-primary">
             Mini Logistic
           </Link>
           <div className="flex items-center gap-1">

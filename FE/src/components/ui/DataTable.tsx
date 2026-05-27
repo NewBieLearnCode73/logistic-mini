@@ -106,7 +106,7 @@ export default function DataTable<T>({
           <div className="flex flex-1 flex-wrap items-center gap-2">
             {onSearchChange && (
               <div className="relative w-full max-w-xs">
-                <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
+                <MagnifyingGlassIcon className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted" />
                 <input
                   type="text"
                   value={localSearch}
@@ -123,10 +123,10 @@ export default function DataTable<T>({
       )}
 
       {/* Table container */}
-      <div className="overflow-hidden rounded-lg border border-zinc-200/50 bg-white dark:border-zinc-800/40 dark:bg-zinc-950">
+      <div className="card p-0 overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-zinc-200/50 dark:divide-zinc-800/40 table-fixed">
-            <thead className="bg-zinc-50/50 dark:bg-zinc-900/10">
+          <table className="min-w-full divide-y divide-border-muted table-fixed">
+            <thead className="bg-transparent">
               <tr>
                 {columns.map((col) => {
                   const isSorted = sortKey === col.key;
@@ -136,13 +136,13 @@ export default function DataTable<T>({
                       scope="col"
                       onClick={() => col.sortable && handleSortClick(col.key)}
                       className={`table-header-cell ${
-                        col.sortable ? 'cursor-pointer select-none hover:bg-zinc-100 dark:hover:bg-zinc-900/50' : ''
+                        col.sortable ? 'cursor-pointer select-none hover:bg-muted' : ''
                       } ${col.className || ''}`}
                     >
                       <div className="flex items-center gap-1.5 py-1">
                         <span>{col.header}</span>
                         {col.sortable && onSort && (
-                          <span className="text-zinc-400 dark:text-zinc-500">
+                          <span className="text-text-muted">
                             {isSorted ? (
                               sortDirection === 'asc' ? (
                                 <ChevronUpIcon className="h-3 w-3" />
@@ -162,7 +162,7 @@ export default function DataTable<T>({
                 })}
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-200/50 bg-white dark:divide-zinc-800/40 dark:bg-zinc-950">
+            <tbody className="divide-y divide-border-muted bg-surface">
               {loading ? (
                 <tr>
                   <td colSpan={columns.length} className="px-3 py-4">
@@ -179,7 +179,7 @@ export default function DataTable<T>({
                 data.map((item, idx) => (
                   <tr
                     key={(item as any).id || idx}
-                    className="hover:bg-zinc-50/30 dark:hover:bg-zinc-900/10 transition-colors"
+                    className="table-row"
                   >
                     {columns.map((col) => (
                       <td key={col.key} className={`table-cell ${col.className || ''}`}>
@@ -201,7 +201,7 @@ export default function DataTable<T>({
 
         {/* Pagination bar */}
         {onPageChange && totalItems > 0 && (
-          <div className="flex items-center justify-between border-t border-zinc-200/50 px-4 py-3 dark:border-zinc-800/40">
+          <div className="flex items-center justify-between border-t border-border px-4 py-3">
             <div className="flex flex-1 justify-between sm:hidden">
               <button
                 onClick={() => onPageChange(page - 1)}
@@ -220,17 +220,17 @@ export default function DataTable<T>({
             </div>
             <div className="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
               <div>
-                <p className="text-[13px] text-zinc-500 dark:text-zinc-400">
+                <p className="text-[13px] text-text-secondary">
                   {t('common.showing')}{' '}
-                  <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                  <span className="font-medium text-text-primary">
                     {startItem}
                   </span>{' '}
                   {t('common.of')}{' '}
-                  <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                  <span className="font-medium text-text-primary">
                     {endItem}
                   </span>{' '}
                   {t('common.of')}{' '}
-                  <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                  <span className="font-medium text-text-primary">
                     {totalItems}
                   </span>{' '}
                   {t('common.results')}
@@ -238,13 +238,13 @@ export default function DataTable<T>({
               </div>
               <div>
                 <nav
-                  className="isolate inline-flex -space-x-px rounded-md bg-white dark:bg-zinc-950"
+                  className="isolate inline-flex -space-x-px rounded-md bg-surface"
                   aria-label="Pagination"
                 >
                   <button
                     onClick={() => onPageChange(page - 1)}
                     disabled={page <= 1 || loading}
-                    className="relative inline-flex items-center rounded-l-md border border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2 py-1.5 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="relative inline-flex items-center rounded-l-md border border-border bg-surface px-2 py-1.5 text-text-secondary hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className="sr-only">Previous</span>
                     <ChevronLeftIcon className="h-4 w-4" aria-hidden="true" />
@@ -262,10 +262,10 @@ export default function DataTable<T>({
                           key={pageNum}
                           onClick={() => onPageChange(pageNum)}
                           aria-current={page === pageNum ? 'page' : undefined}
-                          className={`relative inline-flex items-center border border-zinc-200/60 dark:border-zinc-800 px-3 py-1.5 text-[13px] font-medium transition-colors ${
+                          className={`relative inline-flex items-center border border-border px-3 py-1.5 text-[13px] font-medium transition-colors ${
                             page === pageNum
-                              ? 'z-10 bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 border-zinc-900 dark:border-zinc-100'
-                              : 'bg-white dark:bg-zinc-950 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900'
+                              ? 'z-10 bg-accent text-text-inverse border-accent font-semibold'
+                              : 'bg-surface text-text-secondary hover:bg-muted'
                           }`}
                         >
                           {pageNum}
@@ -279,7 +279,7 @@ export default function DataTable<T>({
                       return (
                         <span
                           key={pageNum}
-                          className="relative inline-flex items-center border border-zinc-200/60 dark:border-zinc-800 px-3 py-1.5 text-[13px] font-medium bg-white dark:bg-zinc-950 text-zinc-500"
+                          className="relative inline-flex items-center border border-border px-3 py-1.5 text-[13px] font-medium bg-surface text-text-secondary"
                         >
                           ...
                         </span>
@@ -290,7 +290,7 @@ export default function DataTable<T>({
                   <button
                     onClick={() => onPageChange(page + 1)}
                     disabled={page >= totalPages || loading}
-                    className="relative inline-flex items-center rounded-r-md border border-zinc-200/60 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-2 py-1.5 text-zinc-500 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="relative inline-flex items-center rounded-r-md border border-border bg-surface px-2 py-1.5 text-text-secondary hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <span className="sr-only">Next</span>
                     <ChevronRightIcon className="h-4 w-4" aria-hidden="true" />

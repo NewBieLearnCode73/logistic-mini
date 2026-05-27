@@ -23,10 +23,10 @@ export default function QRDisplay({
 
   if (!qrCode) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 p-6 text-center dark:border-gray-700">
+      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border p-6 text-center">
         <span className="text-3xl mb-2">⚠️</span>
-        <h4 className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">{t('qr.noQrTitle')}</h4>
-        <p className="mt-1 text-2xs text-gray-500 max-w-[180px]">
+        <h4 className="text-[13px] font-semibold text-text-primary">{t('qr.noQrTitle')}</h4>
+        <p className="mt-1 text-2xs text-text-muted max-w-[180px]">
           {t('qr.noQrDesc')}
         </p>
         {canRegenerate && onRegenerate && (
@@ -123,7 +123,7 @@ export default function QRDisplay({
   return (
     <div className="card flex flex-col items-center justify-center p-6 text-center">
       {/* QR Code base64 image */}
-      <div className="relative group rounded-md border border-zinc-200/50 p-4 bg-zinc-50 dark:border-zinc-850/40 dark:bg-zinc-900/40">
+      <div className="relative group rounded-md border border-border p-4 bg-muted">
         <img
           src={qrCode.qrImageUrl}
           alt={`${t('qr.qrTitle')} - ${batchCode}`}
@@ -132,10 +132,10 @@ export default function QRDisplay({
       </div>
 
       <div className="mt-4 w-full">
-        <h4 className="text-[13px] font-semibold text-gray-900 dark:text-gray-100">
+        <h4 className="text-[13px] font-semibold text-text-primary">
           {t('qr.qrTitle')}
         </h4>
-        <p className="mt-0.5 text-2xs font-mono text-gray-500 truncate select-all">
+        <p className="mt-0.5 text-2xs font-mono text-text-muted truncate select-all">
           {batchCode}
         </p>
       </div>
@@ -164,7 +164,7 @@ export default function QRDisplay({
         <button
           onClick={onRegenerate}
           disabled={regenerating}
-          className="btn-ghost flex items-center justify-center gap-1.5 text-2xs mt-4 w-full text-gray-500 hover:text-gray-900 dark:hover:text-white"
+          className="btn-ghost flex items-center justify-center gap-1.5 text-2xs mt-4 w-full text-text-muted hover:text-text-primary"
         >
           <ArrowPathIcon className={`h-3.5 w-3.5 ${regenerating ? 'animate-spin' : ''}`} />
           <span>{t('qr.regenerate')}</span>

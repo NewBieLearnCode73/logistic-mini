@@ -11,10 +11,10 @@ export default function Header({ onMenuClick }: { onMenuClick: () => void }) {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-gray-200 bg-white px-5 dark:border-gray-800 dark:bg-gray-950">
+    <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-border bg-surface px-5">
       <button
         onClick={onMenuClick}
-        className="btn-ghost p-1 lg:hidden -ml-2 text-gray-500 hover:text-gray-950 dark:text-gray-400 dark:hover:text-white"
+        className="btn-ghost p-1 lg:hidden -ml-2"
         title="Menu"
       >
         <Bars3Icon className="h-5 w-5" />

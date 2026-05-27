@@ -95,10 +95,10 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
   });
 
   return (
-    <aside className={`fixed left-0 top-0 z-40 flex h-screen w-[220px] flex-col border-r border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950 transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+    <aside className={`fixed left-0 top-0 z-40 flex h-screen w-[220px] flex-col border-r border-border bg-surface transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       {/* Logo */}
-      <div className="flex h-12 items-center px-4 border-b border-gray-200 dark:border-gray-800">
-        <span className="text-[13px] font-semibold tracking-tight text-gray-900 dark:text-gray-100">
+      <div className="flex h-12 items-center px-4 border-b border-border">
+        <span className="text-[13px] font-semibold tracking-tight text-text-primary">
           Mini Logistic
         </span>
       </div>
@@ -109,7 +109,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
           if (item.type === 'divider') {
             return (
               <div key={index} className="pt-4 pb-1 first:pt-0">
-                <p className="px-2.5 text-2xs font-medium uppercase tracking-wider text-gray-400 dark:text-gray-600">
+                <p className="px-2.5 text-2xs font-medium uppercase tracking-wider text-text-muted">
                   {t(item.label)}
                 </p>
               </div>
@@ -134,16 +134,16 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
       </nav>
 
       {/* User & logout */}
-      <div className="border-t border-gray-200 p-2 dark:border-gray-800 space-y-0.5">
+      <div className="border-t border-border p-2 space-y-0.5">
         <div className="flex items-center gap-2.5 px-2.5 py-2">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-200 text-[11px] font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-text-secondary">
             {user?.fullName?.charAt(0)?.toUpperCase() || 'U'}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-medium text-gray-900 dark:text-gray-100">
+            <p className="truncate text-[13px] font-medium text-text-primary">
               {user?.fullName || 'User'}
             </p>
-            <p className="truncate text-2xs text-gray-400 dark:text-gray-600">
+            <p className="truncate text-2xs text-text-muted">
               {role ? t(`user.roles.${role}`, role) : ''}
             </p>
           </div>
@@ -153,14 +153,14 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
             setIsChangePasswordOpen(true);
             onClose();
           }}
-          className="sidebar-link w-full text-gray-400 hover:text-gray-900 dark:text-gray-600 dark:hover:text-white"
+          className="sidebar-link w-full text-text-muted hover:text-text-primary"
         >
           <KeyIcon className="h-4 w-4 shrink-0" />
           <span>{t('auth.changePassword')}</span>
         </button>
         <button
           onClick={handleLogout}
-          className="sidebar-link w-full text-gray-400 hover:text-red-650 dark:text-gray-600 dark:hover:text-red-400"
+          className="sidebar-link w-full text-text-muted hover:text-red-600 dark:hover:text-red-400"
         >
           <ArrowLeftOnRectangleIcon className="h-4 w-4 shrink-0" />
           <span>{t('auth.logout')}</span>
@@ -178,7 +178,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
       >
         <form onSubmit={handleChangePasswordSubmit} className="space-y-4">
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-[13px] font-medium text-text-secondary mb-1">
               {t('auth.oldPassword')} <span className="text-red-500">*</span>
             </label>
             <input
@@ -192,7 +192,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
           </div>
 
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-[13px] font-medium text-text-secondary mb-1">
               {t('auth.newPassword')} <span className="text-red-500">*</span>
             </label>
             <input
@@ -206,7 +206,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
           </div>
 
           <div>
-            <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-[13px] font-medium text-text-secondary mb-1">
               {t('auth.confirmPassword')} <span className="text-red-500">*</span>
             </label>
             <input
@@ -219,7 +219,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
             />
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-gray-100 dark:border-gray-800">
+          <div className="flex justify-end gap-2 pt-3 border-t border-border">
             <button
               type="button"
               onClick={() => {

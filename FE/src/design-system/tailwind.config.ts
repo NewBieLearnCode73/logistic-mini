@@ -1,13 +1,12 @@
-/** @type {import('tailwindcss').Config} */
-export default {
-  darkMode: 'class',
-  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+import type { Config } from 'tailwindcss';
+
+/**
+ * 🚀 Extended Tailwind Configuration mapping to the design system.
+ * This config can be imported directly or spread into the root tailwind.config.ts
+ */
+export const tailwindConfigExtension: Partial<Config> = {
   theme: {
     extend: {
-      fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        mono: ['ui-monospace', 'SFMono-Regular', 'SF Mono', 'Menlo', 'monospace'],
-      },
       colors: {
         background: 'var(--bg-background)',
         surface: 'var(--bg-surface)',
@@ -79,15 +78,14 @@ export default {
       },
       boxShadow: {
         'saas-sm': 'var(--shadow-sm)',
-        'saas-md': 'var(--shadow-md)',
-        'saas-lg': 'var(--shadow-lg)',
+        'saas-md': 'var(--saas-md)',
+        'saas-lg': 'var(--saas-lg)',
       },
       backdropBlur: {
         'saas-glass': 'var(--glass-blur)',
       },
     },
   },
-  plugins: [
-    require('@tailwindcss/forms'),
-  ],
 };
+
+export default tailwindConfigExtension;

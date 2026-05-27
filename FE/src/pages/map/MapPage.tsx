@@ -122,19 +122,19 @@ export default function MapPage() {
       // Node details Popup
       marker.bindPopup(`
         <div class="p-2 font-sans text-2xs space-y-1.5 min-w-[180px]">
-          <div class="border-b border-zinc-200/50 pb-1 dark:border-zinc-800/40">
+          <div class="border-b border-border pb-1">
             <span class="text-3xs font-semibold uppercase tracking-wider px-1 py-0.5 rounded text-white" style="background-color: ${
               NODE_COLORS[node.nodeType]
             }">
               ${t(`node.types.${node.nodeType}`)}
             </span>
-            <h4 class="font-bold text-zinc-900 dark:text-zinc-50 mt-1 leading-none">${node.name}</h4>
+            <h4 class="font-bold text-text-primary mt-1 leading-none">${node.name}</h4>
           </div>
-          <div class="text-zinc-600 dark:text-zinc-400">
-            <span class="text-zinc-400 dark:text-zinc-500 block text-3xs">Địa chỉ</span>
+          <div class="text-text-secondary">
+            <span class="text-text-muted block text-3xs">Địa chỉ</span>
             <p className="mt-0.5 leading-snug">${node.address || '—'}</p>
           </div>
-          <div class="grid grid-cols-2 gap-1 text-[10px] text-zinc-450 dark:text-zinc-500 font-mono">
+          <div class="grid grid-cols-2 gap-1 text-[10px] text-text-muted font-mono">
             <div>Lat: ${node.latitude.toFixed(4)}</div>
             <div>Lng: ${node.longitude.toFixed(4)}</div>
           </div>
@@ -164,30 +164,30 @@ export default function MapPage() {
           // Shipment details Popup on line click
           polyline.bindPopup(`
             <div class="p-2 font-sans text-2xs space-y-1.5 min-w-[200px]">
-              <div class="border-b border-zinc-200/50 pb-1 dark:border-zinc-800/40">
-                <span class="text-3xs font-semibold uppercase tracking-wider px-1 py-0.5 rounded bg-indigo-50 text-indigo-650 dark:bg-indigo-950/20 dark:text-indigo-400 border border-indigo-200/25">
+              <div class="border-b border-border pb-1">
+                <span class="text-3xs font-semibold uppercase tracking-wider px-1 py-0.5 rounded bg-status-intransit-bg text-status-intransit-text border border-border/25">
                   Vận đơn: ${shipment.trackingCode}
                 </span>
               </div>
-              <div class="space-y-1 text-zinc-700 dark:text-zinc-300">
+              <div class="space-y-1 text-text-secondary">
                 <div>
-                  <span class="text-zinc-400 dark:text-zinc-500 text-3xs block">Sản phẩm (Lô hàng)</span>
+                  <span class="text-text-muted text-3xs block">Sản phẩm (Lô hàng)</span>
                   <span class="font-semibold">${shipment.batch?.product?.name || '—'}</span> 
-                  <span class="text-3xs font-mono text-zinc-400 dark:text-zinc-500 block">${shipment.batch?.batchCode || ''}</span>
+                  <span class="text-3xs font-mono text-text-muted block">${shipment.batch?.batchCode || ''}</span>
                 </div>
                 <div class="grid grid-cols-2 gap-2 text-3xs">
                   <div>
-                    <span class="text-zinc-400 dark:text-zinc-500 block">Số lượng</span>
-                    <span class="font-bold text-zinc-900 dark:text-zinc-50 font-mono">${shipment.quantityShipped} ${shipment.batch?.unit || ''}</span>
+                    <span class="text-text-muted block">Số lượng</span>
+                    <span class="font-bold text-text-primary font-mono">${shipment.quantityShipped} ${shipment.batch?.unit || ''}</span>
                   </div>
                   <div>
-                    <span class="text-zinc-400 dark:text-zinc-500 block">Trạng thái</span>
-                    <span class="font-bold text-indigo-650 dark:text-indigo-400">${t(`shipment.status.${shipment.status}`, shipment.status)}</span>
+                    <span class="text-text-muted block">Trạng thái</span>
+                    <span class="font-bold text-status-intransit-text">${t(`shipment.status.${shipment.status}`, shipment.status)}</span>
                   </div>
                 </div>
-                <div class="pt-1.5 border-t border-zinc-200/50 dark:border-zinc-800/40 text-[10px] space-y-0.5">
-                  <div><span class="text-zinc-400 dark:text-zinc-500">Từ:</span> ${shipment.sourceNode?.name}</div>
-                  <div><span class="text-zinc-400 dark:text-zinc-500">Đến:</span> ${shipment.destinationNode?.name}</div>
+                <div class="pt-1.5 border-t border-border text-[10px] space-y-0.5">
+                  <div><span class="text-text-muted">Từ:</span> ${shipment.sourceNode?.name}</div>
+                  <div><span class="text-text-muted">Đến:</span> ${shipment.destinationNode?.name}</div>
                 </div>
               </div>
             </div>
@@ -207,13 +207,13 @@ export default function MapPage() {
   const isLoading = isLoadingNodes || isLoadingShipments;
 
   return (
-    <div className="relative w-full h-[calc(100vh-100px)] rounded-xl border border-zinc-200/50 dark:border-zinc-800/40 overflow-hidden bg-zinc-50">
+    <div className="relative w-full h-[calc(100vh-100px)] rounded-xl border border-border overflow-hidden bg-background">
       {/* Loading overlay */}
       {isLoading && (
-        <div className="absolute inset-0 bg-white/70 dark:bg-zinc-950/70 z-50 flex items-center justify-center">
+        <div className="absolute inset-0 bg-surface/70 z-50 flex items-center justify-center">
           <div className="flex flex-col items-center gap-2">
-            <div className="h-6 w-6 border-2 border-indigo-650 border-t-transparent rounded-full animate-spin" />
-            <span className="text-2xs font-semibold text-zinc-500 dark:text-zinc-400">
+            <div className="h-6 w-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+            <span className="text-2xs font-semibold text-text-secondary">
               {t('common.loading')}
             </span>
           </div>
@@ -224,15 +224,15 @@ export default function MapPage() {
       <div ref={mapRef} className="w-full h-full z-10" />
 
       {/* Floating Control Panel */}
-      <div className="absolute top-4 left-4 z-20 w-64 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md p-4 rounded-xl border border-zinc-200/50 dark:border-zinc-800/40 shadow-sm space-y-4">
+      <div className="absolute top-4 left-4 z-20 w-64 glass-panel p-4 rounded-xl shadow-sm space-y-4">
         {/* Header */}
-        <div className="flex items-center gap-1.5 border-b border-zinc-200/50 pb-2.5 dark:border-zinc-800/40">
-          <MapIcon className="h-4.5 w-4.5 text-zinc-500 dark:text-zinc-400" />
+        <div className="flex items-center gap-1.5 border-b border-border pb-2.5">
+          <MapIcon className="h-4.5 w-4.5 text-text-secondary" />
           <div>
-            <h2 className="text-2xs font-bold text-zinc-900 dark:text-zinc-50 uppercase tracking-wider">
+            <h2 className="text-2xs font-bold text-text-primary uppercase tracking-wider">
               {t('map.title')}
             </h2>
-            <p className="text-4xs text-zinc-450 dark:text-zinc-500 leading-none mt-0.5">
+            <p className="text-4xs text-text-muted leading-none mt-0.5">
               Phân tích trực quan mạng lưới
             </p>
           </div>
@@ -240,7 +240,7 @@ export default function MapPage() {
 
         {/* Node Filters */}
         <div className="space-y-2">
-          <div className="flex items-center gap-1 text-zinc-400 dark:text-zinc-500 text-3xs font-semibold uppercase tracking-wider">
+          <div className="flex items-center gap-1 text-text-muted text-3xs font-semibold uppercase tracking-wider">
             <FunnelIcon className="h-3 w-3" />
             <span>{t('map.filterNodes')}</span>
           </div>
@@ -254,15 +254,15 @@ export default function MapPage() {
                   onClick={() => toggleFilterType(type)}
                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-3xs font-medium border transition-all ${
                     active
-                      ? 'bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-zinc-50'
-                      : 'border-transparent text-zinc-400 dark:text-zinc-500 hover:bg-zinc-50/50 dark:hover:bg-zinc-900/20'
+                      ? 'bg-muted border-border text-text-primary'
+                      : 'border-transparent text-text-muted hover:bg-muted'
                   }`}
                 >
                   <div className="flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
                     <span>{t(`node.types.${type}`)}</span>
                   </div>
-                  {active && <span className="text-[10px] text-indigo-600 font-bold">✓</span>}
+                  {active && <span className="text-[10px] text-accent font-bold">✓</span>}
                 </button>
               );
             })}
@@ -270,17 +270,17 @@ export default function MapPage() {
         </div>
 
         {/* Shipments filter */}
-        <div className="space-y-2 pt-2 border-t border-zinc-200/50 dark:border-zinc-800/40">
-          <div className="flex items-center gap-1 text-zinc-400 dark:text-zinc-500 text-3xs font-semibold uppercase tracking-wider">
+        <div className="space-y-2 pt-2 border-t border-border">
+          <div className="flex items-center gap-1 text-text-muted text-3xs font-semibold uppercase tracking-wider">
             <AdjustmentsHorizontalIcon className="h-3 w-3" />
             <span>Hiển thị luồng vận đơn</span>
           </div>
-          <label className="flex items-center gap-2 px-1 text-3xs font-semibold text-zinc-700 dark:text-zinc-300 cursor-pointer">
+          <label className="flex items-center gap-2 px-1 text-3xs font-semibold text-text-secondary cursor-pointer">
             <input
               type="checkbox"
               checked={showShipments}
               onChange={(e) => setShowShipments(e.target.checked)}
-              className="rounded border-zinc-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-500 h-3.5 w-3.5"
+              className="rounded border-border text-accent focus:ring-accent-glow h-3.5 w-3.5 bg-surface"
             />
             <span>{t('map.activeShipments')}</span>
           </label>
@@ -288,11 +288,11 @@ export default function MapPage() {
       </div>
 
       {/* Map Legend Overlay */}
-      <div className="absolute bottom-4 left-4 z-20 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md px-3 py-2 rounded-lg border border-zinc-200/50 dark:border-zinc-800/40 shadow-sm text-4xs space-y-1">
-        <h3 className="font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-widest leading-none mb-1">
+      <div className="absolute bottom-4 left-4 z-20 glass-panel px-3 py-2 rounded-lg shadow-sm text-4xs space-y-1">
+        <h2 className="font-bold text-text-muted uppercase tracking-widest leading-none mb-1">
           {t('map.legend')}
-        </h3>
-        <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-zinc-650 dark:text-zinc-300">
+        </h2>
+        <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-text-secondary">
           <div className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-slate-700" />
             <span>M: Sản xuất</span>
@@ -309,8 +309,8 @@ export default function MapPage() {
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             <span>R: Cửa hàng</span>
           </div>
-          <div className="col-span-2 border-t border-zinc-200/50 pt-1 mt-1 dark:border-zinc-800/40 flex items-center gap-1">
-            <span className="h-0.5 w-3.5 bg-indigo-650 border-t border-dashed" />
+          <div className="col-span-2 border-t border-border pt-1 mt-1 flex items-center gap-1">
+            <span className="h-0.5 w-3.5 bg-indigo-600 border-t border-dashed" />
             <span>Vận đơn đang chạy</span>
           </div>
         </div>

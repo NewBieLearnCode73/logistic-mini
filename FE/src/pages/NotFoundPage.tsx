@@ -6,13 +6,13 @@ export default function NotFoundPage() {
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center text-center">
-      <div className="text-8xl font-semibold tracking-tight text-zinc-350 dark:text-zinc-800">
+      <div className="text-8xl font-semibold tracking-tight text-text-muted">
         404
       </div>
-      <h2 className="mt-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+      <h2 className="mt-4 text-lg font-semibold text-text-primary">
         {t('errors.notFound')}
       </h2>
-      <p className="mt-2 text-[13px] text-zinc-500 dark:text-zinc-400">
+      <p className="mt-2 text-[13px] text-text-secondary">
         {t('common.back')}
       </p>
       <Link to="/" className="btn-primary mt-6">

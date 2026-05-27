@@ -23,13 +23,13 @@ export default function ShipmentDetailPage() {
   if (isLoading) {
     return (
       <div className="space-y-6 animate-pulse py-4">
-        <div className="h-6 w-20 rounded bg-zinc-100 dark:bg-zinc-900/60" />
+        <div className="h-6 w-20 rounded bg-muted" />
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <div className="md:col-span-2 space-y-4">
-            <div className="h-40 rounded-lg bg-zinc-100 dark:bg-zinc-900/60" />
-            <div className="h-40 rounded-lg bg-zinc-100 dark:bg-zinc-900/60" />
+            <div className="h-40 rounded-lg bg-muted" />
+            <div className="h-40 rounded-lg bg-muted" />
           </div>
-          <div className="h-60 rounded-lg bg-zinc-100 dark:bg-zinc-900/60" />
+          <div className="h-60 rounded-lg bg-muted" />
         </div>
       </div>
     );
@@ -39,10 +39,10 @@ export default function ShipmentDetailPage() {
     return (
       <div className="flex h-[50vh] flex-col items-center justify-center text-center">
         <span className="text-4xl mb-2">❌</span>
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+        <h2 className="text-lg font-semibold text-text-primary">
           {t('shipment.notFound')}
         </h2>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400 max-w-sm">
+        <p className="mt-1 text-sm text-text-secondary max-w-sm">
           {t('shipment.notFoundDesc')}
         </p>
         <button onClick={() => navigate('/shipments')} className="btn-secondary mt-4">
@@ -82,7 +82,7 @@ export default function ShipmentDetailPage() {
       <div>
         <button
           onClick={() => navigate('/shipments')}
-          className="btn-ghost flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-150 pl-0"
+          className="btn-ghost flex items-center gap-1.5 text-text-secondary hover:text-text-primary pl-0"
         >
           <ArrowLeftIcon className="h-4 w-4" />
           <span>{t('common.back')}</span>
@@ -95,12 +95,12 @@ export default function ShipmentDetailPage() {
           
           {/* Card 1: Shipment Info */}
           <div className="card space-y-4">
-            <div className="flex items-center justify-between border-b border-zinc-200/50 pb-3 dark:border-zinc-800/40">
+            <div className="flex items-center justify-between border-b border-border pb-3">
               <div>
-                <span className="text-2xs uppercase tracking-wider text-zinc-400 dark:text-zinc-500 font-semibold">
+                <span className="text-2xs uppercase tracking-wider text-text-muted font-semibold">
                   {t('shipment.trackingCode')}
                 </span>
-                <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-50 font-mono">
+                <h2 className="text-base font-bold text-text-primary font-mono">
                   {shipment.trackingCode}
                 </h2>
               </div>
@@ -109,45 +109,45 @@ export default function ShipmentDetailPage() {
 
             <div className="grid grid-cols-2 gap-4 text-[13px]">
               <div>
-                <span className="text-zinc-400 dark:text-zinc-500 block text-2xs">{t('shipment.shippedAt')}</span>
-                <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                <span className="text-text-muted block text-2xs">{t('shipment.shippedAt')}</span>
+                <span className="font-medium text-text-primary">
                   {formatDate(shipment.shippedAt)}
                 </span>
               </div>
               <div>
-                <span className="text-zinc-400 dark:text-zinc-500 block text-2xs">{t('shipment.expectedDeliveryDate')}</span>
-                <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                <span className="text-text-muted block text-2xs">{t('shipment.expectedDeliveryDate')}</span>
+                <span className="font-medium text-text-primary">
                   {formatDate(shipment.expectedDeliveryDate)}
                 </span>
               </div>
               <div>
-                <span className="text-zinc-400 dark:text-zinc-500 block text-2xs">{t('shipment.receivedAt')}</span>
-                <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                <span className="text-text-muted block text-2xs">{t('shipment.receivedAt')}</span>
+                <span className="font-medium text-text-primary">
                   {formatDate(shipment.actualDeliveryDate)}
                 </span>
               </div>
               <div>
-                <span className="text-zinc-400 dark:text-zinc-500 block text-2xs">{t('shipment.creator')}</span>
-                <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                <span className="text-text-muted block text-2xs">{t('shipment.creator')}</span>
+                <span className="font-medium text-text-primary">
                   {shipment.creator?.fullName || '—'}{' '}
                   {shipment.creator && (
-                    <span className="text-2xs text-zinc-400 dark:text-zinc-500 font-normal">({shipment.creator.email})</span>
+                    <span className="text-2xs text-text-muted font-normal">({shipment.creator.email})</span>
                   )}
                 </span>
               </div>
               {shipment.receiver && (
                 <div>
-                  <span className="text-zinc-400 dark:text-zinc-500 block text-2xs">{t('shipment.receiver')}</span>
-                  <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                  <span className="text-text-muted block text-2xs">{t('shipment.receiver')}</span>
+                  <span className="font-medium text-text-primary">
                     {shipment.receiver.fullName}{' '}
-                    <span className="text-2xs text-zinc-400 dark:text-zinc-500 font-normal">({shipment.receiver.email})</span>
+                    <span className="text-2xs text-text-muted font-normal">({shipment.receiver.email})</span>
                   </span>
                 </div>
               )}
               {shipment.notes && (
                 <div className="col-span-2">
-                  <span className="text-zinc-400 dark:text-zinc-500 block text-2xs">{t('shipment.notes')}</span>
-                  <p className="mt-0.5 text-zinc-600 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-900/40 p-2 rounded text-[13px]">
+                  <span className="text-text-muted block text-2xs">{t('shipment.notes')}</span>
+                  <p className="mt-0.5 text-text-secondary bg-muted p-2 rounded text-[13px]">
                     {shipment.notes}
                   </p>
                 </div>
@@ -157,34 +157,34 @@ export default function ShipmentDetailPage() {
 
           {/* Card 2: Batch Info */}
           <div className="card space-y-3">
-            <h3 className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-50 border-b border-zinc-200/50 pb-2 dark:border-zinc-800/40">
+            <h3 className="text-[13px] font-semibold text-text-primary border-b border-border pb-2">
               {t('batch.title')}
             </h3>
             <div className="grid grid-cols-2 gap-4 text-[13px]">
               <div>
-                <span className="text-zinc-400 dark:text-zinc-500 block text-2xs">{t('batch.batchCode')}</span>
+                <span className="text-text-muted block text-2xs">{t('batch.batchCode')}</span>
                 <span
                   onClick={() => navigate(`/batches/${shipment.batchId}`)}
-                  className="font-mono font-medium text-zinc-900 hover:underline dark:text-zinc-50 cursor-pointer text-2xs"
+                  className="font-mono font-medium text-text-primary hover:underline cursor-pointer text-2xs"
                 >
                   {shipment.batch?.batchCode}
                 </span>
               </div>
               <div>
-                <span className="text-zinc-400 dark:text-zinc-500 block text-2xs">{t('batch.product')}</span>
-                <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                <span className="text-text-muted block text-2xs">{t('batch.product')}</span>
+                <span className="font-medium text-text-primary">
                   {shipment.batch?.product?.name} ({shipment.batch?.product?.sku})
                 </span>
               </div>
               <div>
-                <span className="text-zinc-400 dark:text-zinc-500 block text-2xs">{t('shipment.quantityShipped')}</span>
-                <span className="font-medium text-zinc-950 dark:text-zinc-50 font-mono">
+                <span className="text-text-muted block text-2xs">{t('shipment.quantityShipped')}</span>
+                <span className="font-medium text-text-primary font-mono">
                   {shipment.quantityShipped} {shipment.batch?.unit}
                 </span>
               </div>
               {shipment.quantityReceived !== null && (
                 <div>
-                  <span className="text-zinc-400 dark:text-zinc-500 block text-2xs">{t('shipment.receivedAt')} ({t('batch.quantity')})</span>
+                  <span className="text-text-muted block text-2xs">{t('shipment.receivedAt')} ({t('batch.quantity')})</span>
                   <span className="font-medium text-emerald-600 dark:text-emerald-400 font-mono">
                     {shipment.quantityReceived} {shipment.batch?.unit}
                   </span>
@@ -195,29 +195,29 @@ export default function ShipmentDetailPage() {
 
           {/* Card 3: Route details */}
           <div className="card space-y-3">
-            <h3 className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-50 border-b border-zinc-200/50 pb-2 dark:border-zinc-800/40">
+            <h3 className="text-[13px] font-semibold text-text-primary border-b border-border pb-2">
               Tuyến đường di chuyển
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[13px]">
-              <div className="p-3 bg-zinc-50/50 rounded dark:bg-zinc-900/10 border border-zinc-200/50 dark:border-zinc-800/40">
-                <span className="text-2xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase block tracking-wider mb-1">
+              <div className="p-3 bg-muted/40 rounded border border-border">
+                <span className="text-2xs font-semibold text-text-muted uppercase block tracking-wider mb-1">
                   {t('shipment.sourceNode')}
                 </span>
-                <p className="font-semibold text-zinc-900 dark:text-zinc-50">{shipment.sourceNode?.name}</p>
-                <p className="text-2xs text-zinc-500 mt-0.5">
+                <p className="font-semibold text-text-primary">{shipment.sourceNode?.name}</p>
+                <p className="text-2xs text-text-secondary mt-0.5">
                   Type: {shipment.sourceNode?.nodeType ? t(`node.types.${shipment.sourceNode.nodeType}`, shipment.sourceNode.nodeType) : '—'}
                 </p>
-                <p className="text-[12px] text-zinc-500 mt-1">{shipment.sourceNode?.address || '—'}</p>
+                <p className="text-[12px] text-text-secondary mt-1">{shipment.sourceNode?.address || '—'}</p>
               </div>
-              <div className="p-3 bg-zinc-50/50 rounded dark:bg-zinc-900/10 border border-zinc-200/50 dark:border-zinc-800/40">
-                <span className="text-2xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase block tracking-wider mb-1">
+              <div className="p-3 bg-muted/40 rounded border border-border">
+                <span className="text-2xs font-semibold text-text-muted uppercase block tracking-wider mb-1">
                   {t('shipment.destNode')}
                 </span>
-                <p className="font-semibold text-zinc-900 dark:text-zinc-50">{shipment.destinationNode?.name}</p>
-                <p className="text-2xs text-zinc-500 mt-0.5">
+                <p className="font-semibold text-text-primary">{shipment.destinationNode?.name}</p>
+                <p className="text-2xs text-text-secondary mt-0.5">
                   Type: {shipment.destinationNode?.nodeType ? t(`node.types.${shipment.destinationNode.nodeType}`, shipment.destinationNode.nodeType) : '—'}
                 </p>
-                <p className="text-[12px] text-zinc-500 mt-1">{shipment.destinationNode?.address || '—'}</p>
+                <p className="text-[12px] text-text-secondary mt-1">{shipment.destinationNode?.address || '—'}</p>
               </div>
             </div>
           </div>
@@ -227,10 +227,10 @@ export default function ShipmentDetailPage() {
         <div className="space-y-4">
           {canReceive && (
             <div className="card">
-              <h4 className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-50 mb-2">
+              <h4 className="text-[13px] font-semibold text-text-primary mb-2">
                 {t('shipment.receiveShipment')}
               </h4>
-              <p className="text-2xs text-zinc-500 dark:text-zinc-400 mb-4">
+              <p className="text-2xs text-text-secondary mb-4">
                 Xác nhận đã nhận đủ {shipment.quantityShipped} {shipment.batch?.unit} của lô hàng tại địa điểm của bạn. Số lượng hàng sẽ được ghi có vào kho của bạn ngay lập tức.
               </p>
               <button
@@ -252,22 +252,22 @@ export default function ShipmentDetailPage() {
 
           {/* Incident reporting panel (Static placeholder for later phases if needed, or simple info) */}
           <div className="card">
-            <h4 className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-50 mb-2">
+            <h4 className="text-[13px] font-semibold text-text-primary mb-2">
               Sự cố vận đơn
             </h4>
             {shipment.issues && shipment.issues.length > 0 ? (
               <div className="space-y-2 mt-2">
                 {shipment.issues.map((issue) => (
                   <div key={issue.id} className="p-2 border border-red-200/40 rounded bg-red-50/20 dark:border-red-950/20 dark:bg-red-950/10">
-                    <p className="text-[12px] text-zinc-800 dark:text-zinc-300">{issue.description}</p>
-                    <p className="text-3xs text-zinc-400 dark:text-zinc-500 mt-1">
+                    <p className="text-[12px] text-text-secondary">{issue.description}</p>
+                    <p className="text-3xs text-text-muted mt-1">
                       Báo cáo bởi: {issue.reporter?.fullName} &middot; {formatDate(issue.createdAt)}
                     </p>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-2xs text-zinc-400 dark:text-zinc-500">
+              <p className="text-2xs text-text-muted">
                 Chưa ghi nhận sự cố nào liên quan tới vận đơn này.
               </p>
             )}

@@ -63,13 +63,13 @@ export default function DashboardPage() {
     <div className="space-y-5">
       {/* Page header */}
       <div>
-        <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+        <h1 className="text-lg font-semibold text-text-primary">
           {t('dashboard.title')}
         </h1>
-        <p className="text-[13px] text-zinc-500 dark:text-zinc-400">
+        <p className="text-[13px] text-text-secondary">
           {t('auth.welcomeBack')}, {user?.fullName}
           {role && (
-            <span className="ml-1.5 text-zinc-400 dark:text-zinc-500">· {t(`user.roles.${role}`, role)}</span>
+            <span className="ml-1.5 text-text-muted">· {t(`user.roles.${role}`, role)}</span>
           )}
         </p>
       </div>
@@ -97,17 +97,17 @@ export default function DashboardPage() {
       {/* Reports Export Card (Authorized Roles Only) */}
       {canExport && (
         <div className="card space-y-4">
-          <div className="border-b border-zinc-200/50 pb-2 dark:border-zinc-800/40">
-            <h2 className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-50">
+          <div className="border-b border-border pb-2">
+            <h2 className="text-[13px] font-semibold text-text-primary">
               {t('reports.title')}
             </h2>
-            <p className="text-[12px] text-zinc-400 mt-0.5">
+            <p className="text-[12px] text-text-muted mt-0.5">
               {t('reports.subtitle')}
             </p>
           </div>
           <div className="flex flex-wrap items-end gap-3 text-2xs">
             <div className="flex-1 min-w-[200px]">
-              <label className="block text-zinc-500 mb-1 font-medium text-[12px]">{t('reports.reportType')}</label>
+              <label className="block text-text-secondary mb-1 font-medium text-[12px]">{t('reports.reportType')}</label>
               <select
                 value={reportType}
                 onChange={(e) => setReportType(e.target.value as any)}
@@ -119,7 +119,7 @@ export default function DashboardPage() {
               </select>
             </div>
             <div className="w-32">
-              <label className="block text-zinc-500 mb-1 font-medium text-[12px]">{t('reports.format')}</label>
+              <label className="block text-text-secondary mb-1 font-medium text-[12px]">{t('reports.format')}</label>
               <select
                 value={exportFormat}
                 onChange={(e) => setExportFormat(e.target.value as any)}
@@ -145,8 +145,8 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Recent Shipments */}
         <div className="card p-0">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200/50 dark:border-zinc-800/40">
-            <h2 className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-50">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <h2 className="text-[13px] font-semibold text-text-primary">
               {t('shipment.title')}
             </h2>
             <Link to="/shipments" className="btn-ghost text-2xs gap-1">
@@ -157,7 +157,7 @@ export default function DashboardPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-zinc-200/50 dark:border-zinc-800/40">
+                <tr className="border-b border-border">
                   <th className="table-header-cell">{t('shipment.trackingCode')}</th>
                   <th className="table-header-cell">{t('shipment.destNode')}</th>
                   <th className="table-header-cell">{t('shipment.quantityShipped')}</th>
@@ -173,7 +173,7 @@ export default function DashboardPage() {
                       <td className="table-cell">
                         <Link
                           to={`/shipments/${s.id}`}
-                          className="font-mono text-[12px] text-zinc-900 hover:underline dark:text-zinc-50"
+                          className="font-mono text-[12px] text-text-primary hover:underline"
                         >
                           {s.trackingCode}
                         </Link>
@@ -199,8 +199,8 @@ export default function DashboardPage() {
 
         {/* Recent Batches */}
         <div className="card p-0">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-200/50 dark:border-zinc-800/40">
-            <h2 className="text-[13px] font-semibold text-zinc-900 dark:text-zinc-50">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+            <h2 className="text-[13px] font-semibold text-text-primary">
               {t('batch.title')}
             </h2>
             <Link to="/batches" className="btn-ghost text-2xs gap-1">
@@ -211,7 +211,7 @@ export default function DashboardPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-zinc-200/50 dark:border-zinc-800/40">
+                <tr className="border-b border-border">
                   <th className="table-header-cell">{t('batch.batchCode')}</th>
                   <th className="table-header-cell">{t('batch.product')}</th>
                   <th className="table-header-cell">{t('batch.quantity')}</th>
@@ -227,7 +227,7 @@ export default function DashboardPage() {
                       <td className="table-cell">
                         <Link
                           to={`/batches/${b.id}`}
-                          className="font-mono text-[12px] text-zinc-900 hover:underline dark:text-zinc-50"
+                          className="font-mono text-[12px] text-text-primary hover:underline"
                         >
                           {b.batchCode}
                         </Link>
@@ -236,7 +236,7 @@ export default function DashboardPage() {
                         {b.product?.name || '—'}
                       </td>
                       <td className="table-cell font-mono text-[12px]">
-                        {b.quantity} <span className="text-zinc-400 dark:text-zinc-500">{b.unit}</span>
+                        {b.quantity} <span className="text-text-muted">{b.unit}</span>
                       </td>
                       <td className="table-cell">
                         <StatusBadge status={b.status} />
@@ -270,17 +270,17 @@ function StatCard({
 }) {
   return (
     <div className="card">
-      <p className="text-2xs font-medium uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+      <p className="text-2xs font-medium uppercase tracking-wider text-text-muted">
         {label}
       </p>
       <p
         className={`mt-1.5 text-2xl font-semibold tabular-nums ${warn
-            ? 'text-red-600 dark:text-red-400'
-            : 'text-zinc-900 dark:text-zinc-50'
+            ? 'text-red-650 dark:text-red-400'
+            : 'text-text-primary'
           }`}
       >
         {loading ? (
-          <span className="inline-block h-7 w-12 animate-pulse rounded bg-zinc-100 dark:bg-zinc-900/60" />
+          <span className="inline-block h-7 w-12 animate-pulse rounded bg-muted" />
         ) : (
           (value ?? 0).toLocaleString()
         )}
@@ -296,7 +296,7 @@ function TableSkeleton({ cols, rows }: { cols: number; rows: number }) {
         <tr key={i} className="table-row">
           {Array.from({ length: cols }).map((_, j) => (
             <td key={j} className="table-cell">
-              <span className="inline-block h-3.5 w-16 animate-pulse rounded bg-zinc-100 dark:bg-zinc-900/60" />
+              <span className="inline-block h-3.5 w-16 animate-pulse rounded bg-muted" />
             </td>
           ))}
         </tr>
@@ -309,7 +309,7 @@ function EmptyRow({ cols }: { cols: number }) {
   const { t } = useTranslation();
   return (
     <tr>
-      <td colSpan={cols} className="px-3 py-8 text-center text-[13px] text-zinc-400 dark:text-zinc-500">
+      <td colSpan={cols} className="px-3 py-8 text-center text-[13px] text-text-muted">
         {t('common.noData')}
       </td>
     </tr>

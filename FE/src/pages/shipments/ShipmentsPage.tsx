@@ -123,12 +123,12 @@ export default function ShipmentsPage() {
     {
       key: 'trackingCode',
       header: t('shipment.trackingCode'),
-      className: 'w-[180px] font-mono text-2xs uppercase text-zinc-900 dark:text-zinc-50',
+      className: 'w-[180px] font-mono text-2xs uppercase text-text-primary',
     },
     {
       key: 'batchCode',
       header: t('batch.batchCode'),
-      className: 'w-[180px] font-mono text-2xs uppercase',
+      className: 'w-[180px] font-mono text-2xs uppercase text-text-secondary',
       render: (s) => s.batch?.batchCode || '—',
     },
     {
@@ -175,7 +175,7 @@ export default function ShipmentsPage() {
       render: (s) => (
         <button
           onClick={() => navigate(`/shipments/${s.id}`)}
-          className="btn-ghost p-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-150"
+          className="btn-ghost p-1 text-text-secondary hover:text-text-primary"
           title={t('common.detail')}
         >
           <EyeIcon className="h-4 w-4" />
@@ -212,10 +212,10 @@ export default function ShipmentsPage() {
       {/* Page Title & Action Button */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+          <h1 className="text-lg font-semibold text-text-primary">
             {t('shipment.title')}
           </h1>
-          <p className="text-[13px] text-zinc-500 dark:text-zinc-400">
+          <p className="text-[13px] text-text-secondary">
             {t('sidebar.dashboard')} &middot; {t('shipment.title')}
           </p>
         </div>
@@ -269,7 +269,7 @@ export default function ShipmentsPage() {
             {/* Source Node (Admin only) */}
             {isAdmin && (
               <div>
-                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-[13px] font-medium text-text-secondary mb-1">
                   {t('shipment.sourceNode')} <span className="text-red-500">*</span>
                 </label>
                 <select
@@ -297,7 +297,7 @@ export default function ShipmentsPage() {
 
             {/* Select Batch */}
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-[13px] font-medium text-text-secondary mb-1">
                 {t('batch.title')} <span className="text-red-500">*</span>
               </label>
               <select
@@ -328,7 +328,7 @@ export default function ShipmentsPage() {
 
             {/* Destination Node */}
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-[13px] font-medium text-text-secondary mb-1">
                 {t('shipment.destNode')} <span className="text-red-500">*</span>
               </label>
               <select
@@ -353,7 +353,7 @@ export default function ShipmentsPage() {
 
             {/* Quantity Shipped */}
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-[13px] font-medium text-text-secondary mb-1">
                 {t('shipment.quantityShipped')} <span className="text-red-500">*</span>
               </label>
               <input
@@ -376,7 +376,7 @@ export default function ShipmentsPage() {
 
             {/* Expected Delivery Date */}
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-[13px] font-medium text-text-secondary mb-1">
                 {t('shipment.expectedDeliveryDate')}
               </label>
               <input
@@ -389,7 +389,7 @@ export default function ShipmentsPage() {
 
             {/* Notes */}
             <div>
-              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-[13px] font-medium text-text-secondary mb-1">
                 {t('shipment.notes')}
               </label>
               <textarea
@@ -401,7 +401,7 @@ export default function ShipmentsPage() {
             </div>
 
             {/* Modal actions */}
-            <div className="flex justify-end gap-2 pt-3 border-t border-zinc-200/50 dark:border-zinc-800/40">
+            <div className="flex justify-end gap-2 pt-3 border-t border-border">
               <button
                 type="button"
                 onClick={() => setIsFormOpen(false)}

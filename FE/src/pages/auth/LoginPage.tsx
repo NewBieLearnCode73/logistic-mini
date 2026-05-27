@@ -49,7 +49,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4 dark:bg-zinc-950">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
       {/* Top-right controls */}
       <div className="fixed right-4 top-4 flex items-center gap-1">
         <button onClick={toggleLanguage} className="btn-ghost text-2xs">
@@ -63,8 +63,8 @@ export default function LoginPage() {
       <div className="w-full max-w-[340px]">
         {/* Logo */}
         <div className="mb-6">
-          <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">Mini Logistic</h1>
-          <p className="mt-0.5 text-[13px] text-gray-500 dark:text-gray-500">{t('auth.loginSubtitle')}</p>
+          <h1 className="text-lg font-semibold text-text-primary">Mini Logistic</h1>
+          <p className="mt-0.5 text-[13px] text-text-muted">{t('auth.loginSubtitle')}</p>
         </div>
 
         {/* Form */}
@@ -76,7 +76,7 @@ export default function LoginPage() {
           )}
 
           <div>
-            <label htmlFor="login-email" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="login-email" className="block text-[13px] font-medium text-text-secondary mb-1">
               {t('auth.email')}
             </label>
             <input
@@ -93,7 +93,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label htmlFor="login-password" className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="login-password" className="block text-[13px] font-medium text-text-secondary mb-1">
               {t('auth.password')}
             </label>
             <div className="relative">
@@ -110,7 +110,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary"
               >
                 {showPassword ? <EyeSlashIcon className="h-4 w-4" /> : <EyeIcon className="h-4 w-4" />}
               </button>
@@ -123,9 +123,9 @@ export default function LoginPage() {
         </form>
 
         {/* Demo hint */}
-        <div className="mt-5 border-t border-gray-200 pt-4 dark:border-gray-800">
-          <p className="text-2xs font-medium text-gray-400 dark:text-gray-600 mb-1.5">Demo accounts</p>
-          <div className="space-y-0.5 font-mono text-2xs text-gray-400 dark:text-gray-600">
+        <div className="mt-5 border-t border-border pt-4">
+          <p className="text-2xs font-medium text-text-muted mb-1.5">Demo accounts</p>
+          <div className="space-y-0.5 font-mono text-2xs text-text-muted">
             <p>admin1@logistic.com / password123</p>
             <p>admin2@logistic.com / password123</p>
           </div>
