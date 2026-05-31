@@ -79,7 +79,7 @@ export default function ShipmentsPage() {
     if (formData.quantityShipped <= 0) {
       errors.quantityShipped = t('shipment.quantityShippedMin');
     }
-    
+
     // Check destination is not source
     const effectiveSource = isAdmin ? formData.sourceNodeId : userNodeId;
     if (effectiveSource && formData.destinationNodeId === effectiveSource) {
@@ -244,7 +244,7 @@ export default function ShipmentsPage() {
                 setSelectedStatus(e.target.value);
                 setPage(1);
               }}
-              className="input-field py-1 px-2 text-[12px] h-8 w-auto min-w-[130px]"
+              className="input-field py-1 pl-5 text-[12px] h-8 w-auto min-w-[80px]"
             >
               <option value="">{t('common.allStatus')}</option>
               {Object.values(ShipmentStatus).map((status) => (

@@ -289,3 +289,47 @@
   box-shadow: var(--shadow-sm); 
   border: 1px solid var(--color-border); 
 }
+
+/* Telemetry & Glow animations for LoginPage */
+@keyframes dash-move {
+  to {
+    stroke-dashoffset: -40;
+  }
+}
+.animate-dash {
+  stroke-dasharray: 8, 12;
+  animation: dash-move 2s linear infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    transform: scale(1) translate(0, 0);
+    opacity: 0.15;
+  }
+  50% {
+    transform: scale(1.15) translate(4%, 4%);
+    opacity: 0.25;
+  }
+}
+.animate-glow-pulse-1 {
+  animation: glow-pulse 10s ease-in-out infinite;
+}
+.animate-glow-pulse-2 {
+  animation: glow-pulse 15s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+@keyframes signal-ping {
+  0% {
+    r: 3px;
+    opacity: 0.9;
+  }
+  100% {
+    r: 12px;
+    opacity: 0;
+  }
+}
+.animate-signal {
+  animation: signal-ping 2.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+

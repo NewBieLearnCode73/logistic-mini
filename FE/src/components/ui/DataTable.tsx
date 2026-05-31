@@ -23,23 +23,23 @@ interface DataTableProps<T> {
   data: T[] | undefined;
   columns: Column<T>[];
   loading?: boolean;
-  
+
   // Pagination
   totalItems?: number;
   page?: number;
   limit?: number;
   onPageChange?: (page: number) => void;
-  
+
   // Search
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
   searchPlaceholder?: string;
-  
+
   // Sort
   sortKey?: string;
   sortDirection?: 'asc' | 'desc' | null;
   onSort?: (key: string, direction: 'asc' | 'desc' | null) => void;
-  
+
   // Slots
   filters?: React.ReactNode;
   actions?: React.ReactNode;
@@ -112,7 +112,7 @@ export default function DataTable<T>({
                   value={localSearch}
                   onChange={(e) => setLocalSearch(e.target.value)}
                   placeholder={searchPlaceholder || t('common.search')}
-                  className="input-field pl-8.5 w-full"
+                  className="input-field pl-8 w-full"
                 />
               </div>
             )}
@@ -135,9 +135,8 @@ export default function DataTable<T>({
                       key={col.key}
                       scope="col"
                       onClick={() => col.sortable && handleSortClick(col.key)}
-                      className={`table-header-cell ${
-                        col.sortable ? 'cursor-pointer select-none hover:bg-muted' : ''
-                      } ${col.className || ''}`}
+                      className={`table-header-cell ${col.sortable ? 'cursor-pointer select-none hover:bg-muted' : ''
+                        } ${col.className || ''}`}
                     >
                       <div className="flex items-center gap-1.5 py-1">
                         <span>{col.header}</span>
@@ -236,7 +235,7 @@ export default function DataTable<T>({
                   {t('common.results')}
                 </p>
               </div>
-              <div>
+              <div className="flex items-center gap-4">
                 <nav
                   className="isolate inline-flex -space-x-px rounded-md bg-surface"
                   aria-label="Pagination"
@@ -262,11 +261,10 @@ export default function DataTable<T>({
                           key={pageNum}
                           onClick={() => onPageChange(pageNum)}
                           aria-current={page === pageNum ? 'page' : undefined}
-                          className={`relative inline-flex items-center border border-border px-3 py-1.5 text-[13px] font-medium transition-colors ${
-                            page === pageNum
-                              ? 'z-10 bg-accent text-text-inverse border-accent font-semibold'
-                              : 'bg-surface text-text-secondary hover:bg-muted'
-                          }`}
+                          className={`relative inline-flex items-center border border-border px-3 py-1.5 text-[13px] font-medium transition-colors ${page === pageNum
+                            ? 'z-10 bg-accent text-text-inverse border-accent font-semibold'
+                            : 'bg-surface text-text-secondary hover:bg-muted'
+                            }`}
                         >
                           {pageNum}
                         </button>
@@ -296,6 +294,38 @@ export default function DataTable<T>({
                     <ChevronRightIcon className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </nav>
+                {totalPages > 5 && (
+                  <div className="flex items-center gap-1.5 text-[13px] text-text-secondary">
+                    <span className="hidden md:inline">{t('common.goToPage')}:</span>
+                    <input
+                      type="number"
+                      min={1}
+                      max={totalPages}
+                      defaultValue={page}
+                      key={page}
+                      onBlur={(e) => {
+                        const val = parseInt(e.target.value);
+                        if (!isNaN(val) && val >= 1 && val <= totalPages) {
+                          onPageChange(val);
+                        } else {
+                          e.target.value = page.toString();
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          const val = parseInt((e.target as HTMLInputElement).value);
+                          if (!isNaN(val) && val >= 1 && val <= totalPages) {
+                            onPageChange(val);
+                          } else {
+                            (e.target as HTMLInputElement).value = page.toString();
+                          }
+                        }
+                      }}
+                      className="w-12 text-center rounded border border-border bg-surface px-1.5 py-1 text-text-primary focus:outline-none focus:ring-1 focus:ring-accent [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <span>/ {totalPages}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

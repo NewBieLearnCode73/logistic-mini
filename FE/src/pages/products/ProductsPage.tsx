@@ -171,16 +171,14 @@ export default function ProductsPage() {
       className: 'w-[120px]',
       render: (p) => (
         <span
-          className={`inline-flex items-center gap-1.5 text-[12px] font-medium ${
-            p.isActive
+          className={`inline-flex items-center gap-1.5 text-[12px] font-medium ${p.isActive
               ? 'text-emerald-700 dark:text-emerald-400'
               : 'text-zinc-500 dark:text-zinc-400'
-          }`}
+            }`}
         >
           <span
-            className={`h-1.5 w-1.5 rounded-full ${
-              p.isActive ? 'bg-emerald-500' : 'bg-zinc-400 dark:bg-zinc-500'
-            }`}
+            className={`h-1.5 w-1.5 rounded-full ${p.isActive ? 'bg-emerald-500' : 'bg-zinc-400 dark:bg-zinc-500'
+              }`}
           />
           {p.isActive ? t('common.active') : t('common.inactive')}
         </span>
@@ -255,7 +253,7 @@ export default function ProductsPage() {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="input-field py-1 px-2 text-[12px] h-8 w-auto min-w-[120px]"
+              className="input-field py-1 px-2 pl-4 text-[12px] h-8 w-auto min-w-[120px]"
             >
               <option value="">{t('common.all')} {t('product.category').toLowerCase()}</option>
               {categoriesList.map((cat) => (
@@ -303,9 +301,8 @@ export default function ProductsPage() {
                   type="text"
                   value={formData.sku}
                   onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                  className={`input-field font-mono text-2xs uppercase ${
-                    formErrors.sku ? 'border-red-500 focus:ring-red-500' : ''
-                  }`}
+                  className={`input-field font-mono text-2xs uppercase ${formErrors.sku ? 'border-red-500 focus:ring-red-500' : ''
+                    }`}
                   placeholder="SKU-MILK-1L"
                   required
                 />

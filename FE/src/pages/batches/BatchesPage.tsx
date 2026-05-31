@@ -239,7 +239,7 @@ export default function BatchesPage() {
                 setSelectedProduct(e.target.value);
                 setPage(1);
               }}
-              className="input-field py-1 px-2 text-[12px] h-8 w-auto min-w-[150px]"
+              className="input-field py-1 px-2 pl-3 text-[12px] h-8 w-auto min-w-[100px]"
             >
               <option value="">{t('common.allProducts')}</option>
               {activeProducts?.map((prod) => (
