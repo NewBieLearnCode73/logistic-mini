@@ -97,19 +97,19 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
   return (
     <aside className={`fixed left-0 top-0 z-40 flex h-screen w-[220px] flex-col border-r border-border bg-surface transition-transform duration-300 lg:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       {/* Logo */}
-      <div className="flex h-12 items-center px-4 border-b border-border">
-        <span className="text-[13px] font-semibold tracking-tight text-text-primary">
+      <div className="flex h-16 items-center px-5 border-b border-border">
+        <span className="text-[14px] font-bold tracking-widest uppercase text-text-primary">
           Mini Logistic
         </span>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
         {filteredItems.map((item, index) => {
           if (item.type === 'divider') {
             return (
-              <div key={index} className="pt-4 pb-1 first:pt-0">
-                <p className="px-2.5 text-2xs font-medium uppercase tracking-wider text-text-muted">
+              <div key={index} className="pt-5 pb-1 first:pt-0">
+                <p className="px-4 text-3xs font-bold uppercase tracking-widest text-text-muted">
                   {t(item.label)}
                 </p>
               </div>
@@ -134,16 +134,16 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
       </nav>
 
       {/* User & logout */}
-      <div className="border-t border-border p-2 space-y-0.5">
-        <div className="flex items-center gap-2.5 px-2.5 py-2">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-semibold text-text-secondary">
+      <div className="border-t border-border p-3 space-y-1 bg-muted/20">
+        <div className="flex items-center gap-3 px-1 py-1.5">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-[12px] font-bold text-text-inverse shadow-sm">
             {user?.fullName?.charAt(0)?.toUpperCase() || 'U'}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-medium text-text-primary">
+            <p className="truncate text-[13px] font-semibold text-text-primary">
               {user?.fullName || 'User'}
             </p>
-            <p className="truncate text-2xs text-text-muted">
+            <p className="truncate text-3xs uppercase font-bold tracking-wider text-text-muted">
               {role ? t(`user.roles.${role}`, role) : ''}
             </p>
           </div>
@@ -160,7 +160,7 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
         </button>
         <button
           onClick={handleLogout}
-          className="sidebar-link w-full text-text-muted hover:text-red-600 dark:hover:text-red-400"
+          className="sidebar-link w-full text-text-muted hover:text-red-650 dark:hover:text-red-400"
         >
           <ArrowLeftOnRectangleIcon className="h-4 w-4 shrink-0" />
           <span>{t('auth.logout')}</span>

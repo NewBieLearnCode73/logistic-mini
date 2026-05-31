@@ -60,22 +60,22 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* Page header */}
-      <div>
-        <h1 className="text-lg font-semibold text-text-primary">
+      <div className="space-y-1">
+        <h1 className="page-title">
           {t('dashboard.title')}
         </h1>
-        <p className="text-[13px] text-text-secondary">
-          {t('auth.welcomeBack')}, {user?.fullName}
+        <p className="secondary-label text-[14px]">
+          {t('auth.welcomeBack')}, <span className="font-semibold text-text-primary">{user?.fullName}</span>
           {role && (
-            <span className="ml-1.5 text-text-muted">· {t(`user.roles.${role}`, role)}</span>
+            <span className="ml-2 text-text-muted">· {t(`user.roles.${role}`, role)}</span>
           )}
         </p>
       </div>
 
       {/* KPI Stats */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
           label={t('dashboard.totalInventory')}
           value={stats?.totalInventory}
@@ -96,34 +96,34 @@ export default function DashboardPage() {
  
       {/* Reports Export Card (Authorized Roles Only) */}
       {canExport && (
-        <div className="card space-y-4">
-          <div className="border-b border-border pb-2">
-            <h2 className="text-[13px] font-semibold text-text-primary">
+        <div className="card space-y-5">
+          <div className="border-b border-border pb-3">
+            <h2 className="card-title text-[18px] font-semibold">
               {t('reports.title')}
             </h2>
-            <p className="text-[12px] text-text-muted mt-0.5">
+            <p className="secondary-label mt-1">
               {t('reports.subtitle')}
             </p>
           </div>
-          <div className="flex flex-wrap items-end gap-3 text-2xs">
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-text-secondary mb-1 font-medium text-[12px]">{t('reports.reportType')}</label>
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="flex-1 min-w-[200px] space-y-1.5">
+              <label className="block text-[13px] font-semibold text-text-secondary">{t('reports.reportType')}</label>
               <select
                 value={reportType}
                 onChange={(e) => setReportType(e.target.value as any)}
-                className="input-field py-1.5"
+                className="input-field"
               >
                 <option value="inventory">{t('reports.inventory')}</option>
                 <option value="shipments">{t('reports.shipments')}</option>
                 <option value="incidents">{t('reports.incidents')}</option>
               </select>
             </div>
-            <div className="w-32">
-              <label className="block text-text-secondary mb-1 font-medium text-[12px]">{t('reports.format')}</label>
+            <div className="w-40 space-y-1.5">
+              <label className="block text-[13px] font-semibold text-text-secondary">{t('reports.format')}</label>
               <select
                 value={exportFormat}
                 onChange={(e) => setExportFormat(e.target.value as any)}
-                className="input-field py-1.5"
+                className="input-field"
               >
                 <option value="csv">CSV</option>
                 <option value="pdf">PDF (Helvetica)</option>
@@ -132,7 +132,7 @@ export default function DashboardPage() {
             <button
               onClick={handleExport}
               disabled={isExporting}
-              className="btn-primary py-2 px-4 text-xs font-semibold inline-flex items-center gap-1.5 h-[34px] disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary px-6 h-[42px] disabled:opacity-50 disabled:cursor-not-allowed text-[13px] font-semibold"
             >
               <ArrowDownTrayIcon className="h-4 w-4" />
               <span>{isExporting ? t('common.loading') : t('reports.export')}</span>
@@ -142,22 +142,22 @@ export default function DashboardPage() {
       )}
  
       {/* Tables */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Shipments */}
-        <div className="card p-0">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-            <h2 className="text-[13px] font-semibold text-text-primary">
+        <div className="card p-0 overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
+            <h2 className="card-title font-semibold">
               {t('shipment.title')}
             </h2>
-            <Link to="/shipments" className="btn-ghost text-2xs gap-1">
+            <Link to="/shipments" className="btn-ghost px-3 py-1 text-2xs gap-1">
               {t('common.all')}
               <ArrowRightIcon className="h-3 w-3" />
             </Link>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b border-border">
+                <tr className="border-b border-border bg-muted/30">
                   <th className="table-header-cell">{t('shipment.trackingCode')}</th>
                   <th className="table-header-cell">{t('shipment.destNode')}</th>
                   <th className="table-header-cell">{t('shipment.quantityShipped')}</th>
@@ -173,15 +173,15 @@ export default function DashboardPage() {
                       <td className="table-cell">
                         <Link
                           to={`/shipments/${s.id}`}
-                          className="font-mono text-[12px] text-text-primary hover:underline"
+                          className="font-mono text-[12px] font-semibold text-text-primary hover:underline hover:text-accent-hover transition-colors"
                         >
                           {s.trackingCode}
                         </Link>
                       </td>
-                      <td className="table-cell truncate max-w-[140px]">
+                      <td className="table-cell truncate max-w-[140px] font-medium text-text-secondary">
                         {s.destinationNode?.name || '—'}
                       </td>
-                      <td className="table-cell font-mono text-[12px]">
+                      <td className="table-cell font-mono text-[12px] text-text-secondary">
                         {s.quantityShipped}
                       </td>
                       <td className="table-cell">
@@ -198,20 +198,20 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Batches */}
-        <div className="card p-0">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-            <h2 className="text-[13px] font-semibold text-text-primary">
+        <div className="card p-0 overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card">
+            <h2 className="card-title font-semibold">
               {t('batch.title')}
             </h2>
-            <Link to="/batches" className="btn-ghost text-2xs gap-1">
+            <Link to="/batches" className="btn-ghost px-3 py-1 text-2xs gap-1">
               {t('common.all')}
               <ArrowRightIcon className="h-3 w-3" />
             </Link>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="border-b border-border">
+                <tr className="border-b border-border bg-muted/30">
                   <th className="table-header-cell">{t('batch.batchCode')}</th>
                   <th className="table-header-cell">{t('batch.product')}</th>
                   <th className="table-header-cell">{t('batch.quantity')}</th>
@@ -227,15 +227,15 @@ export default function DashboardPage() {
                       <td className="table-cell">
                         <Link
                           to={`/batches/${b.id}`}
-                          className="font-mono text-[12px] text-text-primary hover:underline"
+                          className="font-mono text-[12px] font-semibold text-text-primary hover:underline hover:text-accent-hover transition-colors"
                         >
                           {b.batchCode}
                         </Link>
                       </td>
-                      <td className="table-cell truncate max-w-[140px]">
+                      <td className="table-cell truncate max-w-[140px] font-medium text-text-secondary">
                         {b.product?.name || '—'}
                       </td>
-                      <td className="table-cell font-mono text-[12px]">
+                      <td className="table-cell font-mono text-[12px] text-text-secondary">
                         {b.quantity} <span className="text-text-muted">{b.unit}</span>
                       </td>
                       <td className="table-cell">
@@ -269,18 +269,18 @@ function StatCard({
   warn?: boolean;
 }) {
   return (
-    <div className="card">
-      <p className="text-2xs font-medium uppercase tracking-wider text-text-muted">
+    <div className="card flex flex-col justify-between min-h-[120px]">
+      <p className="text-2xs font-semibold uppercase tracking-wider text-text-muted">
         {label}
       </p>
       <p
-        className={`mt-1.5 text-2xl font-semibold tabular-nums ${warn
-            ? 'text-red-650 dark:text-red-400'
+        className={`mt-3 metric-number ${warn
+            ? 'text-red-600 dark:text-red-400'
             : 'text-text-primary'
           }`}
       >
         {loading ? (
-          <span className="inline-block h-7 w-12 animate-pulse rounded bg-muted" />
+          <span className="inline-block h-8 w-16 animate-pulse rounded bg-muted" />
         ) : (
           (value ?? 0).toLocaleString()
         )}
@@ -296,7 +296,7 @@ function TableSkeleton({ cols, rows }: { cols: number; rows: number }) {
         <tr key={i} className="table-row">
           {Array.from({ length: cols }).map((_, j) => (
             <td key={j} className="table-cell">
-              <span className="inline-block h-3.5 w-16 animate-pulse rounded bg-muted" />
+              <span className="inline-block h-4 w-20 animate-pulse rounded-full bg-muted" />
             </td>
           ))}
         </tr>
@@ -309,9 +309,10 @@ function EmptyRow({ cols }: { cols: number }) {
   const { t } = useTranslation();
   return (
     <tr>
-      <td colSpan={cols} className="px-3 py-8 text-center text-[13px] text-text-muted">
+      <td colSpan={cols} className="px-5 py-10 text-center text-[13px] text-text-muted">
         {t('common.noData')}
       </td>
     </tr>
   );
 }
+

@@ -20,7 +20,7 @@ export default function AppLayout() {
 
       <div className="lg:pl-[220px]">
         <Header onMenuClick={() => setIsSidebarOpen(true)} />
-        <main className="px-5 py-4">
+        <main className="px-6 py-6 lg:px-8 lg:py-8">
           <Outlet />
         </main>
       </div>

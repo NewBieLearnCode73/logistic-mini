@@ -202,11 +202,11 @@ export default function BatchesPage() {
     <div className="space-y-4">
       {/* Page Title & Add Button */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+        <div className="space-y-1">
+          <h1 className="page-title">
             {t('batch.title')}
           </h1>
-          <p className="text-[13px] text-zinc-500 dark:text-zinc-400">
+          <p className="secondary-label text-[14px]">
             {t('batch.subtitle')}
           </p>
         </div>

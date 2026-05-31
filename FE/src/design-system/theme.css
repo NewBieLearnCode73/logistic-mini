@@ -1,119 +1,255 @@
 /**
  * 🎨 theme.css
  * Core theme variables for Light and Dark modes.
- * Implements a clean, high-contrast, linear-depth system.
+ * Refactored to match a modern premium enterprise SaaS dashboard aesthetic with deep navy/teal contrast.
  */
 
 :root {
-  /* Light Theme Variables */
-  --bg-background: #fafafa;       /* Zinc-50 */
-  --bg-surface: #ffffff;          /* Pure White */
-  --bg-card: #ffffff;
-  --bg-popover: #ffffff;
-  --bg-muted: #f4f4f5;            /* Zinc-100 */
+  /* ==========================================
+   * 🎨 USER-SPECIFIED LIGHT THEME VARIABLES
+   * ========================================== */
   
-  --text-primary: #18181b;        /* Zinc-900 */
-  --text-secondary: #52525b;      /* Zinc-600 */
-  --text-muted: #a1a1aa;           /* Zinc-400 */
-  --text-inverse: #ffffff;
+  /* Brand */
+  --color-primary:         #0F3347;   /* deeper navy — more contrast vs white cards */
+  --color-primary-hover:   #1A5A78;   /* more saturated teal on hover */
+  --color-primary-deep:    #092840;   /* tab active, selected pill bg */
+  --color-accent:          #F5C518;   /* punchy vivid gold */
+  --color-accent-hover:    #DBA800;   /* darkened for hover state */
+  --color-accent-text:     #3D2E00;   /* text on accent bg */
 
-  --border-primary: rgba(228, 228, 231, 0.8); /* Zinc-200/80 */
-  --border-muted: rgba(228, 228, 231, 0.4);   /* Zinc-200/40 */
-  
-  --brand-accent: #4f46e5;        /* Deep Indigo */
-  --brand-accent-hover: #4338ca;
-  --brand-accent-glow: rgba(79, 70, 229, 0.15);
+  /* Page & Surface */
+  --color-bg-page:         #E8EAE4;   /* darker off-white → cards pop more */
+  --color-bg-surface:      #FFFFFF;   /* card bg */
+  --color-bg-subtle:       #F2F3EF;   /* table header, input fill, hover row */
+  --color-border:          #C8D0D8;   /* more visible border */
+  --color-border-strong:   #A8B4BF;   /* emphasized border, focus ring */
 
-  /* Status Tokens (Light mode) */
-  --status-created-text: #71717a;
-  --status-created-bg: #f4f4f5;
-  --status-created-dot: #a1a1aa;
+  /* Typography */
+  --color-text-primary:    #0F3347;   /* aligned with primary for consistency */
+  --color-text-secondary:  #3D4F5C;   /* darker secondary — better readability */
+  --color-text-muted:      #7A8A96;   /* shelf counts, disabled */
+  --color-text-on-primary: #FFFFFF;
 
-  --status-intransit-text: #1d4ed8;
-  --status-intransit-bg: #eff6ff;
-  --status-intransit-dot: #3b82f6;
+  /* SEMANTIC — shared both themes */
+  --color-success:         #158C4A;   /* deeper green */
+  --color-success-bg:      #D4F3E3;   /* richer fill */
+  --color-danger:          #C52B2B;   /* deeper red */
+  --color-danger-bg:       #FFD9D9;   /* richer fill */
+  --color-warning:         #F5C518;
+  --color-info:            #1A6FD4;
 
-  --status-received-text: #047857;
-  --status-received-bg: #ecfdf5;
-  --status-received-dot: #10b981;
+  /* CHART & DATA VIZ */
+  --color-chart-primary:   #F5C518;
+  --color-chart-track:     #D8DDE3;
 
-  --status-sold-text: #6d28d9;
-  --status-sold-bg: #f5f3ff;
-  --status-sold-dot: #8b5cf6;
+  /* SHELF / SECTION CATEGORY COLORS */
+  --color-shelf-a:         #6EC99A;
+  --color-shelf-a-light:   #C0E8D0;
+  --color-shelf-a-text:    #1A5C38;
 
-  --status-discarded-text: #b91c1c;
-  --status-discarded-bg: #fef2f2;
-  --status-discarded-dot: #ef4444;
+  --color-shelf-b:         #F5CE55;
+  --color-shelf-b-light:   #FAE08C;
+  --color-shelf-b-text:    #5C4608;
 
-  --status-lost-text: #c2410c;
-  --status-lost-bg: #fff7ed;
-  --status-lost-dot: #f97316;
+  --color-shelf-c:         #A99FCE;
+  --color-shelf-c-light:   #CBC5E8;
+  --color-shelf-c-text:    #352880;
+
+  --color-shelf-d:         #67C3BA;
+  --color-shelf-d-light:   #AADCD8;
+  --color-shelf-d-text:    #0D5C55;
+
+  --color-shelf-empty:     #DDE0DC;
+
+  /* ==========================================
+   * 🔗 SEMANTIC MAPPING COMPATIBILITY LAYER
+   * ========================================== */
+  --bg-background:        var(--color-bg-page);
+  --bg-secondary:         var(--color-bg-subtle);
+  --bg-surface:           var(--color-bg-surface);
+  --bg-card:              var(--color-bg-surface);
+  --bg-popover:           var(--color-bg-surface);
+  --bg-muted:             var(--color-bg-subtle);
+
+  --text-primary:         var(--color-text-primary);
+  --text-secondary:       var(--color-text-secondary);
+  --text-muted:           var(--color-text-muted);
+  --text-inverse:         var(--color-text-on-primary);
+
+  --border-primary:       var(--color-border);
+  --border-muted:         var(--color-border);
+
+  --brand-accent:         var(--color-primary);
+  --brand-accent-hover:   var(--color-primary-hover);
+  --brand-accent-glow:    rgba(15, 51, 71, 0.12);
+
+  --success:              var(--color-success);
+  --success-bg:           var(--color-success-bg);
+  --warning:              var(--color-warning);
+  --warning-bg:           rgba(245, 197, 24, 0.08);
+  --error:                var(--color-danger);
+  --error-bg:             var(--color-danger-bg);
+  --info:                 var(--color-info);
+  --info-bg:              rgba(26, 111, 212, 0.08);
+
+  /* Status Badges */
+  --status-created-text:  var(--color-text-secondary);
+  --status-created-bg:    var(--color-bg-subtle);
+  --status-created-dot:   var(--color-text-muted);
+
+  --status-intransit-text: var(--color-primary);
+  --status-intransit-bg:  rgba(15, 51, 71, 0.08);
+  --status-intransit-dot:  var(--color-primary);
+
+  --status-received-text: var(--color-success);
+  --status-received-bg:   var(--color-success-bg);
+  --status-received-dot:  var(--color-success);
+
+  --status-sold-text:     var(--color-accent-text);
+  --status-sold-bg:       rgba(245, 197, 24, 0.08);
+  --status-sold-dot:      var(--color-accent);
+
+  --status-discarded-text: var(--color-danger);
+  --status-discarded-bg:  var(--color-danger-bg);
+  --status-discarded-dot:  var(--color-danger);
+
+  --status-lost-text:       #FF8A65;
+  --status-lost-bg:         rgba(255, 138, 101, 0.08);
+  --status-lost-dot:        #FF8A65;
 
   /* Glassmorphism system */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(228, 228, 231, 0.6);
-  --glass-blur: 12px;
+  --glass-bg:             rgba(255, 255, 255, 0.7);
+  --glass-border:         var(--color-border);
+  --glass-blur:           12px;
 
   /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+  --shadow-sm:            0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-md:            0 2px 8px rgba(0, 0, 0, 0.04);
+  --shadow-lg:            0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .dark {
-  /* Dark Theme Variables (Pure dark slate aesthetics) */
-  --bg-background: #09090b;       /* Zinc-950 (Vercel dark style) */
-  --bg-surface: #09090b;
-  --bg-card: #09090b;
-  --bg-popover: #09090b;
-  --bg-muted: #18181b;            /* Zinc-900 */
+  /* ==========================================
+   * 🎨 USER-SPECIFIED DARK THEME VARIABLES
+   * ========================================== */
   
-  --text-primary: #f4f4f5;        /* Zinc-100 */
-  --text-secondary: #a1a1aa;      /* Zinc-400 */
-  --text-muted: #52525b;          /* Zinc-600 */
-  --text-inverse: #09090b;
+  /* Brand */
+  --color-primary:         #62CBEA;   /* brighter on dark for legibility */
+  --color-primary-hover:   #88DAF2;
+  --color-primary-deep:    #45B8D8;
+  --color-accent:          #F5C518;   /* stays vivid in dark */
+  --color-accent-hover:    #DBA800;
+  --color-accent-text:     #3D2E00;
 
-  --border-primary: rgba(39, 39, 42, 0.6);   /* Zinc-800/60 */
-  --border-muted: rgba(39, 39, 42, 0.3);     /* Zinc-800/30 */
-  
-  --brand-accent: #ffffff;        /* High-contrast brand primary for dark mode */
-  --brand-accent-hover: #e4e4e7;  /* Zinc-200 */
-  --brand-accent-glow: rgba(255, 255, 255, 0.1);
+  /* Page & Surface */
+  --color-bg-page:         #0A1520;   /* slightly deeper for more contrast */
+  --color-bg-surface:      #132030;   /* card bg — more distinct from page */
+  --color-bg-subtle:       #1C3040;   /* table header, hover — clear layer */
+  --color-border:          #2A3E4C;   /* more defined than before */
+  --color-border-strong:   #3A5060;
 
-  /* Status Tokens (Dark mode) */
-  --status-created-text: #a1a1aa;
-  --status-created-bg: #18181b;
-  --status-created-dot: #71717a;
+  /* Typography */
+  --color-text-primary:    #EAF2F6;   /* slightly cooler white */
+  --color-text-secondary:  #9ABAC6;   /* clearer secondary contrast */
+  --color-text-muted:      #4E6E7E;
+  --color-text-on-primary: #FFFFFF;
 
-  --status-intransit-text: #60a5fa;
-  --status-intransit-bg: rgba(30, 58, 138, 0.3);
-  --status-intransit-dot: #3b82f6;
+  /* SEMANTIC — shared both themes */
+  --color-success:         #158C4A;   /* deeper green */
+  --color-success-bg:      #D4F3E3;   /* richer fill */
+  --color-danger:          #C52B2B;   /* deeper red */
+  --color-danger-bg:       #FFD9D9;   /* richer fill */
+  --color-warning:         #F5C518;
+  --color-info:            #1A6FD4;
 
-  --status-received-text: #34d399;
-  --status-received-bg: rgba(6, 78, 59, 0.3);
-  --status-received-dot: #10b981;
+  /* CHART & DATA VIZ */
+  --color-chart-primary:   #F5C518;
+  --color-chart-track:     #D8DDE3;
 
-  --status-sold-text: #a78bfa;
-  --status-sold-bg: rgba(46, 16, 101, 0.3);
-  --status-sold-dot: #8b5cf6;
+  /* SHELF / SECTION CATEGORY COLORS */
+  --color-shelf-a:         #6EC99A;
+  --color-shelf-a-light:   #C0E8D0;
+  --color-shelf-a-text:    #1A5C38;
 
-  --status-discarded-text: #f87171;
-  --status-discarded-bg: rgba(127, 29, 29, 0.3);
-  --status-discarded-dot: #ef4444;
+  --color-shelf-b:         #F5CE55;
+  --color-shelf-b-light:   #FAE08C;
+  --color-shelf-b-text:    #5C4608;
 
-  --status-lost-text: #fb923c;
-  --status-lost-bg: rgba(124, 45, 18, 0.3);
-  --status-lost-dot: #f97316;
+  --color-shelf-c:         #A99FCE;
+  --color-shelf-c-light:   #CBC5E8;
+  --color-shelf-c-text:    #352880;
+
+  --color-shelf-d:         #67C3BA;
+  --color-shelf-d-light:   #AADCD8;
+  --color-shelf-d-text:    #0D5C55;
+
+  --color-shelf-empty:     #1A2C38;
+
+  /* ==========================================
+   * 🔗 SEMANTIC MAPPING COMPATIBILITY LAYER
+   * ========================================== */
+  --bg-background:        var(--color-bg-page);
+  --bg-secondary:         var(--color-bg-subtle);
+  --bg-surface:           var(--color-bg-surface);
+  --bg-card:              var(--color-bg-surface);
+  --bg-popover:           var(--color-bg-surface);
+  --bg-muted:             var(--color-bg-subtle);
+
+  --text-primary:         var(--color-text-primary);
+  --text-secondary:       var(--color-text-secondary);
+  --text-muted:           var(--color-text-muted);
+  --text-inverse:         var(--color-text-on-primary);
+
+  --border-primary:       var(--color-border);
+  --border-muted:         var(--color-border);
+
+  --brand-accent:         var(--color-primary);
+  --brand-accent-hover:   var(--color-primary-hover);
+  --brand-accent-glow:    rgba(98, 203, 234, 0.15);
+
+  --success:              var(--color-success);
+  --success-bg:           var(--color-success-bg);
+  --warning:              var(--color-warning);
+  --warning-bg:           rgba(245, 197, 24, 0.08);
+  --error:                var(--color-danger);
+  --error-bg:             var(--color-danger-bg);
+  --info:                 var(--color-info);
+  --info-bg:              rgba(26, 111, 212, 0.08);
+
+  /* Status Badges */
+  --status-created-text:  var(--color-text-secondary);
+  --status-created-bg:    rgba(255, 255, 255, 0.04);
+  --status-created-dot:   var(--color-text-muted);
+
+  --status-intransit-text: var(--color-primary);
+  --status-intransit-bg:  rgba(98, 203, 234, 0.12);
+  --status-intransit-dot:  var(--color-primary);
+
+  --status-received-text: var(--color-success);
+  --status-received-bg:   var(--color-success-bg);
+  --status-received-dot:  var(--color-success);
+
+  --status-sold-text:     var(--color-accent);
+  --status-sold-bg:       rgba(245, 197, 24, 0.08);
+  --status-sold-dot:      var(--color-accent);
+
+  --status-discarded-text: var(--color-danger);
+  --status-discarded-bg:  var(--color-danger-bg);
+  --status-discarded-dot:  var(--color-danger);
+
+  --status-lost-text:       #FF8A65;
+  --status-lost-bg:         rgba(255, 138, 101, 0.08);
+  --status-lost-dot:        #FF8A65;
 
   /* Glassmorphism system */
-  --glass-bg: rgba(9, 9, 11, 0.7);
-  --glass-border: rgba(39, 39, 42, 0.4);
-  --glass-blur: 16px;
+  --glass-bg:             rgba(19, 32, 48, 0.7);
+  --glass-border:         var(--color-border);
+  --glass-blur:           12px;
 
   /* Shadows */
-  --shadow-sm: 0 0 0 1px rgba(0, 0, 0, 0.8);
-  --shadow-md: 0 0 0 1px rgba(0, 0, 0, 0.8), 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 0 0 1px rgba(0, 0, 0, 0.8), 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-sm:            0 2px 8px rgba(0, 0, 0, 0.30);
+  --shadow-md:            0 2px 8px rgba(0, 0, 0, 0.30);
+  --shadow-lg:            0 2px 8px rgba(0, 0, 0, 0.30);
 }
 
 /* Glassmorphism helper class */

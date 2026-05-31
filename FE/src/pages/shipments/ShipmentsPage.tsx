@@ -211,12 +211,12 @@ export default function ShipmentsPage() {
     <div className="space-y-4">
       {/* Page Title & Action Button */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold text-text-primary">
+        <div className="space-y-1">
+          <h1 className="page-title">
             {t('shipment.title')}
           </h1>
-          <p className="text-[13px] text-text-secondary">
-            {t('sidebar.dashboard')} &middot; {t('shipment.title')}
+          <p className="secondary-label text-[14px]">
+            {t('sidebar.dashboard')} &middot; <span className="font-semibold text-text-primary">{t('shipment.title')}</span>
           </p>
         </div>
         {canCreate && (

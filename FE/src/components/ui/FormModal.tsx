@@ -37,7 +37,7 @@ export default function FormModal({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-gray-900/35 backdrop-blur-[1px] transition-opacity dark:bg-gray-950/50" />
+          <div className="fixed inset-0 bg-primary-900/10 backdrop-blur-[1px] transition-opacity" />
         </TransitionChild>
 
         {/* Modal container */}
@@ -53,17 +53,17 @@ export default function FormModal({
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
               <DialogPanel
-                className={`relative transform overflow-hidden rounded-lg bg-white p-5 text-left border border-gray-100 dark:border-gray-800 shadow-lg transition-all sm:my-8 w-full ${sizeClasses[size]} dark:bg-gray-900`}
+                className={`relative transform overflow-hidden rounded-[24px] bg-surface p-6 text-left border border-border shadow-saas-md transition-all sm:my-8 w-full ${sizeClasses[size]}`}
               >
                 {/* Header */}
-                <div className="flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800">
-                  <DialogTitle className="text-[14px] font-semibold text-gray-900 dark:text-gray-100">
+                <div className="flex items-center justify-between border-b border-border pb-3">
+                  <DialogTitle className="text-[15px] font-semibold text-text-primary">
                     {title}
                   </DialogTitle>
                   <button
                     type="button"
                     onClick={onClose}
-                    className="rounded-md text-gray-400 hover:text-gray-500 focus:outline-none dark:text-gray-500 dark:hover:text-gray-400"
+                    className="rounded-full p-1 text-text-muted hover:text-text-primary hover:bg-muted transition-colors"
                   >
                     <span className="sr-only">Close</span>
                     <XMarkIcon className="h-4 w-4" aria-hidden="true" />

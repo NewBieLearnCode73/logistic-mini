@@ -227,10 +227,10 @@ export default function AuditLogsPage() {
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          <h1 className="page-title">
             {t('audit.title')}
           </h1>
-          <p className="text-[13px] text-gray-500 dark:text-gray-500">
+          <p className="secondary-label mt-1">
             {t('audit.subtitle')}
           </p>
         </div>

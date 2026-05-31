@@ -63,12 +63,12 @@ ON CONFLICT (name) DO UPDATE
 SET description = EXCLUDED.description;
 
 -- ==========================================
--- 2. CHÈN 2 TÀI KHOẢN ADMIN (MẬT KHẨU: password123)
+-- 2. CHÈN 2 TÀI KHOẢN ADMIN BAN ĐẦU (MẬT KHẨU: password123)
 -- ==========================================
 INSERT INTO users (id, email, password_hash, full_name, node_id, is_active, version, created_at, updated_at)
 VALUES 
   (
-    'u3000000-0000-0000-0000-000000000001', 
+    'a3000000-0000-0000-0000-000000000001', 
     'admin1@logistic.com', 
     '$2b$12$B9npDBXVW/zuYUenstGeX.UnUgDv.ISdQ7b7mmksXGzE8Ms7wrO6i', 
     'Nguyễn Văn A (Admin 1)', 
@@ -79,7 +79,7 @@ VALUES
     NOW()
   ),
   (
-    'u3000000-0000-0000-0000-000000000002', 
+    'a3000000-0000-0000-0000-000000000002', 
     'admin2@logistic.com', 
     '$2b$12$B9npDBXVW/zuYUenstGeX.UnUgDv.ISdQ7b7mmksXGzE8Ms7wrO6i', 
     'Trần Thị B (Admin 2)', 
@@ -96,8 +96,8 @@ ON CONFLICT (email) DO NOTHING;
 -- ==========================================
 INSERT INTO users_roles (user_id, role_id, assigned_at)
 VALUES 
-  ('u3000000-0000-0000-0000-000000000001', 'd3000000-0000-0000-0000-000000000001', NOW()),
-  ('u3000000-0000-0000-0000-000000000002', 'd3000000-0000-0000-0000-000000000001', NOW())
+  ('a3000000-0000-0000-0000-000000000001', 'd3000000-0000-0000-0000-000000000001', NOW()),
+  ('a3000000-0000-0000-0000-000000000002', 'd3000000-0000-0000-0000-000000000001', NOW())
 ON CONFLICT (user_id, role_id) DO NOTHING;
 ```
 

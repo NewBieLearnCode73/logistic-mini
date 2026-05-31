@@ -142,14 +142,14 @@ export default function IncidentsPage() {
       header: t('incident.priority'),
       className: 'w-[100px]',
       render: (inc) => {
-        const priorityColors: Record<string, string> = {
-          LOW: 'text-zinc-500 bg-zinc-50 dark:bg-zinc-900/60',
-          MEDIUM: 'text-blue-600 bg-blue-50/50 dark:text-blue-400 dark:bg-blue-950/10',
-          HIGH: 'text-orange-650 bg-orange-50/40 dark:text-orange-400 dark:bg-orange-950/10',
-          CRITICAL: 'text-red-650 bg-red-50/40 dark:text-red-400 dark:bg-red-950/10 font-bold animate-pulse',
+        const priorityClasses: Record<string, string> = {
+          LOW: 'badge-muted',
+          MEDIUM: 'badge-info',
+          HIGH: 'badge-warning',
+          CRITICAL: 'badge-danger animate-pulse',
         };
         return (
-          <span className={`inline-flex px-1.5 py-0.5 rounded text-[11px] font-semibold ${priorityColors[inc.priority] || ''}`}>
+          <span className={`inline-flex px-[10px] py-[3px] rounded-[8px] text-[12px] font-medium transition-colors ${priorityClasses[inc.priority] || 'badge-muted'}`}>
             {t(`incident.priorities.${inc.priority}`, inc.priority)}
           </span>
         );
@@ -160,15 +160,14 @@ export default function IncidentsPage() {
       header: t('common.status'),
       className: 'w-[110px]',
       render: (inc) => {
-        const statusColors: Record<string, string> = {
-          OPEN: 'text-amber-700 dark:text-amber-400',
-          IN_PROGRESS: 'text-blue-700 dark:text-blue-400',
-          RESOLVED: 'text-emerald-700 dark:text-emerald-400',
-          CLOSED: 'text-zinc-500 dark:text-zinc-400',
+        const statusClasses: Record<string, string> = {
+          OPEN: 'badge-warning',
+          IN_PROGRESS: 'badge-primary',
+          RESOLVED: 'badge-success',
+          CLOSED: 'badge-muted',
         };
         return (
-          <span className={`inline-flex items-center gap-1.5 text-[12px] font-semibold ${statusColors[inc.status] || ''}`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${inc.status === 'OPEN' ? 'bg-amber-500' : inc.status === 'CLOSED' ? 'bg-zinc-400 dark:bg-zinc-500' : 'bg-blue-500'}`} />
+          <span className={`inline-flex px-[10px] py-[3px] rounded-[8px] text-[12px] font-medium transition-colors ${statusClasses[inc.status] || 'badge-muted'}`}>
             {t(`incident.statuses.${inc.status}`, inc.status)}
           </span>
         );
@@ -237,10 +236,10 @@ export default function IncidentsPage() {
       {/* Page Title & Add Button */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+          <h1 className="page-title">
             {t('incident.title')}
           </h1>
-          <p className="text-[13px] text-zinc-500 dark:text-zinc-400">
+          <p className="secondary-label mt-1">
             {t('incident.subtitle')}
           </p>
         </div>

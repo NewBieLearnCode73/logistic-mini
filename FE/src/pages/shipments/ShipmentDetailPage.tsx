@@ -154,70 +154,69 @@ export default function ShipmentDetailPage() {
               )}
             </div>
           </div>
-
           {/* Card 2: Batch Info */}
-          <div className="card space-y-3">
-            <h3 className="text-[13px] font-semibold text-text-primary border-b border-border pb-2">
+          <div className="card-secondary space-y-4">
+            <h3 className="text-[15px] font-bold text-text-primary border-b border-border pb-2">
               {t('batch.title')}
             </h3>
             <div className="grid grid-cols-2 gap-4 text-[13px]">
               <div>
-                <span className="text-text-muted block text-2xs">{t('batch.batchCode')}</span>
+                <span className="text-text-muted block text-2xs uppercase tracking-wider">{t('batch.batchCode')}</span>
                 <span
                   onClick={() => navigate(`/batches/${shipment.batchId}`)}
-                  className="font-mono font-medium text-text-primary hover:underline cursor-pointer text-2xs"
+                  className="font-mono font-bold text-accent hover:underline cursor-pointer text-xs"
                 >
                   {shipment.batch?.batchCode}
                 </span>
               </div>
               <div>
-                <span className="text-text-muted block text-2xs">{t('batch.product')}</span>
-                <span className="font-medium text-text-primary">
-                  {shipment.batch?.product?.name} ({shipment.batch?.product?.sku})
+                <span className="text-text-muted block text-2xs uppercase tracking-wider">{t('batch.product')}</span>
+                <span className="font-semibold text-text-primary">
+                  {shipment.batch?.product?.name} <span className="font-normal text-text-muted">({shipment.batch?.product?.sku})</span>
                 </span>
               </div>
               <div>
-                <span className="text-text-muted block text-2xs">{t('shipment.quantityShipped')}</span>
-                <span className="font-medium text-text-primary font-mono">
+                <span className="text-text-muted block text-2xs uppercase tracking-wider">{t('shipment.quantityShipped')}</span>
+                <span className="font-bold text-text-primary font-mono text-[14px]">
                   {shipment.quantityShipped} {shipment.batch?.unit}
                 </span>
               </div>
               {shipment.quantityReceived !== null && (
                 <div>
-                  <span className="text-text-muted block text-2xs">{t('shipment.receivedAt')} ({t('batch.quantity')})</span>
-                  <span className="font-medium text-emerald-600 dark:text-emerald-400 font-mono">
+                  <span className="text-text-muted block text-2xs uppercase tracking-wider">{t('shipment.receivedAt')} ({t('batch.quantity')})</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono text-[14px]">
                     {shipment.quantityReceived} {shipment.batch?.unit}
                   </span>
                 </div>
               )}
             </div>
           </div>
-
+ 
           {/* Card 3: Route details */}
-          <div className="card space-y-3">
-            <h3 className="text-[13px] font-semibold text-text-primary border-b border-border pb-2">
+          <div className="card-secondary space-y-4">
+            <h3 className="text-[15px] font-bold text-text-primary border-b border-border pb-2">
               Tuyến đường di chuyển
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-[13px]">
-              <div className="p-3 bg-muted/40 rounded border border-border">
-                <span className="text-2xs font-semibold text-text-muted uppercase block tracking-wider mb-1">
+              <div className="p-4 bg-muted/30 rounded-[12px] border border-border/80">
+                <span className="text-3xs font-bold text-text-muted uppercase block tracking-widest mb-1.5">
                   {t('shipment.sourceNode')}
                 </span>
-                <p className="font-semibold text-text-primary">{shipment.sourceNode?.name}</p>
-                <p className="text-2xs text-text-secondary mt-0.5">
+                <p className="font-bold text-text-primary text-[14px]">{shipment.sourceNode?.name}</p>
+                <p className="text-3xs font-semibold uppercase tracking-wider text-text-muted mt-1">
                   Type: {shipment.sourceNode?.nodeType ? t(`node.types.${shipment.sourceNode.nodeType}`, shipment.sourceNode.nodeType) : '—'}
                 </p>
-                <p className="text-[12px] text-text-secondary mt-1">{shipment.sourceNode?.address || '—'}</p>
+                <p className="text-[12px] text-text-secondary mt-2 bg-surface/50 p-2 rounded-[8px] border border-border/50">{shipment.sourceNode?.address || '—'}</p>
               </div>
-              <div className="p-3 bg-muted/40 rounded border border-border">
-                <span className="text-2xs font-semibold text-text-muted uppercase block tracking-wider mb-1">
+              <div className="p-4 bg-muted/30 rounded-[12px] border border-border/80">
+                <span className="text-3xs font-bold text-text-muted uppercase block tracking-widest mb-1.5">
                   {t('shipment.destNode')}
                 </span>
-                <p className="font-semibold text-text-primary">{shipment.destinationNode?.name}</p>
-                <p className="text-2xs text-text-secondary mt-0.5">
+                <p className="font-bold text-text-primary text-[14px]">{shipment.destinationNode?.name}</p>
+                <p className="text-3xs font-semibold uppercase tracking-wider text-text-muted mt-1">
                   Type: {shipment.destinationNode?.nodeType ? t(`node.types.${shipment.destinationNode.nodeType}`, shipment.destinationNode.nodeType) : '—'}
                 </p>
-                <p className="text-[12px] text-text-secondary mt-1">{shipment.destinationNode?.address || '—'}</p>
+                <p className="text-[12px] text-text-secondary mt-2 bg-surface/50 p-2 rounded-[8px] border border-border/50">{shipment.destinationNode?.address || '—'}</p>
               </div>
             </div>
           </div>
