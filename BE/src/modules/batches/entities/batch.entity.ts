@@ -57,6 +57,19 @@ export class BatchEntity {
   })
   status!: BatchStatus;
 
+  @Column({
+    name: 'total_value',
+    type: 'decimal',
+    precision: 15,
+    scale: 2,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string | number) => (value ? Number(Number(value).toFixed(2)) : 0),
+    },
+    default: 0,
+  })
+  totalValue!: number;
+
   @Column({ name: 'created_by', type: 'uuid' })
   createdBy!: string;
 

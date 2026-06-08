@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../stores/authStore';
-import { RoleName } from '../../utils/constants';
+import { RoleName, formatCurrency } from '../../utils/constants';
 import {
   useProductsList,
   useCreateProduct,
@@ -22,6 +22,7 @@ export default function ProductsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'active' | 'inactive' | 'all'>('active');
   const limit = 10;
 
   // React Query queries/mutations
@@ -30,6 +31,7 @@ export default function ProductsPage() {
     limit,
     search: search || undefined,
     category: category || undefined,
+    isActive: statusFilter === 'all' ? 'all' : statusFilter === 'active',
   });
 
   const createMutation = useCreateProduct();
@@ -46,6 +48,7 @@ export default function ProductsPage() {
     name: '',
     sku: '',
     unit: '',
+    unitPrice: 0,
     description: '',
     category: '',
   });
@@ -57,6 +60,7 @@ export default function ProductsPage() {
       name: '',
       sku: '',
       unit: '',
+      unitPrice: 0,
       description: '',
       category: '',
     });
@@ -70,6 +74,7 @@ export default function ProductsPage() {
       name: product.name,
       sku: product.sku,
       unit: product.unit,
+      unitPrice: product.unitPrice,
       description: product.description || '',
       category: product.category || '',
     });
@@ -93,6 +98,11 @@ export default function ProductsPage() {
     if (!formData.unit.trim()) {
       errors.unit = t('product.validation.unitRequired');
     }
+    if (formData.unitPrice === undefined || formData.unitPrice === null || isNaN(Number(formData.unitPrice))) {
+      errors.unitPrice = t('product.validation.unitPriceRequired', 'Đơn giá không được để trống');
+    } else if (Number(formData.unitPrice) < 0) {
+      errors.unitPrice = t('product.validation.unitPriceMin', 'Đơn giá không được nhỏ hơn 0');
+    }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -107,6 +117,7 @@ export default function ProductsPage() {
         name: formData.name,
         sku: formData.sku,
         unit: formData.unit,
+        unitPrice: Number(formData.unitPrice),
         description: formData.description,
         category: formData.category,
       };
@@ -119,7 +130,11 @@ export default function ProductsPage() {
       );
     } else {
       // Add
-      createMutation.mutate(formData, {
+      const createData: CreateProductDto = {
+        ...formData,
+        unitPrice: Number(formData.unitPrice),
+      };
+      createMutation.mutate(createData, {
         onSuccess: () => setIsFormOpen(false),
       });
     }
@@ -143,17 +158,23 @@ export default function ProductsPage() {
     {
       key: 'sku',
       header: t('product.sku'),
-      className: 'w-[150px] font-mono text-2xs uppercase text-zinc-400 dark:text-zinc-500',
+      className: 'w-[120px] font-mono text-2xs uppercase text-zinc-400 dark:text-zinc-500',
     },
     {
       key: 'unit',
       header: t('product.unitLabel'),
-      className: 'w-[120px]',
+      className: 'w-[80px]',
+    },
+    {
+      key: 'unitPrice',
+      header: t('product.unitPrice', 'Đơn giá'),
+      className: 'w-[120px] text-right font-medium',
+      render: (p) => formatCurrency(p.unitPrice),
     },
     {
       key: 'category',
       header: t('product.category'),
-      className: 'w-[150px]',
+      className: 'w-[120px]',
       render: (p) => p.category ? t(`product.categories.${p.category}`, p.category) : '-',
     },
     {
@@ -168,12 +189,12 @@ export default function ProductsPage() {
     {
       key: 'isActive',
       header: t('common.status'),
-      className: 'w-[120px]',
+      className: 'w-[100px]',
       render: (p) => (
         <span
           className={`inline-flex items-center gap-1.5 text-[12px] font-medium ${p.isActive
-              ? 'text-emerald-700 dark:text-emerald-400'
-              : 'text-zinc-500 dark:text-zinc-400'
+            ? 'text-emerald-700 dark:text-emerald-400'
+            : 'text-zinc-500 dark:text-zinc-400'
             }`}
         >
           <span
@@ -252,7 +273,10 @@ export default function ProductsPage() {
           <div className="flex items-center gap-1.5">
             <select
               value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              onChange={(e) => {
+                setCategory(e.target.value);
+                setPage(1);
+              }}
               className="input-field py-1 px-2 pl-4 text-[12px] h-8 w-auto min-w-[120px]"
             >
               <option value="">{t('common.all')} {t('product.category').toLowerCase()}</option>
@@ -261,6 +285,18 @@ export default function ProductsPage() {
                   {t(`product.categories.${cat}`, cat)}
                 </option>
               ))}
+            </select>
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value as 'active' | 'inactive' | 'all');
+                setPage(1);
+              }}
+              className="input-field py-1 px-2 pl-4 text-[12px] h-8 w-auto min-w-[120px]"
+            >
+              <option value="active">{t('common.active')}</option>
+              <option value="inactive">{t('common.inactive')}</option>
+              <option value="all">{t('common.all')}</option>
             </select>
           </div>
         }
@@ -328,22 +364,42 @@ export default function ProductsPage() {
               </div>
             </div>
 
-            <div>
-              <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
-                {t('product.category')}
-              </label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="input-field"
-              >
-                <option value="">{t('product.selectCategory')}</option>
-                {categoriesList.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {t(`product.categories.${cat}`, cat)}
-                  </option>
-                ))}
-              </select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t('product.unitPrice', 'Đơn giá')} <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  step="any"
+                  value={formData.unitPrice || ''}
+                  onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value === '' ? 0 : Number(e.target.value) })}
+                  className={`input-field ${formErrors.unitPrice ? 'border-red-500 focus:ring-red-500' : ''}`}
+                  placeholder={t('product.unitPricePlaceholder', 'Nhập đơn giá sản phẩm')}
+                  required
+                  min="0"
+                />
+                {formErrors.unitPrice && (
+                  <p className="mt-1 text-2xs text-red-600 dark:text-red-400">{formErrors.unitPrice}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  {t('product.category')}
+                </label>
+                <select
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  className="input-field"
+                >
+                  <option value="">{t('product.selectCategory')}</option>
+                  {categoriesList.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {t(`product.categories.${cat}`, cat)}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div>

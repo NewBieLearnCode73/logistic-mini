@@ -130,8 +130,15 @@ describe('IncidentsService', () => {
       incident.id = 'incident-id';
       incident.status = 'OPEN';
       incident.reportedBy = 'admin-1-uuid';
+      incident.firstApprovedBy = 'admin-2-uuid';
+      incident.shipmentId = 'shipment-uuid';
 
-      mockManager.findOne.mockResolvedValueOnce(incident);
+      const shipment = new ShipmentEntity();
+      shipment.id = 'shipment-uuid';
+
+      mockManager.findOne
+        .mockResolvedValueOnce(incident)
+        .mockResolvedValueOnce(shipment);
 
       await expect(service.confirmLost('incident-id', { userId: 'admin-1-uuid' })).rejects.toThrow(
         new ForbiddenException(
@@ -140,7 +147,29 @@ describe('IncidentsService', () => {
       );
     });
 
-    it('should rollback inventory, change status to LOST, audit adjustment, and close incident successfully', async () => {
+    it('should throw ForbiddenException if second approver is the same as first approver', async () => {
+      const incident = new IncidentReportEntity();
+      incident.id = 'incident-id';
+      incident.status = 'OPEN';
+      incident.reportedBy = 'admin-1-uuid';
+      incident.firstApprovedBy = 'admin-2-uuid';
+      incident.shipmentId = 'shipment-uuid';
+
+      const shipment = new ShipmentEntity();
+      shipment.id = 'shipment-uuid';
+
+      mockManager.findOne
+        .mockResolvedValueOnce(incident)
+        .mockResolvedValueOnce(shipment);
+
+      await expect(service.confirmLost('incident-id', { userId: 'admin-2-uuid' })).rejects.toThrow(
+        new ForbiddenException(
+          'Quy tắc phê duyệt kép: Người xác nhận thứ hai phải khác người đề xuất/xác nhận thứ nhất',
+        ),
+      );
+    });
+
+    it('should set firstApprovedBy and update batch status to LOST on first confirmation', async () => {
       const incident = new IncidentReportEntity();
       incident.id = 'incident-id';
       incident.status = 'OPEN';
@@ -157,6 +186,38 @@ describe('IncidentsService', () => {
       const batch = new BatchEntity();
       batch.id = 'batch-uuid';
       batch.status = BatchStatus.INVESTIGATING;
+
+      mockManager.findOne
+        .mockResolvedValueOnce(incident) // incident
+        .mockResolvedValueOnce(shipment) // shipment
+        .mockResolvedValueOnce(batch); // batch
+
+      const result = await service.confirmLost('incident-id', { userId: 'admin-2-uuid' });
+
+      expect(result.firstApprovedBy).toBe('admin-2-uuid');
+      expect(result.status).toBe('OPEN'); // remains OPEN for the second step
+      expect(batch.status).toBe(BatchStatus.LOST);
+      expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
+    });
+
+    it('should rollback inventory, set status to CLOSED, return batch to CREATED at source node on second confirmation', async () => {
+      const incident = new IncidentReportEntity();
+      incident.id = 'incident-id';
+      incident.status = 'OPEN';
+      incident.reportedBy = 'admin-1-uuid';
+      incident.firstApprovedBy = 'admin-2-uuid';
+      incident.shipmentId = 'shipment-uuid';
+
+      const shipment = new ShipmentEntity();
+      shipment.id = 'shipment-uuid';
+      shipment.batchId = 'batch-uuid';
+      shipment.sourceNodeId = 'node-source-uuid';
+      shipment.quantityShipped = 100;
+      shipment.trackingCode = 'SHP-001';
+
+      const batch = new BatchEntity();
+      batch.id = 'batch-uuid';
+      batch.status = BatchStatus.LOST;
 
       const inventory = new InventoryEntity();
       inventory.batchId = 'batch-uuid';
@@ -175,13 +236,15 @@ describe('IncidentsService', () => {
       };
       mockManager.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
-      const result = await service.confirmLost('incident-id', { userId: 'admin-2-uuid' });
+      const result = await service.confirmLost('incident-id', { userId: 'admin-3-uuid' });
 
       expect(result.status).toBe('CLOSED');
       expect(result.resolutionType).toBe('LOSS_CONFIRMED');
-      expect(inventory.quantityAvailable).toBe(150); // 50 + 100
+      expect(result.approvedBy).toBe('admin-3-uuid');
+      expect(inventory.quantityAvailable).toBe(150); // 50 + 100 (rollback)
       expect(shipment.status).toBe(ShipmentStatus.LOST);
-      expect(batch.status).toBe(BatchStatus.LOST);
+      expect(batch.status).toBe(BatchStatus.CREATED);
+      expect(batch.currentNodeId).toBe('node-source-uuid');
       expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
     });
   });

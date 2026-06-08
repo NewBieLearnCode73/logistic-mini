@@ -12,6 +12,7 @@ export declare class NodesService {
         page?: number;
         limit?: number;
         includeInventory?: boolean;
+        isActive?: boolean | 'all';
     }): Promise<{
         data: any[];
         total: number;
@@ -19,6 +20,7 @@ export declare class NodesService {
         limit: number;
     }>;
     findById(id: string): Promise<NodeEntity>;
+    findDetails(id: string): Promise<any>;
     update(id: string, updateNodeDto: UpdateNodeDto): Promise<NodeEntity>;
     delete(id: string): Promise<void>;
 }

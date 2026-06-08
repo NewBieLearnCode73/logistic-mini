@@ -1,4 +1,4 @@
-import { IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsOptional, IsString, MaxLength, IsNumber, Min } from 'class-validator';
 
 export class UpdateProductDto {
   @IsOptional()
@@ -15,6 +15,11 @@ export class UpdateProductDto {
   @IsString({ message: 'Đơn vị tính phải là chuỗi' })
   @MaxLength(50, { message: 'Đơn vị tính tối đa 50 ký tự' })
   unit?: string;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Đơn giá phải là số' })
+  @Min(0, { message: 'Đơn giá không được nhỏ hơn 0' })
+  unitPrice?: number;
 
   @IsOptional()
   @IsString({ message: 'Mô tả phải là chuỗi' })

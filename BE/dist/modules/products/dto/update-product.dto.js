@@ -15,6 +15,7 @@ class UpdateProductDto {
     name;
     sku;
     unit;
+    unitPrice;
     description;
     category;
 }
@@ -37,6 +38,12 @@ __decorate([
     (0, class_validator_1.MaxLength)(50, { message: 'Đơn vị tính tối đa 50 ký tự' }),
     __metadata("design:type", String)
 ], UpdateProductDto.prototype, "unit", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)({}, { message: 'Đơn giá phải là số' }),
+    (0, class_validator_1.Min)(0, { message: 'Đơn giá không được nhỏ hơn 0' }),
+    __metadata("design:type", Number)
+], UpdateProductDto.prototype, "unitPrice", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsString)({ message: 'Mô tả phải là chuỗi' }),

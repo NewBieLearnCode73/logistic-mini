@@ -27,6 +27,19 @@ export class ProductEntity {
   @Column({ name: 'category', type: 'varchar', length: 100, nullable: true })
   category!: string | null;
 
+  @Column({
+    name: 'unit_price',
+    type: 'decimal',
+    precision: 12,
+    scale: 2,
+    transformer: {
+      to: (value: number) => value,
+      from: (value: string | number) => (value ? Number(Number(value).toFixed(2)) : 0),
+    },
+    default: 0,
+  })
+  unitPrice!: number;
+
   @Column({ name: 'is_active', type: 'boolean', default: true })
   isActive!: boolean;
 

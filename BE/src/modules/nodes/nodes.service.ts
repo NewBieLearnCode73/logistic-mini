@@ -45,16 +45,24 @@ export class NodesService {
     page?: number;
     limit?: number;
     includeInventory?: boolean;
+    isActive?: boolean | 'all';
   }): Promise<{ data: any[]; total: number; page: number; limit: number }> {
     const page = options.page && options.page > 0 ? options.page : 1;
     const limit = options.limit && options.limit > 0 ? options.limit : 10;
     const skip = (page - 1) * limit;
 
-    const [nodes, total] = await this.nodeRepository.findAndCount({
-      order: { createdAt: 'DESC' },
-      take: limit,
-      skip,
-    });
+    const query = this.nodeRepository.createQueryBuilder('node');
+
+    const isActiveFilter = options.isActive !== undefined ? options.isActive : true;
+    if (isActiveFilter !== 'all') {
+      query.where('node.isActive = :isActive', { isActive: isActiveFilter });
+    }
+
+    query.orderBy('node.createdAt', 'DESC')
+      .take(limit)
+      .skip(skip);
+
+    const [nodes, total] = await query.getManyAndCount();
 
     let data = nodes as any[];
 
@@ -93,6 +101,56 @@ export class NodesService {
       throw new NotFoundException(`Node với ID ${id} không tồn tại`);
     }
     return node;
+  }
+
+  async findDetails(id: string): Promise<any> {
+    const node = await this.findById(id);
+
+    const inventories = await this.inventoryRepository.createQueryBuilder('inv')
+      .leftJoinAndSelect('inv.batch', 'batch')
+      .leftJoinAndSelect('batch.product', 'product')
+      .where('inv.nodeId = :nodeId', { nodeId: id })
+      .getMany();
+
+    const groupedMap = new Map<string, {
+      productId: string;
+      productName: string;
+      sku: string;
+      quantity: number;
+      unit: string;
+      unitPrice: number;
+      totalValue: number;
+    }>();
+
+    for (const inv of inventories) {
+      if (!inv.batch || !inv.batch.product) continue;
+      const product = inv.batch.product;
+      const qty = Number(inv.quantityAvailable || 0);
+      const unitPrice = Number(product.unitPrice || 0);
+
+      const existing = groupedMap.get(product.id);
+      if (existing) {
+        existing.quantity = Number((existing.quantity + qty).toFixed(3));
+        existing.totalValue = Number((existing.quantity * unitPrice).toFixed(2));
+      } else {
+        groupedMap.set(product.id, {
+          productId: product.id,
+          productName: product.name,
+          sku: product.sku || '',
+          quantity: qty,
+          unit: product.unit || '',
+          unitPrice: unitPrice,
+          totalValue: Number((qty * unitPrice).toFixed(2)),
+        });
+      }
+    }
+
+    const inventoryGrouped = Array.from(groupedMap.values()).filter(item => item.quantity > 0);
+
+    return {
+      ...node,
+      inventory: inventoryGrouped,
+    };
   }
 
   async update(id: string, updateNodeDto: UpdateNodeDto): Promise<NodeEntity> {
@@ -148,7 +206,12 @@ export class NodesService {
   async delete(id: string): Promise<void> {
     const node = await this.findById(id);
 
-    // Verify inventory safety constraint before deleting: no stock with quantity > 0
+    const sumResult = await this.inventoryRepository.createQueryBuilder('inv')
+      .select('SUM(inv.quantityAvailable)', 'total')
+      .where('inv.nodeId = :nodeId', { nodeId: id })
+      .getRawOne();
+    const totalQty = Number(sumResult?.total || 0);
+
     const activeInventory = await this.inventoryRepository.findOne({
       where: {
         nodeId: id,
@@ -156,12 +219,13 @@ export class NodesService {
       },
     });
 
-    if (activeInventory) {
+    if (totalQty > 0 || activeInventory) {
       throw new BadRequestException(
-        `Không thể xóa/vô hiệu hóa điểm nút vì vẫn còn hàng tồn kho tại đây (Số lượng: ${activeInventory.quantityAvailable})`,
+        'Cannot delete this node because inventory still exists at this location. Please transfer, sell, or remove all inventory before deleting the node.',
       );
     }
 
-    await this.nodeRepository.softRemove(node);
+    node.isActive = false;
+    await this.nodeRepository.save(node);
   }
 }

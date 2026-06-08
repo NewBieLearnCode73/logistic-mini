@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   useNodesList,
   useCreateNode,
@@ -11,15 +12,21 @@ import { NodeType } from '../../utils/constants';
 import DataTable, { type Column } from '../../components/ui/DataTable';
 import FormModal from '../../components/ui/FormModal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
-import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, PencilIcon, TrashIcon, EyeIcon } from '@heroicons/react/24/outline';
 
 export default function NodesPage() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const [page, setPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<'active' | 'inactive' | 'all'>('active');
   const limit = 10;
 
   // React Query queries/mutations
-  const { data, isLoading } = useNodesList({ page, limit });
+  const { data, isLoading } = useNodesList({
+    page,
+    limit,
+    isActive: statusFilter === 'all' ? 'all' : statusFilter === 'active',
+  });
   const createMutation = useCreateNode();
   const updateMutation = useUpdateNode();
   const deleteMutation = useDeleteNode();
@@ -145,9 +152,12 @@ export default function NodesPage() {
       header: t('node.name'),
       className: 'w-[200px]',
       render: (node) => (
-        <span className="font-medium text-zinc-900 dark:text-zinc-50">
+        <Link
+          to={`/nodes/${node.id}`}
+          className="font-medium text-text-primary hover:underline hover:text-accent-hover transition-colors"
+        >
           {node.name}
-        </span>
+        </Link>
       ),
     },
     {
@@ -198,9 +208,16 @@ export default function NodesPage() {
     {
       key: 'actions',
       header: t('common.actions'),
-      className: 'w-[100px] text-right',
+      className: 'w-[120px] text-right',
       render: (node) => (
         <div className="flex justify-end gap-1.5">
+          <button
+            onClick={() => navigate(`/nodes/${node.id}`)}
+            className="btn-ghost p-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-150"
+            title={t('common.detail')}
+          >
+            <EyeIcon className="h-4 w-4" />
+          </button>
           <button
             onClick={() => handleOpenEdit(node)}
             className="btn-ghost p-1 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-150"
@@ -247,6 +264,22 @@ export default function NodesPage() {
         page={page}
         limit={limit}
         onPageChange={setPage}
+        filters={
+          <div className="flex items-center gap-1.5">
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value as 'active' | 'inactive' | 'all');
+                setPage(1);
+              }}
+              className="input-field py-1 px-2 pl-4 text-[12px] h-8 w-auto min-w-[120px]"
+            >
+              <option value="active">{t('common.active')}</option>
+              <option value="inactive">{t('common.inactive')}</option>
+              <option value="all">{t('common.all')}</option>
+            </select>
+          </div>
+        }
       />
 
       {/* Create/Edit Node Form Modal */}

@@ -13,6 +13,7 @@ export declare class BatchEntity {
     manufactureDate: Date | string;
     expiryDate: Date | string;
     status: BatchStatus;
+    totalValue: number;
     createdBy: string;
     createdAt: Date;
     updatedAt: Date;

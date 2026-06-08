@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { RoleName, BatchStatus } from '../../utils/constants';
+import { RoleName, BatchStatus, formatCurrency } from '../../utils/constants';
 import { useAuthStore } from '../../stores/authStore';
 import { useProductsList } from '../../hooks/queries/useProducts';
 import { useNodesList } from '../../hooks/queries/useNodes';
@@ -146,12 +146,24 @@ export default function BatchesPage() {
     {
       key: 'quantity',
       header: t('batch.quantity'),
-      className: 'w-[100px]',
+      className: 'w-[100px] text-right',
       render: (b) => (
         <span>
           {b.quantity} {b.unit}
         </span>
       ),
+    },
+    {
+      key: 'unitPrice',
+      header: t('product.unitPrice', 'Đơn giá'),
+      className: 'w-[120px] text-right',
+      render: (b) => formatCurrency(b.product?.unitPrice),
+    },
+    {
+      key: 'totalValue',
+      header: t('batch.totalValue', 'Tổng giá trị'),
+      className: 'w-[140px] text-right font-medium',
+      render: (b) => formatCurrency(b.totalValue),
     },
     {
       key: 'manufactureDate',
@@ -193,6 +205,11 @@ export default function BatchesPage() {
   ];
 
   const activeProducts = Array.isArray(productsData) ? productsData : productsData?.data;
+
+  const selectedProdDetails = activeProducts?.find((p) => p.id === formData.productId);
+  const calculatedTotalValue = selectedProdDetails
+    ? (selectedProdDetails.unitPrice || 0) * (formData.quantity || 0)
+    : 0;
 
   const mfrNodes = (Array.isArray(nodesData) ? nodesData : nodesData?.data)?.filter(
     (n) => n.isActive && n.nodeType === 'MANUFACTURER'
@@ -334,6 +351,27 @@ export default function BatchesPage() {
                 />
               </div>
             </div>
+
+            {selectedProdDetails && (
+              <div className="grid grid-cols-2 gap-4 bg-zinc-50 dark:bg-zinc-900/50 p-3 rounded-lg border border-zinc-200/50 dark:border-zinc-800/40">
+                <div>
+                  <span className="block text-2xs uppercase text-zinc-400 dark:text-zinc-500 font-semibold mb-0.5">
+                    {t('product.unitPrice', 'Đơn giá')}
+                  </span>
+                  <span className="text-zinc-700 dark:text-zinc-300 font-medium">
+                    {formatCurrency(selectedProdDetails.unitPrice)}
+                  </span>
+                </div>
+                <div>
+                  <span className="block text-2xs uppercase text-zinc-400 dark:text-zinc-500 font-semibold mb-0.5">
+                    {t('batch.totalValue', 'Tổng giá trị tạm tính')}
+                  </span>
+                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                    {formatCurrency(calculatedTotalValue)}
+                  </span>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div>

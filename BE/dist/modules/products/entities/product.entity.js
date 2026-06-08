@@ -18,6 +18,7 @@ let ProductEntity = class ProductEntity {
     unit;
     description;
     category;
+    unitPrice;
     isActive;
     createdAt;
     updatedAt;
@@ -48,6 +49,20 @@ __decorate([
     (0, typeorm_1.Column)({ name: 'category', type: 'varchar', length: 100, nullable: true }),
     __metadata("design:type", Object)
 ], ProductEntity.prototype, "category", void 0);
+__decorate([
+    (0, typeorm_1.Column)({
+        name: 'unit_price',
+        type: 'decimal',
+        precision: 12,
+        scale: 2,
+        transformer: {
+            to: (value) => value,
+            from: (value) => (value ? Number(Number(value).toFixed(2)) : 0),
+        },
+        default: 0,
+    }),
+    __metadata("design:type", Number)
+], ProductEntity.prototype, "unitPrice", void 0);
 __decorate([
     (0, typeorm_1.Column)({ name: 'is_active', type: 'boolean', default: true }),
     __metadata("design:type", Boolean)

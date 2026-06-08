@@ -46,17 +46,22 @@ export class ProductsController {
   ) {
     const pageNum = page ? parseInt(page, 10) : undefined;
     const limitNum = limit ? parseInt(limit, 10) : undefined;
-    let isActiveBool: boolean | undefined = undefined;
+    let isActiveVal: boolean | 'all' | undefined = undefined;
 
-    if (isActive === 'true') isActiveBool = true;
-    if (isActive === 'false') isActiveBool = false;
+    if (isActive === 'true') {
+      isActiveVal = true;
+    } else if (isActive === 'false') {
+      isActiveVal = false;
+    } else if (isActive === 'all') {
+      isActiveVal = 'all';
+    }
 
     return this.productsService.findAll({
       page: pageNum,
       limit: limitNum,
       search,
       category,
-      isActive: isActiveBool,
+      isActive: isActiveVal,
     });
   }
 

@@ -51,11 +51,15 @@ let NodesService = class NodesService {
         const page = options.page && options.page > 0 ? options.page : 1;
         const limit = options.limit && options.limit > 0 ? options.limit : 10;
         const skip = (page - 1) * limit;
-        const [nodes, total] = await this.nodeRepository.findAndCount({
-            order: { createdAt: 'DESC' },
-            take: limit,
-            skip,
-        });
+        const query = this.nodeRepository.createQueryBuilder('node');
+        const isActiveFilter = options.isActive !== undefined ? options.isActive : true;
+        if (isActiveFilter !== 'all') {
+            query.where('node.isActive = :isActive', { isActive: isActiveFilter });
+        }
+        query.orderBy('node.createdAt', 'DESC')
+            .take(limit)
+            .skip(skip);
+        const [nodes, total] = await query.getManyAndCount();
         let data = nodes;
         if (options.includeInventory) {
             const nodeIds = nodes.map((n) => n.id);
@@ -90,6 +94,43 @@ let NodesService = class NodesService {
             throw new common_1.NotFoundException(`Node với ID ${id} không tồn tại`);
         }
         return node;
+    }
+    async findDetails(id) {
+        const node = await this.findById(id);
+        const inventories = await this.inventoryRepository.createQueryBuilder('inv')
+            .leftJoinAndSelect('inv.batch', 'batch')
+            .leftJoinAndSelect('batch.product', 'product')
+            .where('inv.nodeId = :nodeId', { nodeId: id })
+            .getMany();
+        const groupedMap = new Map();
+        for (const inv of inventories) {
+            if (!inv.batch || !inv.batch.product)
+                continue;
+            const product = inv.batch.product;
+            const qty = Number(inv.quantityAvailable || 0);
+            const unitPrice = Number(product.unitPrice || 0);
+            const existing = groupedMap.get(product.id);
+            if (existing) {
+                existing.quantity = Number((existing.quantity + qty).toFixed(3));
+                existing.totalValue = Number((existing.quantity * unitPrice).toFixed(2));
+            }
+            else {
+                groupedMap.set(product.id, {
+                    productId: product.id,
+                    productName: product.name,
+                    sku: product.sku || '',
+                    quantity: qty,
+                    unit: product.unit || '',
+                    unitPrice: unitPrice,
+                    totalValue: Number((qty * unitPrice).toFixed(2)),
+                });
+            }
+        }
+        const inventoryGrouped = Array.from(groupedMap.values()).filter(item => item.quantity > 0);
+        return {
+            ...node,
+            inventory: inventoryGrouped,
+        };
     }
     async update(id, updateNodeDto) {
         const node = await this.findById(id);
@@ -139,16 +180,22 @@ let NodesService = class NodesService {
     }
     async delete(id) {
         const node = await this.findById(id);
+        const sumResult = await this.inventoryRepository.createQueryBuilder('inv')
+            .select('SUM(inv.quantityAvailable)', 'total')
+            .where('inv.nodeId = :nodeId', { nodeId: id })
+            .getRawOne();
+        const totalQty = Number(sumResult?.total || 0);
         const activeInventory = await this.inventoryRepository.findOne({
             where: {
                 nodeId: id,
                 quantityAvailable: (0, typeorm_2.MoreThan)(0),
             },
         });
-        if (activeInventory) {
-            throw new common_1.BadRequestException(`Không thể xóa/vô hiệu hóa điểm nút vì vẫn còn hàng tồn kho tại đây (Số lượng: ${activeInventory.quantityAvailable})`);
+        if (totalQty > 0 || activeInventory) {
+            throw new common_1.BadRequestException('Cannot delete this node because inventory still exists at this location. Please transfer, sell, or remove all inventory before deleting the node.');
         }
-        await this.nodeRepository.softRemove(node);
+        node.isActive = false;
+        await this.nodeRepository.save(node);
     }
 };
 exports.NodesService = NodesService;

@@ -5,6 +5,7 @@ export declare class ProductEntity {
     unit: string;
     description: string | null;
     category: string | null;
+    unitPrice: number;
     isActive: boolean;
     createdAt: Date;
     updatedAt: Date;

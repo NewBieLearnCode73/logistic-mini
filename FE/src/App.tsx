@@ -15,6 +15,7 @@ import RoleGuard from './components/guards/RoleGuard';
 import LoginPage from './pages/auth/LoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import NodesPage from './pages/nodes/NodesPage';
+import NodeDetailPage from './pages/nodes/NodeDetailPage';
 import ProductsPage from './pages/products/ProductsPage';
 import UsersPage from './pages/users/UsersPage';
 import BatchesPage from './pages/batches/BatchesPage';
@@ -101,6 +102,7 @@ export default function App() {
                 <Route element={<RoleGuard allowed={['Admin']} />}>
                   <Route path="/users" element={<UsersPage />} />
                   <Route path="/nodes" element={<NodesPage />} />
+                  <Route path="/nodes/:id" element={<NodeDetailPage />} />
                   <Route path="/incidents" element={<IncidentsPage />} />
                   <Route path="/audit-logs" element={<AuditLogsPage />} />
                   <Route path="/map" element={<MapPage />} />

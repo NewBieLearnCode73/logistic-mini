@@ -7,5 +7,11 @@ export declare class DashboardSystemService {
         page?: string;
         limit?: string;
     }): Promise<any>;
-    exportReport(reportType: string, format: string, currentUser: any): Promise<any>;
+    getDateRange(period: string): {
+        start: Date;
+        end: Date;
+    };
+    formatDate(date: Date | string | null | undefined): string;
+    formatCurrency(value: number): string;
+    exportReport(reportType: string, format: string, period: string, currentUser: any): Promise<any>;
 }

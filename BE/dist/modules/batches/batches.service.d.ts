@@ -15,5 +15,5 @@ export declare class BatchesService {
     findDetails(id: string, currentUser: any): Promise<any>;
     getTimeline(id: string, currentUser: any): Promise<TimelineEventEntity[]>;
     regenerateQr(id: string, currentUser: any): Promise<BatchQrCodeEntity>;
-    sell(id: string, sellBatchDto: SellBatchDto, currentUser: any): Promise<void>;
+    sell(id: string, sellBatchDto: SellBatchDto, currentUser: any): Promise<any>;
 }

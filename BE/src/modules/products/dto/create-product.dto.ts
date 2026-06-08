@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString, MaxLength, IsNumber, Min } from 'class-validator';
 
 export class CreateProductDto {
   @IsNotEmpty({ message: 'Tên sản phẩm không được để trống' })
@@ -15,6 +15,11 @@ export class CreateProductDto {
   @IsString({ message: 'Đơn vị tính phải là chuỗi' })
   @MaxLength(50, { message: 'Đơn vị tính tối đa 50 ký tự' })
   unit!: string;
+
+  @IsNotEmpty({ message: 'Đơn giá không được để trống' })
+  @IsNumber({}, { message: 'Đơn giá phải là số' })
+  @Min(0, { message: 'Đơn giá không được nhỏ hơn 0' })
+  unitPrice!: number;
 
   @IsOptional()
   @IsString({ message: 'Mô tả phải là chuỗi' })

@@ -20,6 +20,7 @@ export default function DashboardPage() {
   // Reports Export states
   const [reportType, setReportType] = useState<'inventory' | 'shipments' | 'incidents'>('inventory');
   const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('csv');
+  const [exportPeriod, setExportPeriod] = useState<'today' | 'month' | 'quarter' | 'year'>('month');
   const [isExporting, setIsExporting] = useState(false);
 
   const canExport = role === 'Admin' || role === 'Manufacturer';
@@ -27,7 +28,21 @@ export default function DashboardPage() {
   const handleExport = async () => {
     setIsExporting(true);
     try {
-      const response = await dashboardApi.exportReport({ reportType, format: exportFormat });
+      const response = await dashboardApi.exportReport({
+        reportType,
+        format: exportFormat,
+        period: exportPeriod,
+      });
+
+      // Handle JSON error response wrapped in blob
+      const contentType = response.headers['content-type'] as string;
+      if (contentType && contentType.includes('application/json')) {
+        const text = await (response.data as Blob).text();
+        const errObj = JSON.parse(text);
+        toast.error(errObj.message || t('reports.exportError'));
+        setIsExporting(false);
+        return;
+      }
       
       // Handle file download natively from blob response
       const blob = new Blob([response.data], { type: response.headers['content-type'] as string });
@@ -119,6 +134,19 @@ export default function DashboardPage() {
               </select>
             </div>
             <div className="w-40 space-y-1.5">
+              <label className="block text-[13px] font-semibold text-text-secondary">{t('reports.period', 'Khoảng thời gian')}</label>
+              <select
+                value={exportPeriod}
+                onChange={(e) => setExportPeriod(e.target.value as any)}
+                className="input-field"
+              >
+                <option value="today">{t('reports.periods.today', 'Hôm nay')}</option>
+                <option value="month">{t('reports.periods.month', 'Tháng này')}</option>
+                <option value="quarter">{t('reports.periods.quarter', 'Quý này')}</option>
+                <option value="year">{t('reports.periods.year', 'Năm nay')}</option>
+              </select>
+            </div>
+            <div className="w-40 space-y-1.5">
               <label className="block text-[13px] font-semibold text-text-secondary">{t('reports.format')}</label>
               <select
                 value={exportFormat}
@@ -126,7 +154,7 @@ export default function DashboardPage() {
                 className="input-field"
               >
                 <option value="csv">CSV</option>
-                <option value="pdf">PDF (Helvetica)</option>
+                <option value="pdf">PDF</option>
               </select>
             </div>
             <button

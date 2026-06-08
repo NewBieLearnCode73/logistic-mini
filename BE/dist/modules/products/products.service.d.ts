@@ -11,7 +11,7 @@ export declare class ProductsService {
         limit?: number;
         search?: string;
         category?: string;
-        isActive?: boolean;
+        isActive?: boolean | 'all';
     }): Promise<{
         data: ProductEntity[];
         total: number;

@@ -9,6 +9,7 @@ export interface Batch {
   currentNodeId: string;
   quantity: number;
   unit: string;
+  totalValue: number;
   manufactureDate: string;
   expiryDate: string;
   status: string;

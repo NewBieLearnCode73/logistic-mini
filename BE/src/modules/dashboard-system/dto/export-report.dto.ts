@@ -8,4 +8,8 @@ export class ExportReportDto {
   @IsString()
   @IsIn(['inventory', 'shipments', 'incidents'])
   reportType!: string;
+
+  @IsString()
+  @IsIn(['today', 'month', 'quarter', 'year'])
+  period!: string;
 }

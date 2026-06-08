@@ -12,6 +12,14 @@ export function useNodesList(params?: GetNodesParams) {
   });
 }
 
+export function useNodeDetail(id: string) {
+  return useQuery({
+    queryKey: ['nodes', id],
+    queryFn: () => nodesApi.getDetail(id).then((r) => r.data),
+    enabled: !!id,
+  });
+}
+
 export function useCreateNode() {
   const queryClient = useQueryClient();
   const { t } = useTranslation();

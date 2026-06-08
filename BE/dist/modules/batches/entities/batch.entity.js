@@ -27,6 +27,7 @@ let BatchEntity = class BatchEntity {
     manufactureDate;
     expiryDate;
     status;
+    totalValue;
     createdBy;
     createdAt;
     updatedAt;
@@ -88,6 +89,20 @@ __decorate([
     }),
     __metadata("design:type", String)
 ], BatchEntity.prototype, "status", void 0);
+__decorate([
+    (0, typeorm_1.Column)({
+        name: 'total_value',
+        type: 'decimal',
+        precision: 15,
+        scale: 2,
+        transformer: {
+            to: (value) => value,
+            from: (value) => (value ? Number(Number(value).toFixed(2)) : 0),
+        },
+        default: 0,
+    }),
+    __metadata("design:type", Number)
+], BatchEntity.prototype, "totalValue", void 0);
 __decorate([
     (0, typeorm_1.Column)({ name: 'created_by', type: 'uuid' }),
     __metadata("design:type", String)

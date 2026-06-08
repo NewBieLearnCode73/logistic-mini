@@ -59,3 +59,11 @@ export const NODE_TYPE_LABELS: Record<string, string> = {
   RETAILER: 'Retailer',
   WAREHOUSE: 'Warehouse',
 };
+
+export function formatCurrency(value: number | string | undefined | null): string {
+  const num = value !== undefined && value !== null ? Number(value) : 0;
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(num) + ' VND';
+}

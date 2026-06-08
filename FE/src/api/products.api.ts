@@ -5,7 +5,7 @@ import type { Product, CreateProductDto, UpdateProductDto } from '../types/produ
 export interface GetProductsParams extends PaginationParams {
   search?: string;
   category?: string;
-  isActive?: boolean;
+  isActive?: boolean | 'all';
 }
 
 export const productsApi = {

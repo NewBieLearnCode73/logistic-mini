@@ -25,6 +25,7 @@ export class ProductsService {
       name: createProductDto.name,
       sku: createProductDto.sku,
       unit: createProductDto.unit,
+      unitPrice: createProductDto.unitPrice,
       description: createProductDto.description || null,
       category: createProductDto.category || null,
     });
@@ -37,7 +38,7 @@ export class ProductsService {
     limit?: number;
     search?: string;
     category?: string;
-    isActive?: boolean;
+    isActive?: boolean | 'all';
   }): Promise<{ data: ProductEntity[]; total: number; page: number; limit: number }> {
     const page = options.page && options.page > 0 ? options.page : 1;
     const limit = options.limit && options.limit > 0 ? options.limit : 10;
@@ -57,8 +58,9 @@ export class ProductsService {
       query.andWhere('product.category = :category', { category: options.category });
     }
 
-    if (options.isActive !== undefined) {
-      query.andWhere('product.isActive = :isActive', { isActive: options.isActive });
+    const isActiveFilter = options.isActive !== undefined ? options.isActive : true;
+    if (isActiveFilter !== 'all') {
+      query.andWhere('product.isActive = :isActive', { isActive: isActiveFilter });
     }
 
     query.orderBy('product.createdAt', 'DESC')
@@ -98,12 +100,27 @@ export class ProductsService {
       }
     }
 
+    const unitPriceChanged =
+      updateProductDto.unitPrice !== undefined &&
+      Number(updateProductDto.unitPrice) !== Number(product.unitPrice);
+
     Object.assign(product, updateProductDto);
-    return this.productRepository.save(product);
+    const savedProduct = await this.productRepository.save(product);
+
+    if (unitPriceChanged) {
+      // Recalculate total_value for all batches of this product
+      await this.productRepository.manager.query(
+        `UPDATE batches SET total_value = quantity * $1 WHERE product_id = $2`,
+        [savedProduct.unitPrice, id],
+      );
+    }
+
+    return savedProduct;
   }
 
   async remove(id: string): Promise<void> {
     const product = await this.findById(id);
-    await this.productRepository.softRemove(product);
+    product.isActive = false;
+    await this.productRepository.save(product);
   }
 }

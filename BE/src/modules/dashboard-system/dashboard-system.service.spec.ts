@@ -3,6 +3,7 @@ import { DataSource } from 'typeorm';
 import { DashboardSystemService } from './dashboard-system.service';
 import { RoleName } from '../../common/enums/role.enum';
 import { ShipmentStatus } from '../../common/enums/shipment-status.enum';
+import { BadRequestException } from '@nestjs/common';
 
 describe('DashboardSystemService', () => {
   let service: DashboardSystemService;
@@ -101,17 +102,17 @@ describe('DashboardSystemService', () => {
       const mockQueryBuilder = {
         leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
         getMany: jest.fn().mockResolvedValue(mockInventory),
       };
       mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
       const user = { role: RoleName.ADMIN };
-      const report = await service.exportReport('inventory', 'csv', user);
+      const report = await service.exportReport('inventory', 'csv', 'month', user);
 
-      expect(report.contentType).toBe('text/csv');
-      expect(report.filename).toBe('report_inventory.csv');
-      expect(report.content).toContain('Batch ID,Batch Code,Product Name,Quantity Available');
-      expect(report.content).toContain('batch-1');
+      expect(report.contentType).toBe('text/csv; charset=utf-8');
+      expect(report.filename).toBe('report_inventory_month.csv');
+      expect(report.content.toString()).toContain('BÁO CÁO CHUỖI CUNG ỨNG MINI');
     });
 
     it('should return pdf format for shipments', async () => {
@@ -123,21 +124,39 @@ describe('DashboardSystemService', () => {
           batch: { batchCode: 'BCH-1', product: { name: 'Prod-A' } },
           sourceNode: { name: 'Source' },
           destinationNode: { name: 'Dest' },
-          shippedAt: new Date('2026-05-24T00:00:00.000Z'),
+          shippedAt: new Date(),
         },
       ];
       const mockQueryBuilder = {
         leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
         getMany: jest.fn().mockResolvedValue(mockShipments),
       };
       mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
       const user = { role: RoleName.ADMIN };
-      const report = await service.exportReport('shipments', 'pdf', user);
+      const report = await service.exportReport('shipments', 'pdf', 'month', user);
 
       expect(report.contentType).toBe('application/pdf');
-      expect(report.filename).toBe('report_shipments.pdf');
+      expect(report.filename).toBe('report_shipments_month.pdf');
+      expect(report.content).toBeInstanceOf(Buffer);
+    });
+
+    it('should generate empty report if no data is found', async () => {
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue([]),
+      };
+      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+
+      const user = { role: RoleName.ADMIN };
+      const report = await service.exportReport('shipments', 'pdf', 'month', user);
+      
+      expect(report.contentType).toBe('application/pdf');
+      expect(report.filename).toBe('report_shipments_month.pdf');
       expect(report.content).toBeInstanceOf(Buffer);
     });
   });

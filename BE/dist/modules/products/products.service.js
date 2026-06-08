@@ -34,6 +34,7 @@ let ProductsService = class ProductsService {
             name: createProductDto.name,
             sku: createProductDto.sku,
             unit: createProductDto.unit,
+            unitPrice: createProductDto.unitPrice,
             description: createProductDto.description || null,
             category: createProductDto.category || null,
         });
@@ -51,8 +52,9 @@ let ProductsService = class ProductsService {
         if (options.category) {
             query.andWhere('product.category = :category', { category: options.category });
         }
-        if (options.isActive !== undefined) {
-            query.andWhere('product.isActive = :isActive', { isActive: options.isActive });
+        const isActiveFilter = options.isActive !== undefined ? options.isActive : true;
+        if (isActiveFilter !== 'all') {
+            query.andWhere('product.isActive = :isActive', { isActive: isActiveFilter });
         }
         query.orderBy('product.createdAt', 'DESC')
             .take(limit)
@@ -85,12 +87,19 @@ let ProductsService = class ProductsService {
                 throw new common_1.BadRequestException('Mã SKU sản phẩm đã tồn tại trong hệ thống');
             }
         }
+        const unitPriceChanged = updateProductDto.unitPrice !== undefined &&
+            Number(updateProductDto.unitPrice) !== Number(product.unitPrice);
         Object.assign(product, updateProductDto);
-        return this.productRepository.save(product);
+        const savedProduct = await this.productRepository.save(product);
+        if (unitPriceChanged) {
+            await this.productRepository.manager.query(`UPDATE batches SET total_value = quantity * $1 WHERE product_id = $2`, [savedProduct.unitPrice, id]);
+        }
+        return savedProduct;
     }
     async remove(id) {
         const product = await this.findById(id);
-        await this.productRepository.softRemove(product);
+        product.isActive = false;
+        await this.productRepository.save(product);
     }
 };
 exports.ProductsService = ProductsService;

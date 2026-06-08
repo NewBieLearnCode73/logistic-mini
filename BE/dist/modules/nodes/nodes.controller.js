@@ -27,15 +27,29 @@ let NodesController = class NodesController {
     async create(createNodeDto) {
         return this.nodesService.create(createNodeDto);
     }
-    async findAll(page, limit, includeInventory) {
+    async findAll(page, limit, includeInventory, isActive) {
         const pageNum = page ? parseInt(page, 10) : undefined;
         const limitNum = limit ? parseInt(limit, 10) : undefined;
         const includeInvBool = includeInventory === 'true';
+        let isActiveVal = undefined;
+        if (isActive === 'true') {
+            isActiveVal = true;
+        }
+        else if (isActive === 'false') {
+            isActiveVal = false;
+        }
+        else if (isActive === 'all') {
+            isActiveVal = 'all';
+        }
         return this.nodesService.findAll({
             page: pageNum,
             limit: limitNum,
             includeInventory: includeInvBool,
+            isActive: isActiveVal,
         });
+    }
+    async findOne(id) {
+        return this.nodesService.findDetails(id);
     }
     async update(id, updateNodeDto) {
         return this.nodesService.update(id, updateNodeDto);
@@ -59,10 +73,19 @@ __decorate([
     __param(0, (0, common_1.Query)('page')),
     __param(1, (0, common_1.Query)('limit')),
     __param(2, (0, common_1.Query)('includeInventory')),
+    __param(3, (0, common_1.Query)('isActive')),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String, String, String]),
+    __metadata("design:paramtypes", [String, String, String, String]),
     __metadata("design:returntype", Promise)
 ], NodesController.prototype, "findAll", null);
+__decorate([
+    (0, common_1.Get)(':id'),
+    (0, roles_decorator_1.Roles)(role_enum_1.RoleName.ADMIN, role_enum_1.RoleName.MANUFACTURER, role_enum_1.RoleName.DISTRIBUTOR, role_enum_1.RoleName.RETAILER),
+    __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe({ version: '4', errorHttpStatusCode: common_1.HttpStatus.BAD_REQUEST }))),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], NodesController.prototype, "findOne", null);
 __decorate([
     (0, common_1.Put)(':id'),
     __param(0, (0, common_1.Param)('id', new common_1.ParseUUIDPipe({ version: '4', errorHttpStatusCode: common_1.HttpStatus.BAD_REQUEST }))),

@@ -28,6 +28,7 @@ let IncidentReportEntity = class IncidentReportEntity {
     resolution;
     resolutionType;
     approvedBy;
+    firstApprovedBy;
     evidenceJsonb;
     openedAt;
     resolvedAt;
@@ -38,6 +39,7 @@ let IncidentReportEntity = class IncidentReportEntity {
     reporter;
     assignee;
     approver;
+    firstApprover;
 };
 exports.IncidentReportEntity = IncidentReportEntity;
 __decorate([
@@ -93,6 +95,10 @@ __decorate([
     __metadata("design:type", Object)
 ], IncidentReportEntity.prototype, "approvedBy", void 0);
 __decorate([
+    (0, typeorm_1.Column)({ name: 'first_approved_by', type: 'uuid', nullable: true }),
+    __metadata("design:type", Object)
+], IncidentReportEntity.prototype, "firstApprovedBy", void 0);
+__decorate([
     (0, typeorm_1.Column)({ name: 'evidence_jsonb', type: 'jsonb', nullable: true }),
     __metadata("design:type", Object)
 ], IncidentReportEntity.prototype, "evidenceJsonb", void 0);
@@ -137,6 +143,11 @@ __decorate([
     (0, typeorm_1.JoinColumn)({ name: 'approved_by' }),
     __metadata("design:type", Object)
 ], IncidentReportEntity.prototype, "approver", void 0);
+__decorate([
+    (0, typeorm_1.ManyToOne)(() => user_entity_1.UserEntity, { onDelete: 'SET NULL' }),
+    (0, typeorm_1.JoinColumn)({ name: 'first_approved_by' }),
+    __metadata("design:type", Object)
+], IncidentReportEntity.prototype, "firstApprover", void 0);
 exports.IncidentReportEntity = IncidentReportEntity = __decorate([
     (0, typeorm_1.Entity)('incident_reports')
 ], IncidentReportEntity);

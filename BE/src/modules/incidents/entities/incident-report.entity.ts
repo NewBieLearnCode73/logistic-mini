@@ -53,6 +53,9 @@ export class IncidentReportEntity {
   @Column({ name: 'approved_by', type: 'uuid', nullable: true })
   approvedBy!: string | null;
 
+  @Column({ name: 'first_approved_by', type: 'uuid', nullable: true })
+  firstApprovedBy!: string | null;
+
   @Column({ name: 'evidence_jsonb', type: 'jsonb', nullable: true })
   evidenceJsonb!: any;
 
@@ -88,4 +91,8 @@ export class IncidentReportEntity {
   @ManyToOne(() => UserEntity, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'approved_by' })
   approver!: UserEntity | null;
+
+  @ManyToOne(() => UserEntity, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'first_approved_by' })
+  firstApprover!: UserEntity | null;
 }

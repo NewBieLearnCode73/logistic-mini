@@ -14,6 +14,7 @@ const class_validator_1 = require("class-validator");
 class ExportReportDto {
     format;
     reportType;
+    period;
 }
 exports.ExportReportDto = ExportReportDto;
 __decorate([
@@ -26,4 +27,9 @@ __decorate([
     (0, class_validator_1.IsIn)(['inventory', 'shipments', 'incidents']),
     __metadata("design:type", String)
 ], ExportReportDto.prototype, "reportType", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsIn)(['today', 'month', 'quarter', 'year']),
+    __metadata("design:type", String)
+], ExportReportDto.prototype, "period", void 0);
 //# sourceMappingURL=export-report.dto.js.map

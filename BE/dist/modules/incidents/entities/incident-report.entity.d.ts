@@ -15,6 +15,7 @@ export declare class IncidentReportEntity {
     resolution: string | null;
     resolutionType: string | null;
     approvedBy: string | null;
+    firstApprovedBy: string | null;
     evidenceJsonb: any;
     openedAt: Date;
     resolvedAt: Date | null;
@@ -25,4 +26,5 @@ export declare class IncidentReportEntity {
     reporter: UserEntity;
     assignee: UserEntity | null;
     approver: UserEntity | null;
+    firstApprover: UserEntity | null;
 }

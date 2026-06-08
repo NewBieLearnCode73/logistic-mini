@@ -14,7 +14,8 @@ import {
   ShieldCheckIcon,
   BuildingOffice2Icon,
   TruckIcon,
-  ShoppingBagIcon
+  ShoppingBagIcon,
+  QrCodeIcon
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 
@@ -384,6 +385,24 @@ export default function LoginPage() {
               )}
             </button>
           </form>
+
+          {/* Divider & Scan QR */}
+          <div className="relative flex py-2 items-center">
+            <div className="flex-grow border-t border-border"></div>
+            <span className="flex-shrink mx-4 text-text-muted text-[10px] font-bold uppercase tracking-wider">
+              {i18n.language === 'vi' ? 'Hoặc' : 'Or'}
+            </span>
+            <div className="flex-grow border-t border-border"></div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => navigate('/scan')}
+            className="btn-secondary w-full py-2.5 rounded-xl flex items-center justify-center text-sm font-semibold tracking-wide transition-all duration-200 cursor-pointer"
+          >
+            <QrCodeIcon className="h-5 w-5 mr-2" />
+            {t('auth.scanQr')}
+          </button>
 
           {/* Quick Select Demo Accounts Cockpit */}
           <div className="mt-8 border-t border-border pt-6">

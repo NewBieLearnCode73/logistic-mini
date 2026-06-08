@@ -66,7 +66,7 @@ export class BatchesController {
     @Param('id', new ParseUUIDPipe({ version: '4', errorHttpStatusCode: HttpStatus.BAD_REQUEST })) id: string,
     @Body() sellBatchDto: SellBatchDto,
     @Request() req: any,
-  ): Promise<void> {
+  ): Promise<any> {
     return this.batchesService.sell(id, sellBatchDto, req.user);
   }
 

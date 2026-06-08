@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { usePublicTrace } from '../../hooks/queries/usePublicTrace';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { fetchOSRMRoute } from '../../utils/routing';
 import {
   CalendarDaysIcon,
   InboxStackIcon,
@@ -138,9 +139,10 @@ export default function TracePage() {
     }
   };
 
-  // Render Leaflet Map
   useEffect(() => {
     if (!mapRef.current || !traceData?.batch) return;
+
+    const abortController = new AbortController();
 
     // Destroy existing instance if any
     if (mapInstanceRef.current) {
@@ -227,7 +229,7 @@ export default function TracePage() {
       });
     };
 
-    const pathCoords: L.LatLngExpression[] = [];
+    const pathCoords: [number, number][] = [];
 
     locations.forEach((loc, idx) => {
       const color =
@@ -242,13 +244,12 @@ export default function TracePage() {
       marker.bindPopup(`
         <div class="p-1 font-sans text-2xs">
           <div class="font-bold text-gray-900">${loc.name}</div>
-          <div class="text-gray-400 capitalize mt-0.5">${
-            loc.type === 'origin'
-              ? 'Nơi sản xuất (Origin)'
-              : loc.type === 'current'
-              ? 'Vị trí hiện tại (Current)'
-              : 'Địa điểm trung chuyển'
-          }</div>
+          <div class="text-gray-400 capitalize mt-0.5">${loc.type === 'origin'
+          ? 'Nơi sản xuất (Origin)'
+          : loc.type === 'current'
+            ? 'Vị trí hiện tại (Current)'
+            : 'Địa điểm trung chuyển'
+        }</div>
         </div>
       `);
 
@@ -256,7 +257,8 @@ export default function TracePage() {
     });
 
     if (pathCoords.length > 1) {
-      L.polyline(pathCoords, {
+      // Draw straight fallback immediately
+      const polyline = L.polyline(pathCoords, {
         color: '#3B82F6',
         weight: 2.5,
         opacity: 0.7,
@@ -264,9 +266,36 @@ export default function TracePage() {
       }).addTo(map);
 
       map.fitBounds(L.latLngBounds(pathCoords), { padding: [30, 30] });
+
+      // Fetch actual OSRM road routes segment by segment concurrently
+      const segmentPromises = [];
+      for (let i = 0; i < pathCoords.length - 1; i++) {
+        const start = pathCoords[i];
+        const end = pathCoords[i + 1];
+        segmentPromises.push(
+          fetchOSRMRoute([start, end], abortController.signal)
+            .then((coords) => coords || [start, end]) // Fallback to straight line for this segment if OSRM fails
+        );
+      }
+
+      Promise.all(segmentPromises)
+        .then((segmentsCoords) => {
+          // Combine coordinates from all segments
+          const combinedCoords: [number, number][] = [];
+          segmentsCoords.forEach((segment) => {
+            combinedCoords.push(...segment);
+          });
+          if (combinedCoords.length > 0) {
+            polyline.setLatLngs(combinedCoords);
+          }
+        })
+        .catch(() => {
+          // Fail silently or handle abortion
+        });
     }
 
     return () => {
+      abortController.abort();
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -383,18 +412,16 @@ export default function TracePage() {
           <div>
             <span className="text-gray-450 block mb-0.5">Trạng thái</span>
             <span
-              className={`inline-flex items-center gap-1 font-semibold ${
-                isLost
+              className={`inline-flex items-center gap-1 font-semibold ${isLost
                   ? 'text-red-600'
                   : batch.status === 'SOLD'
-                  ? 'text-purple-600'
-                  : 'text-emerald-600'
-              }`}
+                    ? 'text-purple-600'
+                    : 'text-emerald-600'
+                }`}
             >
               <span
-                className={`h-1.5 w-1.5 rounded-full ${
-                  isLost ? 'bg-red-500' : batch.status === 'SOLD' ? 'bg-purple-500' : 'bg-emerald-500'
-                }`}
+                className={`h-1.5 w-1.5 rounded-full ${isLost ? 'bg-red-500' : batch.status === 'SOLD' ? 'bg-purple-500' : 'bg-emerald-500'
+                  }`}
               />
               {t(`batch.status.${batch.status}`, batch.status)}
             </span>
@@ -469,11 +496,10 @@ export default function TracePage() {
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between gap-4">
                       <span
-                        className={`text-2xs font-bold leading-none ${
-                          isLast
+                        className={`text-2xs font-bold leading-none ${isLast
                             ? 'text-emerald-700 dark:text-emerald-400'
                             : 'text-gray-900 dark:text-gray-200'
-                        }`}
+                          }`}
                       >
                         {t(getEventTitleKey(evt.eventType), evt.eventType)}
                       </span>

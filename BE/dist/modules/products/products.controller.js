@@ -30,17 +30,22 @@ let ProductsController = class ProductsController {
     async findAll(page, limit, search, category, isActive) {
         const pageNum = page ? parseInt(page, 10) : undefined;
         const limitNum = limit ? parseInt(limit, 10) : undefined;
-        let isActiveBool = undefined;
-        if (isActive === 'true')
-            isActiveBool = true;
-        if (isActive === 'false')
-            isActiveBool = false;
+        let isActiveVal = undefined;
+        if (isActive === 'true') {
+            isActiveVal = true;
+        }
+        else if (isActive === 'false') {
+            isActiveVal = false;
+        }
+        else if (isActive === 'all') {
+            isActiveVal = 'all';
+        }
         return this.productsService.findAll({
             page: pageNum,
             limit: limitNum,
             search,
             category,
-            isActive: isActiveBool,
+            isActive: isActiveVal,
         });
     }
     async findOne(id) {

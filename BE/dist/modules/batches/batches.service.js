@@ -87,6 +87,7 @@ let BatchesService = class BatchesService {
             batch.expiryDate = eDate;
             batch.status = batch_status_enum_1.BatchStatus.CREATED;
             batch.createdBy = currentUser.userId;
+            batch.totalValue = Number((product.unitPrice * quantity).toFixed(2));
             const savedBatch = await queryRunner.manager.save(batch_entity_1.BatchEntity, batch);
             const inventory = new inventory_entity_1.InventoryEntity();
             inventory.batchId = savedBatch.id;
@@ -281,16 +282,21 @@ let BatchesService = class BatchesService {
             event.quantityDelta = -quantity;
             event.notes = `Đã bán lẻ ${quantity} sản phẩm từ lô hàng.`;
             await queryRunner.manager.save(timeline_event_entity_1.TimelineEventEntity, event);
-            if (inventory.quantityAvailable === 0) {
-                const batch = await queryRunner.manager.findOne(batch_entity_1.BatchEntity, {
-                    where: { id },
-                });
-                if (batch) {
+            const batch = await queryRunner.manager.findOne(batch_entity_1.BatchEntity, {
+                where: { id },
+                relations: { product: true, originNode: true, currentNode: true },
+            });
+            if (batch) {
+                batch.quantity = Number((batch.quantity - quantity).toFixed(3));
+                const unitPrice = batch.product?.unitPrice || 0;
+                batch.totalValue = Number((unitPrice * batch.quantity).toFixed(2));
+                if (inventory.quantityAvailable === 0) {
                     batch.status = batch_status_enum_1.BatchStatus.SOLD;
-                    await queryRunner.manager.save(batch_entity_1.BatchEntity, batch);
                 }
+                await queryRunner.manager.save(batch_entity_1.BatchEntity, batch);
             }
             await queryRunner.commitTransaction();
+            return batch;
         }
         catch (error) {
             await queryRunner.rollbackTransaction();

@@ -4,6 +4,7 @@ import type { Node, CreateNodeDto, UpdateNodeDto } from '../types/node.types';
 
 export interface GetNodesParams extends PaginationParams {
   includeInventory?: boolean;
+  isActive?: boolean | 'all';
 }
 
 export const nodesApi = {
@@ -18,4 +19,7 @@ export const nodesApi = {
 
   delete: (id: string) =>
     api.delete<void>(`/nodes/${id}`),
+
+  getDetail: (id: string) =>
+    api.get<any>(`/nodes/${id}`),
 };

@@ -159,12 +159,6 @@ export class IncidentsService {
         throw new BadRequestException('Sự cố này đã được giải quyết hoặc đóng.');
       }
 
-      if (incident.reportedBy === currentUser.userId) {
-        throw new ForbiddenException(
-          'Quy tắc phê duyệt kép: Người phê duyệt lần 2 không được trùng với người báo cáo sự cố lần 1',
-        );
-      }
-
       const shipment = await queryRunner.manager.findOne(ShipmentEntity, {
         where: { id: incident.shipmentId },
       });
@@ -172,73 +166,114 @@ export class IncidentsService {
         throw new NotFoundException(`Không tìm thấy vận đơn liên quan đến sự cố`);
       }
 
-      incident.status = 'CLOSED';
-      incident.resolution = 'Xác nhận mất hàng và hoàn trả tồn kho kho nguồn';
-      incident.resolutionType = 'LOSS_CONFIRMED';
-      incident.approvedBy = currentUser.userId;
-      incident.resolvedAt = new Date();
-      incident.closedAt = new Date();
-      const savedIncident = await queryRunner.manager.save(IncidentReportEntity, incident);
+      if (!incident.firstApprovedBy) {
+        // --- FIRST CONFIRMATION (Admin 1) ---
+        incident.firstApprovedBy = currentUser.userId;
+        const savedIncident = await queryRunner.manager.save(IncidentReportEntity, incident);
 
-      const sourceInventory = await queryRunner.manager.createQueryBuilder(InventoryEntity, 'inventory')
-        .setLock('pessimistic_write')
-        .where('inventory.batchId = :batchId AND inventory.nodeId = :nodeId', {
-          batchId: shipment.batchId,
-          nodeId: shipment.sourceNodeId,
-        })
-        .getOne();
+        const batch = await queryRunner.manager.findOne(BatchEntity, {
+          where: { id: shipment.batchId },
+        });
+        if (batch) {
+          batch.status = BatchStatus.LOST;
+          await queryRunner.manager.save(BatchEntity, batch);
+        }
 
-      let qtyBefore = 0;
-      if (sourceInventory) {
-        qtyBefore = Number(sourceInventory.quantityAvailable);
-        sourceInventory.quantityAvailable = Number((qtyBefore + Number(shipment.quantityShipped)).toFixed(3));
-        await queryRunner.manager.save(InventoryEntity, sourceInventory);
+        const event = new TimelineEventEntity();
+        event.batchId = shipment.batchId;
+        event.eventType = TimelineEventType.LOST;
+        event.nodeId = shipment.sourceNodeId;
+        event.actorId = currentUser.userId;
+        event.shipmentId = shipment.id;
+        event.quantityDelta = null;
+        event.notes = `Yêu cầu xác nhận thất lạc hàng hóa (Chờ phê duyệt kép). Người đề xuất: ${currentUser.userId}.`;
+        await queryRunner.manager.save(TimelineEventEntity, event);
+
+        await queryRunner.commitTransaction();
+        return savedIncident;
       } else {
-        const newInventory = new InventoryEntity();
-        newInventory.batchId = shipment.batchId;
-        newInventory.nodeId = shipment.sourceNodeId;
-        newInventory.quantityAvailable = Number(shipment.quantityShipped);
-        await queryRunner.manager.save(InventoryEntity, newInventory);
+        // --- SECOND CONFIRMATION (Admin 2) ---
+        if (incident.firstApprovedBy === currentUser.userId) {
+          throw new ForbiddenException(
+            'Quy tắc phê duyệt kép: Người xác nhận thứ hai phải khác người đề xuất/xác nhận thứ nhất',
+          );
+        }
+
+        if (incident.reportedBy === currentUser.userId) {
+          throw new ForbiddenException(
+            'Quy tắc phê duyệt kép: Người phê duyệt lần 2 không được trùng với người báo cáo sự cố lần 1',
+          );
+        }
+
+        incident.status = 'CLOSED';
+        incident.resolution = 'Xác nhận mất hàng và hoàn trả tồn kho kho nguồn';
+        incident.resolutionType = 'LOSS_CONFIRMED';
+        incident.approvedBy = currentUser.userId;
+        incident.resolvedAt = new Date();
+        incident.closedAt = new Date();
+        const savedIncident = await queryRunner.manager.save(IncidentReportEntity, incident);
+
+        const sourceInventory = await queryRunner.manager.createQueryBuilder(InventoryEntity, 'inventory')
+          .setLock('pessimistic_write')
+          .where('inventory.batchId = :batchId AND inventory.nodeId = :nodeId', {
+            batchId: shipment.batchId,
+            nodeId: shipment.sourceNodeId,
+          })
+          .getOne();
+
+        let qtyBefore = 0;
+        if (sourceInventory) {
+          qtyBefore = Number(sourceInventory.quantityAvailable);
+          sourceInventory.quantityAvailable = Number((qtyBefore + Number(shipment.quantityShipped)).toFixed(3));
+          await queryRunner.manager.save(InventoryEntity, sourceInventory);
+        } else {
+          const newInventory = new InventoryEntity();
+          newInventory.batchId = shipment.batchId;
+          newInventory.nodeId = shipment.sourceNodeId;
+          newInventory.quantityAvailable = Number(shipment.quantityShipped);
+          await queryRunner.manager.save(InventoryEntity, newInventory);
+        }
+        const qtyAfter = qtyBefore + Number(shipment.quantityShipped);
+
+        const adjustment = new InventoryAdjustmentEntity();
+        adjustment.batchId = shipment.batchId;
+        adjustment.nodeId = shipment.sourceNodeId;
+        adjustment.adjustmentType = 'LOSS_ROLLBACK';
+        adjustment.qtyBefore = qtyBefore;
+        adjustment.qtyDelta = Number(shipment.quantityShipped);
+        adjustment.qtyAfter = qtyAfter;
+        adjustment.reason = `Hoàn trả tồn kho do thất lạc vận đơn ${shipment.trackingCode}`;
+        adjustment.approvedBy = incident.firstApprovedBy;
+        adjustment.secondApprover = currentUser.userId;
+        adjustment.referenceId = incident.id;
+        adjustment.referenceType = 'incident_reports';
+        await queryRunner.manager.save(InventoryAdjustmentEntity, adjustment);
+
+        shipment.status = ShipmentStatus.LOST;
+        await queryRunner.manager.save(ShipmentEntity, shipment);
+
+        const batch = await queryRunner.manager.findOne(BatchEntity, {
+          where: { id: shipment.batchId },
+        });
+        if (batch) {
+          batch.status = BatchStatus.CREATED;
+          batch.currentNodeId = shipment.sourceNodeId;
+          await queryRunner.manager.save(BatchEntity, batch);
+        }
+
+        const event = new TimelineEventEntity();
+        event.batchId = shipment.batchId;
+        event.eventType = TimelineEventType.LOST;
+        event.nodeId = shipment.sourceNodeId;
+        event.actorId = currentUser.userId;
+        event.shipmentId = shipment.id;
+        event.quantityDelta = null;
+        event.notes = `Xác nhận thất lạc hàng hóa hoàn tất (Phê duyệt kép). Vận đơn: ${shipment.trackingCode}. Đã hoàn trả ${shipment.quantityShipped} sản phẩm vào kho nguồn.`;
+        await queryRunner.manager.save(TimelineEventEntity, event);
+
+        await queryRunner.commitTransaction();
+        return savedIncident;
       }
-      const qtyAfter = qtyBefore + Number(shipment.quantityShipped);
-
-      const adjustment = new InventoryAdjustmentEntity();
-      adjustment.batchId = shipment.batchId;
-      adjustment.nodeId = shipment.sourceNodeId;
-      adjustment.adjustmentType = 'LOSS_ROLLBACK';
-      adjustment.qtyBefore = qtyBefore;
-      adjustment.qtyDelta = Number(shipment.quantityShipped);
-      adjustment.qtyAfter = qtyAfter;
-      adjustment.reason = `Hoàn trả tồn kho do thất lạc vận đơn ${shipment.trackingCode}`;
-      adjustment.approvedBy = incident.reportedBy;
-      adjustment.secondApprover = currentUser.userId;
-      adjustment.referenceId = incident.id;
-      adjustment.referenceType = 'incident_reports';
-      await queryRunner.manager.save(InventoryAdjustmentEntity, adjustment);
-
-      shipment.status = ShipmentStatus.LOST;
-      await queryRunner.manager.save(ShipmentEntity, shipment);
-
-      const batch = await queryRunner.manager.findOne(BatchEntity, {
-        where: { id: shipment.batchId },
-      });
-      if (batch) {
-        batch.status = BatchStatus.LOST;
-        await queryRunner.manager.save(BatchEntity, batch);
-      }
-
-      const event = new TimelineEventEntity();
-      event.batchId = shipment.batchId;
-      event.eventType = TimelineEventType.LOST;
-      event.nodeId = shipment.sourceNodeId;
-      event.actorId = currentUser.userId;
-      event.shipmentId = shipment.id;
-      event.quantityDelta = null;
-      event.notes = `Xác nhận thất lạc hàng hóa. Vận đơn: ${shipment.trackingCode}. Đã hoàn trả ${shipment.quantityShipped} sản phẩm vào kho nguồn.`;
-      await queryRunner.manager.save(TimelineEventEntity, event);
-
-      await queryRunner.commitTransaction();
-      return savedIncident;
     } catch (error) {
       await queryRunner.rollbackTransaction();
       throw error;

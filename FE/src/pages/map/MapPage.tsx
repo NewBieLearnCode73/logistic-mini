@@ -6,6 +6,7 @@ import type { Node } from '../../types/node.types';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapIcon, FunnelIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline';
+import { fetchOSRMRoute } from '../../utils/routing';
 
 const NODE_COLORS: Record<string, string> = {
   MANUFACTURER: '#374151', // Slate gray
@@ -46,6 +47,8 @@ export default function MapPage() {
   // Re-render Leaflet Map on data or filter change
   useEffect(() => {
     if (!mapRef.current) return;
+
+    const abortController = new AbortController();
 
     // Destroy existing map instance
     if (mapInstanceRef.current) {
@@ -123,9 +126,8 @@ export default function MapPage() {
       marker.bindPopup(`
         <div class="p-2 font-sans text-2xs space-y-1.5 min-w-[180px]">
           <div class="border-b border-border pb-1">
-            <span class="text-3xs font-semibold uppercase tracking-wider px-1 py-0.5 rounded text-white" style="background-color: ${
-              NODE_COLORS[node.nodeType]
-            }">
+            <span class="text-3xs font-semibold uppercase tracking-wider px-1 py-0.5 rounded text-white" style="background-color: ${NODE_COLORS[node.nodeType]
+        }">
               ${t(`node.types.${node.nodeType}`)}
             </span>
             <h4 class="font-bold text-text-primary mt-1 leading-none">${node.name}</h4>
@@ -154,6 +156,7 @@ export default function MapPage() {
 
         // Draw connections only if both nodes have coordinates
         if (start && end) {
+          // Render straight line initially as fallback
           const polyline = L.polyline([start, end], {
             color: '#4F46E5', // Indigo-600
             weight: 3,
@@ -192,11 +195,23 @@ export default function MapPage() {
               </div>
             </div>
           `);
+
+          // Fetch the actual OSRM road route in background
+          fetchOSRMRoute([start, end], abortController.signal)
+            .then((routeCoords) => {
+              if (routeCoords && routeCoords.length > 0) {
+                polyline.setLatLngs(routeCoords);
+              }
+            })
+            .catch(() => {
+              // Fail silently or handle abortion
+            });
         }
       });
     }
 
     return () => {
+      abortController.abort();
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
@@ -252,11 +267,10 @@ export default function MapPage() {
                 <button
                   key={type}
                   onClick={() => toggleFilterType(type)}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-3xs font-medium border transition-all ${
-                    active
+                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-3xs font-medium border transition-all ${active
                       ? 'bg-muted border-border text-text-primary'
                       : 'border-transparent text-text-muted hover:bg-muted'
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />

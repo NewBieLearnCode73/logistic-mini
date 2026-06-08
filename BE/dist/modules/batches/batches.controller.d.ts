@@ -11,6 +11,6 @@ export declare class BatchesController {
     findAll(query: any, req: any): Promise<any>;
     findDetails(id: string, req: any): Promise<any>;
     getTimeline(id: string, req: any): Promise<TimelineEventEntity[]>;
-    sell(id: string, sellBatchDto: SellBatchDto, req: any): Promise<void>;
+    sell(id: string, sellBatchDto: SellBatchDto, req: any): Promise<any>;
     regenerateQr(id: string, req: any): Promise<BatchQrCodeEntity>;
 }

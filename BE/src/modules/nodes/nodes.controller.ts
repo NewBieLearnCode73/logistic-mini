@@ -35,16 +35,35 @@ export class NodesController {
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('includeInventory') includeInventory?: string,
+    @Query('isActive') isActive?: string,
   ) {
     const pageNum = page ? parseInt(page, 10) : undefined;
     const limitNum = limit ? parseInt(limit, 10) : undefined;
     const includeInvBool = includeInventory === 'true';
+    let isActiveVal: boolean | 'all' | undefined = undefined;
+
+    if (isActive === 'true') {
+      isActiveVal = true;
+    } else if (isActive === 'false') {
+      isActiveVal = false;
+    } else if (isActive === 'all') {
+      isActiveVal = 'all';
+    }
 
     return this.nodesService.findAll({
       page: pageNum,
       limit: limitNum,
       includeInventory: includeInvBool,
+      isActive: isActiveVal,
     });
+  }
+
+  @Get(':id')
+  @Roles(RoleName.ADMIN, RoleName.MANUFACTURER, RoleName.DISTRIBUTOR, RoleName.RETAILER)
+  async findOne(
+    @Param('id', new ParseUUIDPipe({ version: '4', errorHttpStatusCode: HttpStatus.BAD_REQUEST })) id: string,
+  ): Promise<any> {
+    return this.nodesService.findDetails(id);
   }
 
   @Put(':id')

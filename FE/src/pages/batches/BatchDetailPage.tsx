@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../stores/authStore';
-import { RoleName, BatchStatus } from '../../utils/constants';
+import { RoleName, BatchStatus, formatCurrency } from '../../utils/constants';
 import {
   useBatchDetail,
   useBatchTimeline,
@@ -157,6 +157,18 @@ export default function BatchDetailPage() {
                 <span className="text-zinc-400 dark:text-zinc-500 block text-2xs">{t('batch.quantity')}</span>
                 <span className="font-medium text-zinc-900 dark:text-zinc-50">
                   {batch.quantity} {batch.unit}
+                </span>
+              </div>
+              <div>
+                <span className="text-zinc-400 dark:text-zinc-500 block text-2xs">{t('product.unitPrice', 'Đơn giá')}</span>
+                <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                  {formatCurrency(batch.product?.unitPrice)}
+                </span>
+              </div>
+              <div>
+                <span className="text-zinc-400 dark:text-zinc-500 block text-2xs">{t('batch.totalValue', 'Tổng giá trị')}</span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                  {formatCurrency(batch.totalValue)}
                 </span>
               </div>
               <div>
