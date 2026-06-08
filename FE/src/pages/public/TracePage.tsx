@@ -257,14 +257,7 @@ export default function TracePage() {
     });
 
     if (pathCoords.length > 1) {
-      // Draw straight fallback immediately
-      const polyline = L.polyline(pathCoords, {
-        color: '#3B82F6',
-        weight: 2.5,
-        opacity: 0.7,
-        dashArray: '5, 8',
-      }).addTo(map);
-
+      // Fit bounds to node locations first
       map.fitBounds(L.latLngBounds(pathCoords), { padding: [30, 30] });
 
       // Fetch actual OSRM road routes segment by segment concurrently
@@ -274,23 +267,47 @@ export default function TracePage() {
         const end = pathCoords[i + 1];
         segmentPromises.push(
           fetchOSRMRoute([start, end], abortController.signal)
-            .then((coords) => coords || [start, end]) // Fallback to straight line for this segment if OSRM fails
+            .then((coords) => ({ coords, success: !!coords && coords.length > 0 }))
+            .catch(() => ({ coords: null, success: false }))
         );
       }
 
       Promise.all(segmentPromises)
-        .then((segmentsCoords) => {
-          // Combine coordinates from all segments
+        .then((results) => {
+          if (abortController.signal.aborted || mapInstanceRef.current !== map) return;
+
           const combinedCoords: [number, number][] = [];
-          segmentsCoords.forEach((segment) => {
-            combinedCoords.push(...segment);
+          let hasRoadRoute = false;
+
+          results.forEach((res, i) => {
+            if (res.success && res.coords) {
+              combinedCoords.push(...res.coords);
+              hasRoadRoute = true;
+            } else {
+              // Fallback to straight segment coords if OSRM failed for this segment
+              combinedCoords.push(pathCoords[i], pathCoords[i + 1]);
+            }
           });
+
           if (combinedCoords.length > 0) {
-            polyline.setLatLngs(combinedCoords);
+            L.polyline(combinedCoords, {
+              color: '#3B82F6',
+              weight: 3.5,
+              opacity: 0.8,
+              dashArray: hasRoadRoute ? undefined : '5, 8', // Draw solid only if we resolved road routes, dashed if we fell back entirely
+            }).addTo(map);
           }
         })
         .catch(() => {
-          // Fail silently or handle abortion
+          if (abortController.signal.aborted || mapInstanceRef.current !== map) return;
+
+          // Draw straight dashed fallback only on total failure/rejection
+          L.polyline(pathCoords, {
+            color: '#3B82F6',
+            weight: 2.5,
+            opacity: 0.7,
+            dashArray: '5, 8',
+          }).addTo(map);
         });
     }
 

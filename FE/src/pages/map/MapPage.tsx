@@ -19,6 +19,9 @@ export default function MapPage() {
   const { t } = useTranslation();
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+  const markersGroupRef = useRef<L.LayerGroup | null>(null);
+  const polylinesGroupRef = useRef<L.LayerGroup | null>(null);
+  const [hasCentered, setHasCentered] = useState(false);
 
   // Queries
   const { data: nodesData, isLoading: isLoadingNodes } = useNodesList();
@@ -44,39 +47,16 @@ export default function MapPage() {
     }
   };
 
-  // Re-render Leaflet Map on data or filter change
+  // 1. Initialize Leaflet Map once
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || mapInstanceRef.current) return;
 
-    const abortController = new AbortController();
+    // Center to Vietnam default center
+    const defaultLat = 16.047;
+    const defaultLng = 108.206;
 
-    // Destroy existing map instance
-    if (mapInstanceRef.current) {
-      mapInstanceRef.current.remove();
-      mapInstanceRef.current = null;
-    }
-
-    const nodes = nodesData?.data || [];
-    const shipments = shipmentsData?.data || [];
-
-    // Filter nodes with valid coordinates
-    const validNodes = nodes.filter(
-      (n: Node) => n.latitude !== null && n.longitude !== null && n.isActive
-    );
-
-    // Calculate map center dynamically (fallback to Vietnam center)
-    let centerLat = 16.047;
-    let centerLng = 108.206;
-    if (validNodes.length > 0) {
-      const sumLat = validNodes.reduce((sum: number, n: Node) => sum + (n.latitude || 0), 0);
-      const sumLng = validNodes.reduce((sum: number, n: Node) => sum + (n.longitude || 0), 0);
-      centerLat = sumLat / validNodes.length;
-      centerLng = sumLng / validNodes.length;
-    }
-
-    // Initialize Leaflet Map
     const map = L.map(mapRef.current, {
-      center: [centerLat, centerLng],
+      center: [defaultLat, defaultLng],
       zoom: 6,
       zoomControl: false,
     });
@@ -88,7 +68,60 @@ export default function MapPage() {
       attribution: '&copy; OpenStreetMap contributors',
     }).addTo(map);
 
-    // Custom node marker generator using SVG and divIcon
+    // Create Layer Groups to update nodes and paths dynamically
+    const markersGroup = L.layerGroup().addTo(map);
+    const polylinesGroup = L.layerGroup().addTo(map);
+    markersGroupRef.current = markersGroup;
+    polylinesGroupRef.current = polylinesGroup;
+
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+      markersGroupRef.current = null;
+      polylinesGroupRef.current = null;
+    };
+  }, []);
+
+  // 2. Auto-center map to the dynamic center of loaded nodes once
+  useEffect(() => {
+    if (!mapInstanceRef.current || hasCentered) return;
+    const nodes = nodesData?.data || [];
+    const validNodes = nodes.filter(
+      (n: Node) => n.latitude !== null && n.longitude !== null && n.isActive
+    );
+    if (validNodes.length > 0) {
+      const sumLat = validNodes.reduce((sum: number, n: Node) => sum + (n.latitude || 0), 0);
+      const sumLng = validNodes.reduce((sum: number, n: Node) => sum + (n.longitude || 0), 0);
+      const centerLat = sumLat / validNodes.length;
+      const centerLng = sumLng / validNodes.length;
+      mapInstanceRef.current.setView([centerLat, centerLng], 6);
+      setHasCentered(true);
+    }
+  }, [nodesData, hasCentered]);
+
+  // 3. Render markers and route lines dynamically on data or filters change
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    const markersGroup = markersGroupRef.current;
+    const polylinesGroup = polylinesGroupRef.current;
+
+    if (!map || !markersGroup || !polylinesGroup) return;
+
+    // Clear previous layers to avoid drawing multiple objects
+    markersGroup.clearLayers();
+    polylinesGroup.clearLayers();
+
+    const abortController = new AbortController();
+
+    const nodes = nodesData?.data || [];
+    const shipments = shipmentsData?.data || [];
+
+    const validNodes = nodes.filter(
+      (n: Node) => n.latitude !== null && n.longitude !== null && n.isActive
+    );
+
     const createNodeMarkerIcon = (type: string) => {
       const color = NODE_COLORS[type] || '#6B7280';
       const char = type.substring(0, 1);
@@ -107,7 +140,6 @@ export default function MapPage() {
       });
     };
 
-    // Keep references to node lat/lng for shipment route mapping
     const nodeCoordsMap: Record<string, [number, number]> = {};
 
     // Render nodes
@@ -115,14 +147,12 @@ export default function MapPage() {
       if (node.latitude === null || node.longitude === null) return;
       nodeCoordsMap[node.id] = [node.latitude, node.longitude];
 
-      // Skip rendering if filtered out
       if (!filterTypes.includes(node.nodeType)) return;
 
       const marker = L.marker([node.latitude, node.longitude], {
         icon: createNodeMarkerIcon(node.nodeType),
-      }).addTo(map);
+      }).addTo(markersGroup);
 
-      // Node details Popup
       marker.bindPopup(`
         <div class="p-2 font-sans text-2xs space-y-1.5 min-w-[180px]">
           <div class="border-b border-border pb-1">
@@ -144,6 +174,37 @@ export default function MapPage() {
       `);
     });
 
+    const getShipmentPopupHtml = (shipment: any) => `
+      <div class="p-2 font-sans text-2xs space-y-1.5 min-w-[200px]">
+        <div class="border-b border-border pb-1">
+          <span class="text-3xs font-semibold uppercase tracking-wider px-1 py-0.5 rounded bg-status-intransit-bg text-status-intransit-text border border-border/25">
+            Vận đơn: ${shipment.trackingCode}
+          </span>
+        </div>
+        <div class="space-y-1 text-text-secondary">
+          <div>
+            <span class="text-text-muted text-3xs block">Sản phẩm (Lô hàng)</span>
+            <span class="font-semibold">${shipment.batch?.product?.name || '—'}</span> 
+            <span class="text-3xs font-mono text-text-muted block">${shipment.batch?.batchCode || ''}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-3xs">
+            <div>
+              <span class="text-text-muted block">Số lượng</span>
+              <span class="font-bold text-text-primary font-mono">${shipment.quantityShipped} ${shipment.batch?.unit || ''}</span>
+            </div>
+            <div>
+              <span class="text-text-muted block">Trạng thái</span>
+              <span class="font-bold text-status-intransit-text">${t(`shipment.status.${shipment.status}`, shipment.status)}</span>
+            </div>
+          </div>
+          <div class="pt-1.5 border-t border-border text-[10px] space-y-0.5">
+            <div><span class="text-text-muted">Từ:</span> ${shipment.sourceNode?.name}</div>
+            <div><span class="text-text-muted">Đến:</span> ${shipment.destinationNode?.name}</div>
+          </div>
+        </div>
+      </div>
+    `;
+
     // Render active shipments paths
     if (showShipments) {
       const activeShipments = shipments.filter(
@@ -154,57 +215,42 @@ export default function MapPage() {
         const start = nodeCoordsMap[shipment.sourceNodeId];
         const end = nodeCoordsMap[shipment.destinationNodeId];
 
-        // Draw connections only if both nodes have coordinates
         if (start && end) {
-          // Render straight line initially as fallback
-          const polyline = L.polyline([start, end], {
-            color: '#4F46E5', // Indigo-600
-            weight: 3,
-            opacity: 0.8,
-            dashArray: '8, 12',
-          }).addTo(map);
-
-          // Shipment details Popup on line click
-          polyline.bindPopup(`
-            <div class="p-2 font-sans text-2xs space-y-1.5 min-w-[200px]">
-              <div class="border-b border-border pb-1">
-                <span class="text-3xs font-semibold uppercase tracking-wider px-1 py-0.5 rounded bg-status-intransit-bg text-status-intransit-text border border-border/25">
-                  Vận đơn: ${shipment.trackingCode}
-                </span>
-              </div>
-              <div class="space-y-1 text-text-secondary">
-                <div>
-                  <span class="text-text-muted text-3xs block">Sản phẩm (Lô hàng)</span>
-                  <span class="font-semibold">${shipment.batch?.product?.name || '—'}</span> 
-                  <span class="text-3xs font-mono text-text-muted block">${shipment.batch?.batchCode || ''}</span>
-                </div>
-                <div class="grid grid-cols-2 gap-2 text-3xs">
-                  <div>
-                    <span class="text-text-muted block">Số lượng</span>
-                    <span class="font-bold text-text-primary font-mono">${shipment.quantityShipped} ${shipment.batch?.unit || ''}</span>
-                  </div>
-                  <div>
-                    <span class="text-text-muted block">Trạng thái</span>
-                    <span class="font-bold text-status-intransit-text">${t(`shipment.status.${shipment.status}`, shipment.status)}</span>
-                  </div>
-                </div>
-                <div class="pt-1.5 border-t border-border text-[10px] space-y-0.5">
-                  <div><span class="text-text-muted">Từ:</span> ${shipment.sourceNode?.name}</div>
-                  <div><span class="text-text-muted">Đến:</span> ${shipment.destinationNode?.name}</div>
-                </div>
-              </div>
-            </div>
-          `);
-
-          // Fetch the actual OSRM road route in background
+          // Fetch the OSRM route in background first and render only when loaded
           fetchOSRMRoute([start, end], abortController.signal)
             .then((routeCoords) => {
+              if (abortController.signal.aborted) return;
               if (routeCoords && routeCoords.length > 0) {
-                polyline.setLatLngs(routeCoords);
+                const polyline = L.polyline(routeCoords, {
+                  color: '#4F46E5', // Indigo-600
+                  weight: 3.5,
+                  opacity: 0.9,
+                }).addTo(polylinesGroup);
+
+                polyline.bindPopup(getShipmentPopupHtml(shipment));
+              } else {
+                // Fail back to straight line if OSRM returned null
+                const fallbackPolyline = L.polyline([start, end], {
+                  color: '#4F46E5',
+                  weight: 3,
+                  opacity: 0.8,
+                  dashArray: '8, 12',
+                }).addTo(polylinesGroup);
+
+                fallbackPolyline.bindPopup(getShipmentPopupHtml(shipment));
               }
             })
-            .catch(() => {
-              // Fail silently or handle abortion
+            .catch((err) => {
+              if (err.name === 'AbortError') return;
+              // Fail back to straight line if API failed
+              const fallbackPolyline = L.polyline([start, end], {
+                color: '#4F46E5',
+                weight: 3,
+                opacity: 0.8,
+                dashArray: '8, 12',
+              }).addTo(polylinesGroup);
+
+              fallbackPolyline.bindPopup(getShipmentPopupHtml(shipment));
             });
         }
       });
@@ -212,12 +258,8 @@ export default function MapPage() {
 
     return () => {
       abortController.abort();
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
     };
-  }, [nodesData, shipmentsData, filterTypes, showShipments]);
+  }, [nodesData, shipmentsData, filterTypes, showShipments, t]);
 
   const isLoading = isLoadingNodes || isLoadingShipments;
 

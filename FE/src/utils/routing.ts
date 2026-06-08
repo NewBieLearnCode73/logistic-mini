@@ -47,6 +47,56 @@ export function isCoordinateInVietnam(lat: number, lng: number): boolean {
   return inside;
 }
 
+// In-memory cache for road routes (origin-destination pairs)
+const routeCache = new Map<string, [number, number][]>();
+
+/**
+ * Generates a unique string key for route cache based on start and end points.
+ */
+function getRouteCacheKey(start: [number, number], end: [number, number]): string {
+  return `${start[0].toFixed(5)},${start[1].toFixed(5)}_${end[0].toFixed(5)},${end[1].toFixed(5)}`;
+}
+
+/**
+ * Key corridor waypoints along National Route 1A in Vietnam to prevent routing through neighboring countries (Laos/Cambodia).
+ */
+const VIETNAM_CORRIDOR_WAYPOINTS: [number, number][] = [
+  [10.93, 108.10], // Phan Thiet
+  [12.25, 109.19], // Nha Trang
+  [13.77, 109.22], // Quy Nhon
+  [16.07, 108.22], // Da Nang
+  [18.67, 105.68], // Vinh
+  [19.80, 105.78]  // Thanh Hoa
+];
+
+/**
+ * Evaluates and returns intermediate waypoints along Vietnam's North-South corridor
+ * based on the start and end coordinates to keep the route inside Vietnam.
+ */
+function getVietnamCorridorWaypoints(start: [number, number], end: [number, number]): [number, number][] {
+  const minLat = Math.min(start[0], end[0]);
+  const maxLat = Math.max(start[0], end[0]);
+
+  // Only insert checkpoints if the latitude span is significant (e.g. > 1.5 degrees)
+  if (maxLat - minLat < 1.5) {
+    return [];
+  }
+
+  // Filter checkpoints whose latitudes are strictly between start and end
+  const intermediate = VIETNAM_CORRIDOR_WAYPOINTS.filter(
+    (wp) => wp[0] > minLat + 0.1 && wp[0] < maxLat - 0.1
+  );
+
+  // Sort based on travel direction (South to North or North to South)
+  if (start[0] < end[0]) {
+    intermediate.sort((a, b) => a[0] - b[0]);
+  } else {
+    intermediate.sort((a, b) => b[0] - a[0]);
+  }
+
+  return intermediate;
+}
+
 /**
  * Fetches routing path between coordinates using OSRM.
  * 
@@ -60,8 +110,30 @@ export async function fetchOSRMRoute(
 ): Promise<[number, number][] | null> {
   if (coordinates.length < 2) return null;
 
+  const startNode = coordinates[0];
+  const endNode = coordinates[coordinates.length - 1];
+  const cacheKey = getRouteCacheKey(startNode, endNode);
+
+  // 1. Check in-memory cache
+  if (routeCache.has(cacheKey)) {
+    return routeCache.get(cacheKey) || null;
+  }
+
+  // 2. Validate start and end coordinates are in Vietnam before sending API call
+  if (!isCoordinateInVietnam(startNode[0], startNode[1]) || !isCoordinateInVietnam(endNode[0], endNode[1])) {
+    console.warn(`[Routing Service] Origin or Destination is outside Vietnam territory. Bypassing OSRM.`);
+    return null;
+  }
+
   try {
-    const waypoints = coordinates
+    // Inject intermediate corridor waypoints if routing a single direct segment
+    let routingPoints = coordinates;
+    if (coordinates.length === 2) {
+      const intermediates = getVietnamCorridorWaypoints(startNode, endNode);
+      routingPoints = [startNode, ...intermediates, endNode];
+    }
+
+    const waypoints = routingPoints
       .map(([lat, lng]) => `${lng},${lat}`)
       .join(';');
     const url = `https://router.project-osrm.org/route/v1/driving/${waypoints}?overview=full&geometries=geojson`;
@@ -81,12 +153,8 @@ export async function fetchOSRMRoute(
       // OSRM returns [lon, lat], Leaflet wants [lat, lon]
       const coords: [number, number][] = geom.coordinates.map(([lon, lat]: [number, number]) => [lat, lon]);
       
-      // Ensure all coordinates are inside Vietnam territory
-      const allInVietnam = coords.every(([lat, lng]) => isCoordinateInVietnam(lat, lng));
-      if (!allInVietnam) {
-        throw new Error('OSRM route path contains coordinates outside Vietnam territory.');
-      }
-      
+      // Store in memory cache
+      routeCache.set(cacheKey, coords);
       return coords;
     }
 
@@ -99,14 +167,8 @@ export async function fetchOSRMRoute(
     console.warn(
       `[Routing Service] Failed to fetch route from OSRM:`, error,
       `\nPossible causes:\n` +
-      `- OSRM route crossed borders outside Vietnam.\n` +
-      `- OSRM public demo server (router.project-osrm.org) is offline, rate-limited, or blocked by network policies.\n` +
-      `- Client is offline or has network issues.\n\n` +
-      `Alternative solutions for this project:\n` +
-      `1. Use Mapbox Directions API (requires a Mapbox account and public access token).\n` +
-      `2. Use GraphHopper API (requires a GraphHopper API key).\n` +
-      `3. Deploy a local/private OSRM backend server using Docker:\n` +
-      `   docker run -t -v "\$(pwd):/data" osrm/osrm-backend osrm-extract -p /usr/local/share/osrm/profiles/car.lua /data/vietnam-latest.osm.pbf`
+      `- OSRM public demo server (router.project-osrm.org) is offline or rate-limited.\n` +
+      `- Client has network connectivity issues.\n`
     );
     return null;
   }

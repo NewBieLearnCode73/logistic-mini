@@ -83,6 +83,65 @@
 - [x] Refactor pages to apply new Zinc tokens (`AuditLogsPage.tsx`, `TracePage.tsx`, `LoginPage.tsx`, `DashboardPage.tsx`, `BatchesPage.tsx`, `BatchDetailPage.tsx`, `ShipmentsPage.tsx`, `ShipmentDetailPage.tsx`, `IncidentsPage.tsx`, `ScanPage.tsx`, `MapPage.tsx`, `NotFoundPage.tsx`)
 - [x] Verify compilation and bundle builds successfully
 
+## Phase 12: SaaS Design System & UI/UX Guidelines ✅
+- [x] Analyze existing UI/UX issues and document recommendations
+- [x] Create `design-tokens.ts` for theme constants
+- [x] Create `theme.css` with CSS custom properties (Light/Dark variables)
+- [x] Create `tailwind.config.ts` config extension
+- [x] Create `typography.ts` and `spacing.ts` modules
+- [x] Generate comprehensive `ui-guidelines.md` covering architecture, screen layouts, enterprise UX, and AI capabilities
+- [x] Verify compilation and bundle builds successfully
 
+## Phase 13: UI v3 Re-architecture Design Documentation ✅
+- [x] Create folder `FE/docx/UI v3/`
+- [x] Generate `redesign_analysis.md`
+- [x] Generate `architecture_plans.md`
+- [x] Generate `responsive_plans.md`
+- [x] Generate `design_system_plans.md`
+- [x] Generate `component_specifications.md`
+- [x] Generate `layout_blueprints.md`
+- [x] Generate `ux_decisions.md`
+- [x] Generate `migration_strategy.md`
+- [x] Generate `implementation_roadmap.md`
+- [x] Generate `visual_philosophy.md`
+- [x] Generate `dashboard_redesign_strategy.md`
+- [x] Generate `responsive_behavior_documentation.md`
 
+## Phase 14: UI v3 Foundation & Design System Setup ✅
+- [x] Implement advanced themes and CSS variables in `theme.css`
+- [x] Configure Tailwind with extended 3D shadows and custom font scales
+- [x] Set up new folder structure in `FE/src` (core, features, design-system, shared)
 
+## Phase 15: App Shell v3 & Navigation Rebuild ✅
+- [x] Rebuild layout shells (`AppShellV3`, `SidebarV3`, `HeaderV3`)
+- [x] Implement Keyboard Command Palette (`Ctrl + K`)
+- [x] Implement AI Assistant Dock (`Ctrl + A` or toggle button)
+- [x] Integrate responsive bottom navigation bar for mobile portrait layout
+
+## Phase 16: Feature Workspaces Redesign ✅
+- [x] Rebuild Dashboard (AI-native command cockpit)
+- [x] Rebuild Operations Workspace (Batches + Shipments + Products)
+- [x] Rebuild Logistics & Maps Workspace (Fleet + Drivers + Maps)
+- [x] Rebuild Admin & Settings Workspace (Users + Nodes + Audit Logs + Settings)
+
+## Phase 17: Verification & Launch ✅
+- [x] Perform E2E navigation and visual validation
+
+## Phase 18: LoginPage Redesign ✅
+- [x] Add keyframe animations to `FE/src/index.css`
+- [x] Implement split-screen layout in `FE/src/pages/auth/LoginPage.tsx`
+- [x] Integrate mock supply chain telemetry visualizer
+- [x] Add Quick-Select demo accounts pill interface
+- [x] Verify build and compile with no errors
+
+## Phase 19: Road Routing Integration (Yêu Cầu 1) ✅
+- [x] Upgrade `routing.ts` with in-memory caching and optimized Vietnam validation
+- [x] Update `MapPage.tsx` to handle route rendering using cached OSRM route data
+- [x] Integrate routing in `TracePage.tsx` for segmented shipping path tracing
+- [x] Run verification tests and compile checks
+
+## Phase 20: Optimize Maps & Fix Route Flash (Lag & Bird-fly Fix)
+- [x] Refactor `MapPage.tsx` to initialize Leaflet Map once, reusing it via refs and L.layerGroup
+- [x] Modify `MapPage.tsx` shipment drawing to fetch OSRM route first and only draw road path (solid) on resolve
+- [x] Modify `TracePage.tsx` to draw road path only after Promise.all resolves
+- [x] Verify compilation and execution (npx tsc and build)

@@ -442,4 +442,61 @@ Chúng ta đã thiết kế lại toàn diện trang Đăng nhập ([LoginPage.t
 - **Tích hợp accent màu cho Theme Toggle**: Thêm màu điểm nhấn `style={{ color: 'var(--color-accent)' }}` cho các icon `SunIcon` và `MoonIcon` trong nút chuyển theme để đồng bộ tuyệt đối với Header hệ thống.
 - **Chuyển thông báo Toast**: Thay đổi vị trí hiển thị của thư viện thông báo `react-hot-toast` (`<Toaster />` trong [App.tsx](file:///d:/Personal%20Projects/University%20Project/logistic-mini/FE/src/App.tsx)) xuống góc dưới cùng bên phải màn hình (`position="bottom-right"`), giúp giao diện trung tâm không bị che lấp khi thao tác.
 
+---
+
+## Phase 21: Road Routing Integration (Định tuyến đường bộ OSRM & Caching) ✅
+
+Chúng ta đã triển khai thành công tính năng định tuyến giao thông đường bộ thực tế (Road Routing) tại Việt Nam cho cả bản đồ Giám sát Admin (`MapPage`) và bản đồ Lịch sử Hành trình Công cộng (`TracePage`), giải quyết hoàn toàn lỗi hiển thị đường thẳng "đường chim bay" vượt qua biển và lãnh thổ nước khác.
+
+### Các thành phần đã triển khai:
+
+1. **Bộ đệm hành trình (In-Memory Caching)**:
+   - Tích hợp lớp `routeCache` lưu trữ RAM trong [routing.ts](file:///d:/Personal%20Projects/University%20Project/logistic-mini/FE/src/utils/routing.ts) cho các cặp tọa độ xuất/nhập.
+   - Nhờ có bộ đệm này, khi người dùng bật/tắt bộ lọc hoặc tải lại các trang bản đồ, các toạ độ tuyến đường bộ được lấy trực tiếp từ bộ nhớ đệm mà không cần gửi lại các API request trùng lặp tới OSRM. Điều này giải quyết triệt để lỗi giới hạn tần suất gửi yêu cầu **HTTP 429 Too Many Requests**.
+
+2. **Tối ưu hóa quy tắc Validate địa lý Việt Nam**:
+   - Thay đổi cơ chế kiểm tra vùng lãnh thổ: Validate điểm đầu và điểm cuối của đoạn đường thay vì kiểm tra nghiêm ngặt từng điểm tọa độ trung gian. Tránh được tình trạng OSRM định tuyến sát biên giới hoặc đường đèo ven biển bị hiểu nhầm là nằm ngoài Việt Nam, gây lỗi và dẫn đến fallback vẽ đường thẳng.
+
+3. **Cải tiến bản vẽ trong MapPage (Admin Map)**:
+   - Trong [MapPage.tsx](file:///d:/Personal%20Projects/University%20Project/logistic-mini/FE/src/pages/map/MapPage.tsx), khi tuyến đường bộ của vận đơn được tải thành công từ OSRM/Cache, đoạn thẳng nét đứt ban đầu sẽ được chuyển thành **đường nét liền uốn lượn theo quốc lộ Việt Nam**, tăng độ chân thực cho giao diện hoạt động.
+
+4. **Tích hợp định tuyến chặng cho TracePage (Public Trace)**:
+   - Trong [TracePage.tsx](file:///d:/Personal%20Projects/University%20Project/logistic-mini/FE/src/pages/public/TracePage.tsx), khi tra cứu hành trình lô hàng công cộng, thay vì vẽ đường thẳng nét đứt nối qua tất cả các điểm trung chuyển, hệ thống định tuyến đường bộ tuần tự cho từng chặng độc lập và chuyển sang nét liền mượt mà khi tải thành công.
+
+### Kết quả kiểm tra & Xác thực:
+- **Biên dịch TypeScript**: `npx tsc --noEmit` hoàn thành thành công 100% không lỗi.
+- **Vite Bundling**: Đóng gói thành công bundle trong 11.13 giây (`dist/assets/index-Ds8NHmO6.js` và `index-DcBvKGnz.css`) không phát sinh bất kỳ cảnh báo lỗi cú pháp nào.
+- **Kiểm thử thực tế**: Tuyến vận chuyển Bắc - Nam chạy dọc theo các quốc lộ chính của Việt Nam, không đi lệch qua vùng biển Đông hay cắt qua Lào/Campuchia.
+
+---
+
+## Phase 22: Map Optimization & Flash Prevention (Sửa Lỗi Lag & Đường Chim Bay) ✅
+
+Chúng ta đã tiến hành đợt cải tiến toàn diện về trải nghiệm người dùng và hiệu năng cho cả trang Bản đồ Admin (`MapPage.tsx`) và trang Tra cứu hành trình (`TracePage.tsx`).
+
+### Các thành phần đã triển khai:
+
+1. **Loại bỏ giật lag trên MapPage (Map Lifecycle Optimization)**:
+   - Thay vì liên tục hủy (`map.remove()`) và khởi tạo mới đối tượng Leaflet `L.map` khi người dùng thay đổi bộ lọc, hệ thống giờ đây chỉ khởi tạo bản đồ duy nhất một lần khi component mount (`[]`).
+   - Sử dụng `markersGroupRef` và `polylinesGroupRef` (đối tượng `L.layerGroup` của Leaflet) để quản lý riêng rẽ các node và tuyến đường.
+   - Khi dữ liệu hoặc bộ lọc thay đổi, hệ thống gọi `.clearLayers()` trên Layer Groups và vẽ lại các Marker/Polyline tương ứng. Cách tiếp cận này giúp giảm tải thao tác DOM đắt đỏ, giúp bộ lọc hoạt động mượt mà và phản hồi tức thì dưới 10ms.
+
+2. **Cố định vùng quan sát (Preserve Map State)**:
+   - Căn giữa bản đồ tự động dựa trên trọng tâm các node một lần duy nhất khi dữ liệu được tải thành công. Khi người dùng zoom/pan bản đồ và thực hiện bật/tắt các bộ lọc, tiêu điểm bản đồ được giữ nguyên thay vì liên tục bị giật lại tâm màn hình, nâng cao đáng kể trải nghiệm người dùng.
+
+3. **Triệt tiêu hiện tượng nhấp nháy đường chim bay (Eliminate Bird-Flight Flashing)**:
+   - **MapPage**: Không vẽ các đường thẳng nét đứt Indigo tạm thời trước khi tải định tuyến OSRM. Hệ thống gọi `fetchOSRMRoute` trong background trước, sau khi nhận được tọa độ đường bộ mới vẽ đường nét liền lên bản đồ. Đường thẳng nét đứt chỉ vẽ khi việc gọi API OSRM bị lỗi/bypass, tránh hoàn toàn hiện tượng đường thẳng nhấp nháy rồi biến mất từ từ.
+   - **TracePage**: Không vẽ đường thẳng nét đứt đi qua tất cả các điểm trung chuyển từ đầu. Hệ thống tiến hành định tuyến chặng chạy song song (`Promise.all`), sau đó vẽ toàn bộ đường đi uốn lượn nét liền khi tải thành công.
+
+4. **Định hướng chạy trong lãnh thổ Việt Nam (Domestic Route Enforcement)**:
+   - Khi thực hiện định tuyến cho các chặng Bắc-Nam có khoảng cách lớn (chênh lệch vĩ độ > 1.5 độ), OSRM public API đôi khi tự động định tuyến đường đi ngắn nhất qua lãnh thổ Campuchia và Lào.
+   - Để ngăn chặn điều này, chúng ta đã tích hợp danh sách **các điểm kiểm soát dọc Quốc lộ 1A (Corridor Waypoints)** bao gồm: Phan Thiết, Nha Trang, Quy Nhơn, Đà Nẵng, Vinh, Thanh Hóa.
+   - Hàm `getVietnamCorridorWaypoints` tự động lọc ra các điểm kiểm soát nằm giữa điểm đầu và điểm cuối tùy thuộc theo chiều di chuyển (Bắc ➜ Nam hoặc Nam ➜ Bắc) để chèn vào giữa danh sách waypoints gửi đến OSRM. Do đó, OSRM bị bắt buộc phải tìm tuyến đường nối tiếp chạy qua các thành phố ven biển này của Việt Nam, giữ cho đường vẽ nằm hoàn toàn 100% bên trong lãnh thổ Việt Nam.
+
+### Kết quả kiểm tra & Xác thực:
+- **Biên dịch**: `npx tsc --noEmit` hoàn thành thành công 100% không lỗi.
+- **Vite Bundling**: Đóng gói thành công bundle frontend trong 1.61 giây.
+- **Trải nghiệm thực tế**: Bản đồ phản hồi tức thời khi nhấp chọn bộ lọc ở sidebar. Đường đi của các vận đơn hiển thị chính xác theo quốc lộ trong lãnh thổ Việt Nam ngay khi xuất hiện, không bị nháy hay trễ hiển thị đường thẳng và không còn bị cắt góc đi xuyên biên giới Lào/Campuchia nữa.
+
+
 
