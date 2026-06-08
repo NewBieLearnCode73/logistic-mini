@@ -109,8 +109,8 @@ export class BatchesService {
       await queryRunner.manager.save(InventoryEntity, inventory);
 
       // Generate QR Code
-      const domain = process.env.APP_DOMAIN || 'mini-logistic.com';
-      const traceUrl = `https://${domain}/public/trace/${batchCode}`;
+      const frontendUrl = process.env.FRONTEND_URL || 'https://mini-logistic.com';
+      const traceUrl = `${frontendUrl}/trace/${batchCode}`;
       const svgData = await this.qrService.generateSvg(traceUrl);
       const qrImageUrl = await this.qrService.generatePngDataUrl(traceUrl);
 
@@ -273,8 +273,8 @@ export class BatchesService {
       }
     }
 
-    const domain = process.env.APP_DOMAIN || 'mini-logistic.com';
-    const traceUrl = `https://${domain}/public/trace/${batch.batchCode}`;
+    const frontendUrl = process.env.FRONTEND_URL || 'https://mini-logistic.com';
+    const traceUrl = `${frontendUrl}/trace/${batch.batchCode}`;
     const svgData = await this.qrService.generateSvg(traceUrl);
     const qrImageUrl = await this.qrService.generatePngDataUrl(traceUrl);
 

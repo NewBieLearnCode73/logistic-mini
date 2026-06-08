@@ -3,6 +3,7 @@ import {
   ForbiddenException,
   Injectable,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { randomUUID } from 'crypto';
@@ -18,10 +19,18 @@ import { CreateIncidentDto } from './dto/create-incident.dto';
 import { IncidentReportEntity } from './entities/incident-report.entity';
 import { InventoryAdjustmentEntity } from './entities/inventory-adjustment.entity';
 import { ShipmentIssueEntity } from './entities/shipment-issue.entity';
+import { UserEntity } from '../users/entities/user.entity';
+import { AuditLogEntity } from '../audit/entities/audit-log.entity';
+import { BrevoEmailService } from './brevo-email.service';
 
 @Injectable()
 export class IncidentsService {
-  constructor(private readonly dataSource: DataSource) {}
+  private readonly logger = new Logger(IncidentsService.name);
+
+  constructor(
+    private readonly dataSource: DataSource,
+    private readonly brevoEmailService: BrevoEmailService,
+  ) {}
 
   @Cron(CronExpression.EVERY_HOUR)
   async handleOverdueShipments(): Promise<void> {
@@ -30,11 +39,16 @@ export class IncidentsService {
 
     const overdueShipments = await this.dataSource.getRepository(ShipmentEntity)
       .createQueryBuilder('shipment')
+      .leftJoinAndSelect('shipment.batch', 'batch')
+      .leftJoinAndSelect('batch.product', 'product')
+      .leftJoinAndSelect('shipment.sourceNode', 'sourceNode')
+      .leftJoinAndSelect('shipment.destinationNode', 'destinationNode')
       .where('shipment.status = :status', { status: ShipmentStatus.IN_TRANSIT })
       .andWhere('shipment.shippedAt <= :fortyEightHoursAgo', { fortyEightHoursAgo })
       .getMany();
 
     for (const shipment of overdueShipments) {
+      // 1. Check if a ShipmentIssue already exists for this shipment
       const existingIssue = await this.dataSource.getRepository(ShipmentIssueEntity).findOne({
         where: {
           shipmentId: shipment.id,
@@ -43,11 +57,27 @@ export class IncidentsService {
       });
       if (existingIssue) continue;
 
+      // 2. Check if an IncidentReport already exists for this batch/shipment
+      const existingIncident = await this.dataSource.getRepository(IncidentReportEntity).findOne({
+        where: {
+          shipmentId: shipment.id,
+          incidentType: 'DELAYED_SHIPMENT',
+        },
+      });
+      if (existingIncident) continue;
+
       const queryRunner = this.dataSource.createQueryRunner();
       await queryRunner.connect();
       await queryRunner.startTransaction();
 
       try {
+        // Find default admin user as reporter
+        const systemUser = await queryRunner.manager.findOne(UserEntity, {
+          where: { email: 'admin@logistic.com' },
+        });
+        const reporterId = systemUser ? systemUser.id : shipment.createdBy;
+
+        // 1. Create ShipmentIssueEntity
         const issue = new ShipmentIssueEntity();
         issue.shipmentId = shipment.id;
         issue.issueType = 'OVERDUE';
@@ -56,6 +86,23 @@ export class IncidentsService {
         issue.notes = `Vận đơn trễ hạn giao > 48 giờ. Ngày gửi: ${shipment.shippedAt.toISOString()}`;
         await queryRunner.manager.save(ShipmentIssueEntity, issue);
 
+        // 2. Create IncidentReportEntity
+        const todayStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const hexPart = randomUUID().replace(/-/g, '').substring(0, 4).toLowerCase();
+        const incidentCode = `INC-${todayStr}-${hexPart}`;
+
+        const incident = new IncidentReportEntity();
+        incident.incidentCode = incidentCode;
+        incident.shipmentId = shipment.id;
+        incident.batchId = shipment.batchId;
+        incident.incidentType = 'DELAYED_SHIPMENT';
+        incident.status = 'OPEN';
+        incident.priority = 'HIGH';
+        incident.reportedBy = reporterId;
+        incident.description = `Lô hàng ${shipment.batch?.batchCode || ''} đã ở trạng thái IN_TRANSIT hơn 48 giờ mà không có xác nhận từ cơ sở đích.`;
+        await queryRunner.manager.save(IncidentReportEntity, incident);
+
+        // 3. Update Batch Status
         const batch = await queryRunner.manager.findOne(BatchEntity, {
           where: { id: shipment.batchId },
         });
@@ -64,6 +111,11 @@ export class IncidentsService {
           await queryRunner.manager.save(BatchEntity, batch);
         }
 
+        // 4. Update Shipment Status
+        shipment.status = ShipmentStatus.DELAYED;
+        await queryRunner.manager.save(ShipmentEntity, shipment);
+
+        // 5. Create Timeline Event
         const event = new TimelineEventEntity();
         event.batchId = shipment.batchId;
         event.eventType = TimelineEventType.DELAYED;
@@ -74,14 +126,93 @@ export class IncidentsService {
         event.notes = `Hệ thống tự động phát hiện trễ hạn vận chuyển (> 48 giờ). Mã vận đơn: ${shipment.trackingCode}`;
         await queryRunner.manager.save(TimelineEventEntity, event);
 
+        // 6. Create Audit Log
+        const auditLog = new AuditLogEntity();
+        auditLog.actorId = null;
+        auditLog.action = 'AUTO_DELAY_DETECTION';
+        auditLog.entityType = 'batches';
+        auditLog.entityId = shipment.batchId;
+        auditLog.oldValues = { status: 'IN_TRANSIT' };
+        auditLog.newValues = { status: 'DELAYED', incidentCode };
+        auditLog.ipAddress = '127.0.0.1';
+        auditLog.userAgent = 'SYSTEM_CRON';
+        await queryRunner.manager.save(AuditLogEntity, auditLog);
+
         await queryRunner.commitTransaction();
+
+        // 7. Send Email Notification
+        this.sendDelayNotification(shipment, incidentCode).catch((err) => {
+          this.logger.error(`Failed to send delay notification for batch ${shipment.batch?.batchCode || ''}: ${err.message}`);
+        });
+
       } catch (error) {
         await queryRunner.rollbackTransaction();
+        this.logger.error(`Error processing overdue shipment ${shipment.trackingCode}: ${(error as any).message}`);
       } finally {
         await queryRunner.release();
       }
     }
   }
+
+  private async sendDelayNotification(shipment: ShipmentEntity, incidentCode: string): Promise<void> {
+    const recipients: { email: string; name?: string }[] = [];
+
+    // Query active administrators
+    try {
+      const admins = await this.dataSource.getRepository(UserEntity)
+        .createQueryBuilder('user')
+        .innerJoinAndSelect('user.userRoles', 'userRole')
+        .innerJoinAndSelect('userRole.role', 'role')
+        .where('role.name = :roleName', { roleName: 'Admin' })
+        .andWhere('user.isActive = true')
+        .getMany();
+
+      for (const admin of admins) {
+        recipients.push({ email: admin.email, name: admin.fullName });
+      }
+    } catch (err) {
+      this.logger.error(`Failed to retrieve admin users for email notifications: ${(err as any).message}`);
+    }
+
+    // Add configured email addresses from environment
+    const extraEmailsEnv = process.env.ADMIN_NOTIFICATION_EMAILS;
+    if (extraEmailsEnv) {
+      const emails = extraEmailsEnv.split(',').map(e => e.trim()).filter(Boolean);
+      for (const email of emails) {
+        if (!recipients.some(r => r.email === email)) {
+          recipients.push({ email });
+        }
+      }
+    }
+
+    if (recipients.length === 0) {
+      this.logger.warn('No recipients found for delay notification.');
+      return;
+    }
+
+    const delayDurationMs = Date.now() - new Date(shipment.shippedAt).getTime();
+    const delayDurationHours = Math.max(0, Math.floor(delayDurationMs / (1000 * 60 * 60)));
+
+    const formattedShipmentDate = new Date(shipment.shippedAt).toISOString().replace('T', ' ').substring(0, 16);
+
+    const subject = `[Mini Supply Chain] Delayed Shipment Detected`;
+    const htmlContent = `
+A delayed shipment has been detected.
+
+Batch Code: ${shipment.batch?.batchCode || ''}
+Status: DELAYED
+Source: ${shipment.sourceNode?.name || ''}
+Destination: ${shipment.destinationNode?.name || ''}
+Quantity: ${shipment.quantityShipped}
+Shipment Date: ${formattedShipmentDate}
+Delay Duration: ${delayDurationHours} hours
+
+An incident has been automatically created for investigation.
+`;
+
+    await this.brevoEmailService.sendEmail(recipients, subject, htmlContent);
+  }
+
 
   async createIncident(dto: CreateIncidentDto, currentUser: any): Promise<IncidentReportEntity> {
     const { shipmentId, incidentType, description, priority } = dto;

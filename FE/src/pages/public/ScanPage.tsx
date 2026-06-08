@@ -30,8 +30,20 @@ export default function ScanPage() {
 
   const handleScanSuccess = async (decodedText: string) => {
     // Standard format checks if any, or just navigate to trace
-    const cleanedText = decodedText.trim();
+    let cleanedText = decodedText.trim();
     if (cleanedText) {
+      if (cleanedText.startsWith('http://') || cleanedText.startsWith('https://')) {
+        try {
+          const url = new URL(cleanedText);
+          const pathParts = url.pathname.split('/');
+          const lastPart = pathParts[pathParts.length - 1];
+          if (lastPart) {
+            cleanedText = lastPart;
+          }
+        } catch (e) {
+          console.error('Failed to parse scanned URL:', e);
+        }
+      }
       toast.success(t('common.success'));
       await stopScanner();
       navigate(`/trace/${cleanedText}`);

@@ -5,6 +5,7 @@ import { ShipmentIssueEntity } from './entities/shipment-issue.entity';
 import { InventoryAdjustmentEntity } from './entities/inventory-adjustment.entity';
 import { IncidentsService } from './incidents.service';
 import { IncidentsController } from './incidents.controller';
+import { BrevoEmailService } from './brevo-email.service';
 
 @Module({
   imports: [
@@ -15,7 +16,8 @@ import { IncidentsController } from './incidents.controller';
     ]),
   ],
   controllers: [IncidentsController],
-  providers: [IncidentsService],
-  exports: [IncidentsService],
+  providers: [IncidentsService, BrevoEmailService],
+  exports: [IncidentsService, BrevoEmailService],
 })
 export class IncidentsModule {}
+
