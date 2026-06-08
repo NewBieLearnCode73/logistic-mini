@@ -40,7 +40,14 @@ export class DashboardSystemController {
     @Request() req: any,
     @Res() res: express.Response,
   ) {
-    const report = await this.service.exportReport(dto.reportType, dto.format, dto.period, req.user);
+    const report = await this.service.exportReport(
+      dto.reportType,
+      dto.format,
+      dto.period,
+      req.user,
+      dto.startDate,
+      dto.endDate,
+    );
     res.setHeader('Content-Type', report.contentType);
     res.setHeader('Content-Disposition', `attachment; filename=${report.filename}`);
     res.send(report.content);

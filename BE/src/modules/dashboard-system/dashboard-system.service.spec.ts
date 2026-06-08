@@ -115,6 +115,23 @@ describe('DashboardSystemService', () => {
       expect(report.content.toString()).toContain('BÁO CÁO CHUỖI CUNG ỨNG MINI');
     });
 
+    it('should support custom date range with custom period', async () => {
+      const mockInventory = [];
+      const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        andWhere: jest.fn().mockReturnThis(),
+        getMany: jest.fn().mockResolvedValue(mockInventory),
+      };
+      mockRepository.createQueryBuilder.mockReturnValue(mockQueryBuilder);
+
+      const user = { role: RoleName.ADMIN };
+      const report = await service.exportReport('inventory', 'csv', 'custom', user, '2026-06-01', '2026-06-08');
+
+      expect(report.contentType).toBe('text/csv; charset=utf-8');
+      expect(report.filename).toBe('report_inventory_2026-06-01_to_2026-06-08.csv');
+    });
+
     it('should return pdf format for shipments', async () => {
       const mockShipments = [
         {

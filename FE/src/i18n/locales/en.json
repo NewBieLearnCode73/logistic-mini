@@ -366,7 +366,18 @@
     "shipments": "Shipments Report",
     "incidents": "Incidents Report",
     "exportSuccess": "Report exported successfully",
-    "exportError": "Failed to export report"
+    "exportError": "Failed to export report",
+    "periods": {
+      "today": "Today",
+      "month": "This Month",
+      "quarter": "This Quarter",
+      "year": "This Year",
+      "custom": "Custom Range"
+    },
+    "startDate": "From Date",
+    "endDate": "To Date",
+    "invalidDateRange": "Start date cannot be after end date",
+    "selectDate": "Please select both start and end dates"
   },
   "theme": {
     "light": "Light",

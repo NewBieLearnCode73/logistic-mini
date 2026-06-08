@@ -15,11 +15,13 @@ class ExportReportDto {
     format;
     reportType;
     period;
+    startDate;
+    endDate;
 }
 exports.ExportReportDto = ExportReportDto;
 __decorate([
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsIn)(['csv', 'pdf']),
+    (0, class_validator_1.IsIn)(['csv', 'pdf', 'xlsx']),
     __metadata("design:type", String)
 ], ExportReportDto.prototype, "format", void 0);
 __decorate([
@@ -29,7 +31,18 @@ __decorate([
 ], ExportReportDto.prototype, "reportType", void 0);
 __decorate([
     (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsIn)(['today', 'month', 'quarter', 'year']),
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsIn)(['today', 'month', 'quarter', 'year', 'custom']),
     __metadata("design:type", String)
 ], ExportReportDto.prototype, "period", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ExportReportDto.prototype, "startDate", void 0);
+__decorate([
+    (0, class_validator_1.IsString)(),
+    (0, class_validator_1.IsOptional)(),
+    __metadata("design:type", String)
+], ExportReportDto.prototype, "endDate", void 0);
 //# sourceMappingURL=export-report.dto.js.map

@@ -498,5 +498,45 @@ Chúng ta đã tiến hành đợt cải tiến toàn diện về trải nghiệ
 - **Vite Bundling**: Đóng gói thành công bundle frontend trong 1.61 giây.
 - **Trải nghiệm thực tế**: Bản đồ phản hồi tức thời khi nhấp chọn bộ lọc ở sidebar. Đường đi của các vận đơn hiển thị chính xác theo quốc lộ trong lãnh thổ Việt Nam ngay khi xuất hiện, không bị nháy hay trễ hiển thị đường thẳng và không còn bị cắt góc đi xuyên biên giới Lào/Campuchia nữa.
 
+---
+
+## Phase 23: Custom Date Range & Total Value Support for Reports (Yêu Cầu 4) ✅
+
+Chúng ta đã mở rộng và hoàn thiện tính năng xuất báo cáo (CSV và PDF) ở cả Backend và Frontend, hỗ trợ lọc theo khoảng thời gian tùy chọn và đính kèm đầy đủ đơn giá, tổng giá trị cùng các dòng tổng kết ở chân trang.
+
+### Các thành phần đã triển khai:
+
+1. **Backend API & DTO (Custom parameters)**:
+   - Cập nhật DTO `ExportReportDto` trong [export-report.dto.ts](file:///d:/Personal%20Projects/University%20Project/logistic-mini/BE/src/modules/dashboard-system/dto/export-report.dto.ts) cho phép nhận `startDate` và `endDate` (kiểu chuỗi) làm các tham số tùy chọn, đồng thời cho phép `period` có thể là `'custom'`.
+   - Cập nhật controller [dashboard-system.controller.ts](file:///d:/Personal%20Projects/University%20Project/logistic-mini/BE/src/modules/dashboard-system/dashboard-system.controller.ts) để truyền các tham số ngày mới vào service.
+
+2. **Xử lý ngày và Truy vấn cơ sở dữ liệu**:
+   - Cập nhật `getDateRange` trong [dashboard-system.service.ts](file:///d:/Personal%20Projects/University%20Project/logistic-mini/BE/src/modules/dashboard-system/dashboard-system.service.ts) để xử lý mốc `'custom'`:
+     - Thiết lập mốc giờ từ `00:00:00.000` của ngày bắt đầu (`startDate`) đến `23:59:59.999` của ngày kết thúc (`endDate`).
+     - Tích hợp kiểm tra lỗi đầu vào (Ví dụ: Định dạng ngày không hợp lệ, ngày bắt đầu lớn hơn ngày kết thúc).
+   - Tối ưu hóa tính toán giá trị thực tế của bản ghi:
+     - **Tồn kho (Inventory)**: Tính giá trị dựa trên `quantityAvailable` (số lượng khả dụng thực tế tại kho) thay vì sử dụng toàn bộ số lượng ban đầu của lô hàng.
+     - **Vận đơn (Shipments)**: Tính giá trị dựa trên `quantityShipped` (số lượng vận chuyển thực tế của chuyến hàng).
+
+3. **Cải tiến định dạng xuất dữ liệu (CSV & PDF Kit)**:
+   - **Tệp CSV**:
+     - Bổ sung cột "Tổng giá trị" cho cả 3 loại báo cáo (tồn kho, vận đơn, sự cố).
+     - Chèn dòng tổng kết chân trang ở cuối tệp: `"Tổng cộng",,,,,,"{Tổng giá trị}",...` khớp chính xác với số lượng cột của từng báo cáo để Excel tự động nhận diện.
+   - **Tệp PDF**:
+     - Đối với báo cáo sự cố (Incidents), thiết lập cấu hình độ rộng cột 495px để bổ sung cột "Tổng giá trị".
+     - Vẽ thêm dòng Footer "Tổng cộng" ở cuối bảng dữ liệu PDF (hỗ trợ tự động ngắt trang nếu dòng này rơi vào cuối trang) với nền xám nhạt `#f4f4f5` và các đường viền kép chuyên nghiệp. Số tiền tổng cộng tự động căn phải thẳng cột "Tổng giá trị".
+     - Hiển thị tổng giá trị tổng hợp trong khối tóm tắt thống kê trên cùng của PDF báo cáo sự cố.
+
+4. **Giao diện bộ chọn ngày ở Frontend**:
+   - Trong [DashboardPage.tsx](file:///d:/Personal%20Projects/University%20Project/logistic-mini/FE/src/pages/dashboard/DashboardPage.tsx), khi người dùng chọn kỳ báo cáo là "Khoảng tự chọn" (`custom`), giao diện sẽ hiển thị thêm 2 ô nhập lịch chọn ngày (`Từ ngày` và `Đến ngày`).
+   - Tích hợp kiểm tra lỗi ở FE: nếu người dùng bỏ trống hoặc chọn ngày bắt đầu lớn hơn ngày kết thúc, nút bấm xuất báo cáo sẽ bị chặn và hiển thị thông báo Toast cảnh báo tức thì.
+   - Bổ sung đầy đủ các nhãn dịch thuật đa ngôn ngữ trong [vi.json](file:///d:/Personal%20Projects/University%20Project/logistic-mini/FE/src/i18n/locales/vi.json) và [en.json](file:///d:/Personal%20Projects/University%20Project/logistic-mini/FE/src/i18n/locales/en.json).
+
+### Kết quả kiểm tra & Xác thực:
+- **Backend Unit Tests**: Chạy `npm run test` thành công hoàn toàn **67/67 tests PASS** (bao gồm cả test case mới cho custom date range).
+- **Biên dịch & Build**: Cả Backend (`nest build`) và Frontend (`npm run build`) đều được đóng gói thành công mà không phát sinh bất kỳ lỗi cảnh báo nào.
+- **Trải nghiệm thực tế**: Người dùng chọn khoảng ngày tự chọn, xuất file CSV/PDF thành công, thông tin tiếng Việt có dấu hiển thị hoàn hảo, các cột tổng giá trị và dòng tổng cộng chân trang khớp chính xác giá trị số lượng nhân đơn giá.
+
+
 
 

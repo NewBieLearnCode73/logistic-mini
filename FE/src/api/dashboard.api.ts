@@ -8,6 +8,12 @@ export interface DashboardStats {
 
 export const dashboardApi = {
   getStats: () => api.get<DashboardStats>('/dashboard/stats'),
-  exportReport: (data: { reportType: 'inventory' | 'shipments' | 'incidents'; format: 'csv' | 'pdf'; period: 'today' | 'month' | 'quarter' | 'year' }) =>
+  exportReport: (data: {
+    reportType: 'inventory' | 'shipments' | 'incidents';
+    format: 'csv' | 'pdf';
+    period?: 'today' | 'month' | 'quarter' | 'year' | 'custom';
+    startDate?: string;
+    endDate?: string;
+  }) =>
     api.post('/reports/export', data, { responseType: 'blob' }),
 };

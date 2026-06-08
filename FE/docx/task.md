@@ -145,3 +145,10 @@
 - [x] Modify `MapPage.tsx` shipment drawing to fetch OSRM route first and only draw road path (solid) on resolve
 - [x] Modify `TracePage.tsx` to draw road path only after Promise.all resolves
 - [x] Verify compilation and execution (npx tsc and build)
+
+## Phase 21: Date Range & Total Value Support for Reports (Yêu Cầu 4)
+- [x] Update DTO and Controller in BE to support optional `startDate` and `endDate` parameters
+- [x] Update `getDateRange` and `exportReport` in BE service to query by custom date range and calculate total value
+- [x] Add "Total value" column and sum footer row in CSV and PDF exports
+- [x] Update frontend `DashboardPage.tsx` to add Date Pickers for custom range in report export widget
+- [x] Run backend tests and compile/build check for BE and FE

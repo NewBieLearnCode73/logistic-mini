@@ -19,19 +19,34 @@ export default function DashboardPage() {
 
   // Reports Export states
   const [reportType, setReportType] = useState<'inventory' | 'shipments' | 'incidents'>('inventory');
-  const [exportFormat, setExportFormat] = useState<'csv' | 'pdf'>('csv');
-  const [exportPeriod, setExportPeriod] = useState<'today' | 'month' | 'quarter' | 'year'>('month');
+  const [exportFormat, setExportFormat] = useState<'csv' | 'pdf' | 'xlsx'>('xlsx');
+  const [exportPeriod, setExportPeriod] = useState<'today' | 'month' | 'quarter' | 'year' | 'custom'>('month');
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
   const [isExporting, setIsExporting] = useState(false);
 
   const canExport = role === 'Admin' || role === 'Manufacturer';
 
   const handleExport = async () => {
+    if (exportPeriod === 'custom') {
+      if (!startDate || !endDate) {
+        toast.error(t('reports.selectDate'));
+        return;
+      }
+      if (new Date(startDate) > new Date(endDate)) {
+        toast.error(t('reports.invalidDateRange'));
+        return;
+      }
+    }
+
     setIsExporting(true);
     try {
       const response = await dashboardApi.exportReport({
         reportType,
         format: exportFormat,
         period: exportPeriod,
+        startDate: exportPeriod === 'custom' ? startDate : undefined,
+        endDate: exportPeriod === 'custom' ? endDate : undefined,
       });
 
       // Handle JSON error response wrapped in blob
@@ -144,8 +159,31 @@ export default function DashboardPage() {
                 <option value="month">{t('reports.periods.month', 'Tháng này')}</option>
                 <option value="quarter">{t('reports.periods.quarter', 'Quý này')}</option>
                 <option value="year">{t('reports.periods.year', 'Năm nay')}</option>
+                <option value="custom">{t('reports.periods.custom', 'Khoảng tự chọn')}</option>
               </select>
             </div>
+            {exportPeriod === 'custom' && (
+              <>
+                <div className="w-40 space-y-1.5">
+                  <label className="block text-[13px] font-semibold text-text-secondary">{t('reports.startDate', 'Từ ngày')}</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="input-field"
+                  />
+                </div>
+                <div className="w-40 space-y-1.5">
+                  <label className="block text-[13px] font-semibold text-text-secondary">{t('reports.endDate', 'Đến ngày')}</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="input-field"
+                  />
+                </div>
+              </>
+            )}
             <div className="w-40 space-y-1.5">
               <label className="block text-[13px] font-semibold text-text-secondary">{t('reports.format')}</label>
               <select
@@ -153,6 +191,7 @@ export default function DashboardPage() {
                 onChange={(e) => setExportFormat(e.target.value as any)}
                 className="input-field"
               >
+                <option value="xlsx">Excel (XLSX)</option>
                 <option value="csv">CSV</option>
                 <option value="pdf">PDF</option>
               </select>

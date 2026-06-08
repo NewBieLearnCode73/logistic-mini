@@ -366,7 +366,18 @@
     "shipments": "Báo cáo Vận Đơn",
     "incidents": "Báo cáo Sự Cố",
     "exportSuccess": "Xuất báo cáo thành công",
-    "exportError": "Xuất báo cáo thất bại"
+    "exportError": "Xuất báo cáo thất bại",
+    "periods": {
+      "today": "Hôm nay",
+      "month": "Tháng này",
+      "quarter": "Quý này",
+      "year": "Năm nay",
+      "custom": "Khoảng tự chọn"
+    },
+    "startDate": "Từ ngày",
+    "endDate": "Đến ngày",
+    "invalidDateRange": "Ngày bắt đầu không được lớn hơn ngày kết thúc",
+    "selectDate": "Vui lòng chọn đầy đủ ngày bắt đầu và ngày kết thúc"
   },
   "theme": {
     "light": "Sáng",

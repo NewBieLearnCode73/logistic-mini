@@ -1,8 +1,8 @@
-import { IsString, IsIn } from 'class-validator';
+import { IsString, IsIn, IsOptional } from 'class-validator';
 
 export class ExportReportDto {
   @IsString()
-  @IsIn(['csv', 'pdf'])
+  @IsIn(['csv', 'pdf', 'xlsx'])
   format!: string;
 
   @IsString()
@@ -10,6 +10,15 @@ export class ExportReportDto {
   reportType!: string;
 
   @IsString()
-  @IsIn(['today', 'month', 'quarter', 'year'])
-  period!: string;
+  @IsOptional()
+  @IsIn(['today', 'month', 'quarter', 'year', 'custom'])
+  period?: string;
+
+  @IsString()
+  @IsOptional()
+  startDate?: string;
+
+  @IsString()
+  @IsOptional()
+  endDate?: string;
 }
