@@ -70,7 +70,8 @@
     "auditLogs": "Audit Logs",
     "map": "Map",
     "administration": "Administration",
-    "supplyChain": "Supply Chain"
+    "supplyChain": "Supply Chain",
+    "myWarehouse": "My Warehouse"
   },
   "dashboard": {
     "title": "System Overview",

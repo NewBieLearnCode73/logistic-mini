@@ -7,6 +7,7 @@ import type { IncidentReport, CreateIncidentDto } from '../../types/incident.typ
 import DataTable, { type Column } from '../../components/ui/DataTable';
 import FormModal from '../../components/ui/FormModal';
 import ConfirmDialog from '../../components/ui/ConfirmDialog';
+import SearchableSelect from '../../components/ui/SearchableSelect';
 import { PlusIcon, CheckIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 export default function IncidentsPage() {
@@ -273,22 +274,19 @@ export default function IncidentsPage() {
             <label className="block text-[13px] font-medium text-zinc-700 dark:text-zinc-300 mb-1">
               {t('shipment.title')} <span className="text-red-500">*</span>
             </label>
-            <select
+            <SearchableSelect
+              options={inTransitShipments.map((s) => ({
+                value: s.id,
+                label: s.trackingCode,
+                subLabel: `${s.batch?.batchCode || ''} · ${s.batch?.product?.name || ''}`,
+              }))}
               value={formData.shipmentId}
-              onChange={(e) => setFormData({ ...formData, shipmentId: e.target.value })}
-              className={`input-field ${formErrors.shipmentId ? 'border-red-500' : ''}`}
+              onChange={(val) => setFormData({ ...formData, shipmentId: val })}
+              placeholder={t('incident.selectShipment')}
+              searchPlaceholder={t('common.search')}
+              error={!!formErrors.shipmentId}
               required
-            >
-              <option value="">{t('incident.selectShipment')}</option>
-              {inTransitShipments.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.trackingCode} ({s.batch?.batchCode} &middot; {s.batch?.product?.name})
-                </option>
-              ))}
-            </select>
-            {formErrors.shipmentId && (
-              <p className="mt-1 text-2xs text-red-600 dark:text-red-400">{formErrors.shipmentId}</p>
-            )}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

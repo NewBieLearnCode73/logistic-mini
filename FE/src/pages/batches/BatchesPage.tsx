@@ -10,6 +10,7 @@ import type { Batch, CreateBatchDto } from '../../types/batch.types';
 import DataTable, { type Column } from '../../components/ui/DataTable';
 import FormModal from '../../components/ui/FormModal';
 import StatusBadge from '../../components/ui/StatusBadge';
+import SearchableSelect from '../../components/ui/SearchableSelect';
 import { PlusIcon, EyeIcon } from '@heroicons/react/24/outline';
 
 export default function BatchesPage() {
@@ -299,19 +300,19 @@ export default function BatchesPage() {
               <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('batch.product')} <span className="text-red-500">*</span>
               </label>
-              <select
+              <SearchableSelect
+                options={activeProducts?.filter((p) => p.isActive).map((prod) => ({
+                  value: prod.id,
+                  label: prod.name,
+                  subLabel: prod.sku ? `SKU: ${prod.sku}` : undefined,
+                })) || []}
                 value={formData.productId}
-                onChange={(e) => handleProductChange(e.target.value)}
-                className={`input-field ${formErrors.productId ? 'border-red-500' : ''}`}
+                onChange={(val) => handleProductChange(val)}
+                placeholder={t('batch.selectProduct')}
+                searchPlaceholder={t('common.search')}
+                error={!!formErrors.productId}
                 required
-              >
-                <option value="">{t('batch.selectProduct')}</option>
-                {activeProducts?.filter((p) => p.isActive).map((prod) => (
-                  <option key={prod.id} value={prod.id}>
-                    {prod.name} ({prod.sku})
-                  </option>
-                ))}
-              </select>
+              />
               {formErrors.productId && (
                 <p className="mt-1 text-2xs text-red-600 dark:text-red-400">{formErrors.productId}</p>
               )}
@@ -413,19 +414,19 @@ export default function BatchesPage() {
                 <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('batch.origin')} <span className="text-red-500">*</span>
                 </label>
-                <select
+                <SearchableSelect
+                  options={mfrNodes?.map((node) => ({
+                    value: node.id,
+                    label: node.name,
+                    subLabel: t(`node.types.${node.nodeType}`, node.nodeType),
+                  })) || []}
                   value={formData.originNodeId}
-                  onChange={(e) => setFormData({ ...formData, originNodeId: e.target.value })}
-                  className={`input-field ${formErrors.originNodeId ? 'border-red-500' : ''}`}
+                  onChange={(val) => setFormData({ ...formData, originNodeId: val })}
+                  placeholder={t('batch.selectOrigin')}
+                  searchPlaceholder={t('common.search')}
+                  error={!!formErrors.originNodeId}
                   required
-                >
-                  <option value="">{t('batch.selectOrigin')}</option>
-                  {mfrNodes?.map((node) => (
-                    <option key={node.id} value={node.id}>
-                      {node.name}
-                    </option>
-                  ))}
-                </select>
+                />
                 {formErrors.originNodeId && (
                   <p className="mt-1 text-2xs text-red-600 dark:text-red-400">{formErrors.originNodeId}</p>
                 )}

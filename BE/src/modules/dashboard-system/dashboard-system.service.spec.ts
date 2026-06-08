@@ -116,7 +116,7 @@ describe('DashboardSystemService', () => {
     });
 
     it('should support custom date range with custom period', async () => {
-      const mockInventory = [];
+      const mockInventory: any[] = [];
       const mockQueryBuilder = {
         leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),

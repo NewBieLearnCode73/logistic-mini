@@ -183,6 +183,9 @@
     transition: all 200ms ease;
     outline: none;
   }
+  textarea.input-field {
+    border-radius: 12px;
+  }
   .input-field:focus {
     border-color: var(--color-primary);
     box-shadow: 0 0 0 1px var(--color-primary);

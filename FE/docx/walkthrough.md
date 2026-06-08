@@ -636,3 +636,42 @@ Chúng ta đã triển khai thành công tính năng tự động gửi email th
 - **Backend Unit Tests**: Toàn bộ suite gồm **67/67 tests PASS** thành công.
 - **Biên dịch & Build**: Cả Backend (`nest build`) và Frontend (`npm run build`) biên dịch và đóng gói hoàn hảo không lỗi.
 - **Trải nghiệm thực tế**: Admin tạo tài khoản nhân viên mới thành công, hệ thống tự động lưu trữ, gửi email chứa mật khẩu tạm thời về địa chỉ đăng ký qua Brevo, và ghi nhật ký hoạt động chính xác với ID của tài khoản mới.
+
+---
+
+## Phase 25: Searchable Select Dropdowns & Role-Specific Warehouse View ✅
+
+Chúng ta đã cải tiến trải nghiệm điền biểu mẫu (Form UX) bằng cách thay thế các trường chọn tĩnh dài dằng dặc bằng Component **SearchableSelect** có hỗ trợ lọc văn bản, đồng thời phân quyền cho phép các tài khoản không phải Admin (Manufacturer, Distributor, Retailer) trực tiếp xem chi tiết tồn kho tại kho/cửa hàng của mình (My Warehouse).
+
+### Các thành phần đã triển khai:
+
+#### 1. Component chọn lựa hỗ trợ tìm kiếm (`SearchableSelect`)
+- **[SearchableSelect.tsx](file:///d:/Personal%20Projects/University%20Project/logistic-mini/FE/src/components/ui/SearchableSelect.tsx)** [NEW]:
+  - Thiết kế dropdown tùy chỉnh có thanh tìm kiếm tích hợp cho phép lọc nhanh các tùy chọn theo tên chính hoặc nhãn phụ (`subLabel`).
+  - Hỗ trợ nút xóa nhanh (`XMarkIcon`), icon đóng mở trạng thái (`ChevronUpDownIcon`), hỗ trợ tự động tập trung tiêu điểm (focus) khi mở dropdown.
+  - Tự động đóng khi nhấn chuột ra ngoài vùng dropdown.
+  - Tương thích tốt với chế độ Dark mode và giao diện SaaS tối giản.
+
+#### 2. Tích hợp `SearchableSelect` vào các trang biểu mẫu
+- **[ShipmentsPage.tsx](file:///d:/Personal%20Projects/University%20Project/logistic-mini/FE/src/pages/shipments/ShipmentsPage.tsx)**: Thay thế các thẻ chọn `<select>` mặc định của lô hàng (batch), điểm xuất hàng (source node) và điểm nhận hàng (destination node) bằng `SearchableSelect` để tránh scroll quá dài khi hệ thống có hàng ngàn lô hàng.
+- **[IncidentsPage.tsx](file:///d:/Personal%20Projects/University%20Project/logistic-mini/FE/src/pages/incidents/IncidentsPage.tsx)**: Áp dụng `SearchableSelect` cho việc tìm chọn vận đơn đang vận chuyển (`IN_TRANSIT`) khi lập báo cáo sự cố.
+- **[UsersPage.tsx](file:///d:/Personal%20Projects/University%20Project/logistic-mini/FE/src/pages/users/UsersPage.tsx)**: Sử dụng `SearchableSelect` cho dropdown chọn điểm công tác (node) khi tạo mới hoặc cập nhật thông tin nhân viên.
+- **[BatchesPage.tsx](file:///d:/Personal%20Projects/University%20Project/logistic-mini/FE/src/pages/batches/BatchesPage.tsx)**: Áp dụng `SearchableSelect` khi chọn sản phẩm sản xuất (product) và chọn nhà máy sản xuất gốc (origin node - Admin only).
+
+#### 3. Phân quyền và giao diện Xem kho riêng ("My Warehouse")
+- **Backend (BE)**:
+  - Cập nhật [roles.guard.ts](file:///d:/Personal%20Projects/University%20Project/logistic-mini/BE/src/common/guards/roles.guard.ts) bổ sung kiểm tra thông tin `params.id` trong `NodesController`. Đảm bảo người dùng không phải Admin chỉ được phép xem chi tiết kho (`/nodes/:id`) của chính điểm công tác mà họ được phân công (`user.nodeId`), ngăn chặn việc truy cập trái phép sang kho của điểm khác.
+- **Frontend (FE)**:
+  - Cập nhật định tuyến trong [App.tsx](file:///d:/Personal%20Projects/University%20Project/logistic-mini/FE/src/App.tsx) chuyển tuyến `/nodes/:id` ra khỏi khối kiểm tra role Admin để cho phép tất cả các tài khoản đăng nhập đều có thể truy cập trang Chi tiết Điểm nút.
+  - Cập nhật [Sidebar.tsx](file:///d:/Personal%20Projects/University%20Project/logistic-mini/FE/src/components/layout/Sidebar.tsx) bổ sung liên kết menu **"Kho của tôi"** (`sidebar.myWarehouse`) trỏ trực tiếp đến đường dẫn động `/nodes/:nodeId` cho các vai trò Manufacturer, Distributor và Retailer.
+  - Cập nhật [NodeDetailPage.tsx](file:///d:/Personal%20Projects/University%20Project/logistic-mini/FE/src/pages/nodes/NodeDetailPage.tsx) điều chỉnh nút quay lại trang danh sách. Nếu người dùng là non-Admin, nút sẽ đổi thành "Về tổng quan" và điều hướng về `/dashboard` thay vì `/nodes` (vốn bị chặn bởi quyền Admin).
+  - Tích hợp thêm bản dịch nhãn `"myWarehouse"` vào các tệp ngôn ngữ [vi.json](file:///d:/Personal%20Projects/University%20Project/logistic-mini/FE/src/i18n/locales/vi.json) và [en.json](file:///d:/Personal%20Projects/University%20Project/logistic-mini/FE/src/i18n/locales/en.json).
+
+#### 4. Sửa lỗi TypeScript Spec Compilation
+- **[dashboard-system.service.spec.ts](file:///d:/Personal%20Projects/University%20Project/logistic-mini/BE/src/modules/dashboard-system/dashboard-system.service.spec.ts)**: Gán kiểu rõ ràng `any[]` cho mảng `mockInventory` để khắc phục hoàn toàn lỗi biên dịch TypeScript `TS7034: Variable 'mockInventory' implicitly has type 'any[]' in some locations...` trong quá trình chạy kiểm thử hoặc build.
+
+### Kết quả xác thực:
+- **Biên dịch Frontend**: `npx tsc --noEmit` hoàn thành 100% không phát sinh lỗi.
+- **Biên dịch Backend**: `npx tsc --noEmit` hoàn thành 100% không phát sinh lỗi.
+- **Đóng gói Bundle**: Chạy `npm run build` trên cả Backend và Frontend đều thành công trơn tru.
+

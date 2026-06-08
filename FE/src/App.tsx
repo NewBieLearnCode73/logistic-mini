@@ -97,12 +97,12 @@ export default function App() {
                 <Route path="/shipments" element={<ShipmentsPage />} />
                 <Route path="/shipments/:id" element={<ShipmentDetailPage />} />
                 <Route path="/products" element={<ProductsPage />} />
+                <Route path="/nodes/:id" element={<NodeDetailPage />} />
 
                 {/* Admin only */}
                 <Route element={<RoleGuard allowed={['Admin']} />}>
                   <Route path="/users" element={<UsersPage />} />
                   <Route path="/nodes" element={<NodesPage />} />
-                  <Route path="/nodes/:id" element={<NodeDetailPage />} />
                   <Route path="/incidents" element={<IncidentsPage />} />
                   <Route path="/audit-logs" element={<AuditLogsPage />} />
                   <Route path="/map" element={<MapPage />} />

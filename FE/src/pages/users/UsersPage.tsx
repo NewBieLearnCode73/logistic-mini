@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNodesList } from '../../hooks/queries/useNodes';
+import SearchableSelect from '../../components/ui/SearchableSelect';
 import {
   useUsersList,
   useCreateUser,
@@ -424,7 +425,7 @@ export default function UsersPage() {
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             <div>
               <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                 {t('user.role')} <span className="text-red-500">*</span>
@@ -450,19 +451,19 @@ export default function UsersPage() {
                 <label className="block text-[13px] font-medium text-gray-700 dark:text-gray-300 mb-1">
                   {t('user.node')} <span className="text-red-500">*</span>
                 </label>
-                <select
+                <SearchableSelect
+                  options={activeNodes?.map((node) => ({
+                    value: node.id,
+                    label: node.name,
+                    subLabel: t(`node.types.${node.nodeType}`, node.nodeType),
+                  })) || []}
                   value={formData.nodeId || ''}
-                  onChange={(e) => setFormData({ ...formData, nodeId: e.target.value })}
-                  className={`input-field ${formErrors.nodeId ? 'border-red-500 focus:ring-red-500' : ''}`}
+                  onChange={(val) => setFormData({ ...formData, nodeId: val })}
+                  placeholder={t('user.selectNode')}
+                  searchPlaceholder={t('common.search')}
+                  error={!!formErrors.nodeId}
                   required
-                >
-                  <option value="">{t('user.selectNode')}</option>
-                  {activeNodes?.map((node) => (
-                    <option key={node.id} value={node.id}>
-                      {node.name}
-                    </option>
-                  ))}
-                </select>
+                />
                 {formErrors.nodeId && (
                   <p className="mt-1 text-2xs text-red-600 dark:text-red-400">{formErrors.nodeId}</p>
                 )}

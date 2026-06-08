@@ -51,6 +51,13 @@ export class RolesGuard implements CanActivate {
         'origin_node_id',
       ];
 
+      const isNodesController = context.getClass().name === 'NodesController';
+      if (isNodesController && params.id && params.id !== user.nodeId) {
+        throw new ForbiddenException(
+          `Bạn không có quyền thao tác trên Node khác. Node của bạn: ${user.nodeId}, Node yêu cầu: ${params.id}`,
+        );
+      }
+
       for (const field of nodeFields) {
         const requestNodeId = body[field] || params[field] || query[field];
         if (requestNodeId && requestNodeId !== user.nodeId) {

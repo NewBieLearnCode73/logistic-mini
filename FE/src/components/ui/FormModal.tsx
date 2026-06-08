@@ -53,7 +53,7 @@ export default function FormModal({
               leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
             >
               <DialogPanel
-                className={`relative transform overflow-hidden rounded-[24px] bg-surface p-6 text-left border border-border shadow-saas-md transition-all sm:my-8 w-full ${sizeClasses[size]}`}
+                className={`relative transform rounded-[24px] bg-surface p-6 text-left border border-border shadow-saas-md transition-all sm:my-8 w-full ${sizeClasses[size]}`}
               >
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border pb-3">

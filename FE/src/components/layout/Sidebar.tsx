@@ -27,6 +27,7 @@ interface NavItem {
   label: string;
   path?: string;
   roles: string[] | '*';
+  dynamicPath?: (nodeId: string | null) => string;
 }
 
 const navItems: NavItem[] = [
@@ -35,6 +36,12 @@ const navItems: NavItem[] = [
   { icon: CubeIcon, label: 'sidebar.batches', path: '/batches', roles: '*' },
   { icon: TruckIcon, label: 'sidebar.shipments', path: '/shipments', roles: '*' },
   { icon: TagIcon, label: 'sidebar.products', path: '/products', roles: '*' },
+  {
+    icon: MapPinIcon,
+    label: 'sidebar.myWarehouse',
+    roles: [RoleName.MANUFACTURER, RoleName.DISTRIBUTOR, RoleName.RETAILER],
+    dynamicPath: (nodeId) => `/nodes/${nodeId}`,
+  },
   { icon: QrCodeIcon, label: 'sidebar.scan', path: '/scan', roles: '*' },
   { type: 'divider', label: 'sidebar.administration', roles: [RoleName.ADMIN] },
   { icon: UsersIcon, label: 'sidebar.users', path: '/users', roles: [RoleName.ADMIN] },
@@ -90,7 +97,10 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
 
   const filteredItems = navItems.filter((item) => {
     if (item.roles === '*') return true;
-    if (Array.isArray(item.roles) && role) return item.roles.includes(role);
+    if (Array.isArray(item.roles) && role) {
+      if (item.dynamicPath && !user?.nodeId) return false;
+      return item.roles.includes(role);
+    }
     return false;
   });
 
@@ -117,10 +127,11 @@ export default function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose:
           }
 
           const Icon = item.icon!;
+          const toPath = item.dynamicPath ? item.dynamicPath(user?.nodeId ?? null) : item.path!;
           return (
             <NavLink
-              key={item.path}
-              to={item.path!}
+              key={toPath}
+              to={toPath}
               onClick={onClose}
               className={({ isActive }) =>
                 isActive ? 'sidebar-link-active' : 'sidebar-link'

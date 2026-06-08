@@ -1,13 +1,17 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useNodeDetail } from '../../hooks/queries/useNodes';
-import { formatCurrency } from '../../utils/constants';
+import { formatCurrency, RoleName } from '../../utils/constants';
+import { useAuthStore } from '../../stores/authStore';
 import { ArrowLeftIcon } from '@heroicons/react/24/outline';
 
 export default function NodeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { getRole } = useAuthStore();
+  const role = getRole();
+  const isAdmin = role === RoleName.ADMIN;
 
   const { data: node, isLoading, isError } = useNodeDetail(id || '');
 
@@ -34,8 +38,11 @@ export default function NodeDetailPage() {
         <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400 max-w-sm">
           {t('node.notFoundDesc')}
         </p>
-        <button onClick={() => navigate('/nodes')} className="btn-secondary mt-4">
-          {t('node.backToList')}
+        <button
+          onClick={() => navigate(isAdmin ? '/nodes' : '/dashboard')}
+          className="btn-secondary mt-4"
+        >
+          {isAdmin ? t('node.backToList') : t('sidebar.dashboard')}
         </button>
       </div>
     );
@@ -59,11 +66,11 @@ export default function NodeDetailPage() {
       {/* Back link */}
       <div>
         <button
-          onClick={() => navigate('/nodes')}
+          onClick={() => navigate(isAdmin ? '/nodes' : '/dashboard')}
           className="btn-ghost flex items-center gap-1.5 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-150 pl-0 py-1"
         >
           <ArrowLeftIcon className="h-4 w-4" />
-          <span>{t('node.backToList')}</span>
+          <span>{isAdmin ? t('node.backToList') : t('sidebar.dashboard')}</span>
         </button>
       </div>
 

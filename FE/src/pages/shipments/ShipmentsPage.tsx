@@ -10,6 +10,7 @@ import type { Shipment, CreateShipmentDto } from '../../types/shipment.types';
 import DataTable, { type Column } from '../../components/ui/DataTable';
 import FormModal from '../../components/ui/FormModal';
 import StatusBadge from '../../components/ui/StatusBadge';
+import SearchableSelect from '../../components/ui/SearchableSelect';
 import { PlusIcon, EyeIcon } from '@heroicons/react/24/outline';
 
 export default function ShipmentsPage() {
@@ -272,21 +273,21 @@ export default function ShipmentsPage() {
                 <label className="block text-[13px] font-medium text-text-secondary mb-1">
                   {t('shipment.sourceNode')} <span className="text-red-500">*</span>
                 </label>
-                <select
+                <SearchableSelect
+                  options={nodes.filter((n) => n.isActive).map((node) => ({
+                    value: node.id,
+                    label: node.name,
+                    subLabel: t(`node.types.${node.nodeType}`, node.nodeType),
+                  }))}
                   value={formData.sourceNodeId}
-                  onChange={(e) =>
-                    setFormData({ ...formData, sourceNodeId: e.target.value, batchId: '' })
+                  onChange={(val) =>
+                    setFormData({ ...formData, sourceNodeId: val, batchId: '' })
                   }
-                  className={`input-field ${formErrors.sourceNodeId ? 'border-red-500' : ''}`}
+                  placeholder={t('user.selectNode')}
+                  searchPlaceholder={t('common.search')}
+                  error={!!formErrors.sourceNodeId}
                   required
-                >
-                  <option value="">{t('user.selectNode')}</option>
-                  {nodes.filter((n) => n.isActive).map((node) => (
-                    <option key={node.id} value={node.id}>
-                      {node.name}
-                    </option>
-                  ))}
-                </select>
+                />
                 {formErrors.sourceNodeId && (
                   <p className="mt-1 text-2xs text-red-600 dark:text-red-400">
                     {formErrors.sourceNodeId}
@@ -300,27 +301,27 @@ export default function ShipmentsPage() {
               <label className="block text-[13px] font-medium text-text-secondary mb-1">
                 {t('batch.title')} <span className="text-red-500">*</span>
               </label>
-              <select
+              <SearchableSelect
+                options={shippableBatches.map((b) => ({
+                  value: b.id,
+                  label: b.batchCode,
+                  subLabel: `${b.product?.name || ''} · ${b.quantity} ${b.unit}`,
+                }))}
                 value={formData.batchId}
-                onChange={(e) => {
-                  const b = shippableBatches.find((item) => item.id === e.target.value);
+                onChange={(val) => {
+                  const b = shippableBatches.find((item) => item.id === val);
                   setFormData({
                     ...formData,
-                    batchId: e.target.value,
+                    batchId: val,
                     quantityShipped: b ? b.quantity : 1,
                   });
                 }}
-                className={`input-field ${formErrors.batchId ? 'border-red-500' : ''}`}
-                required
+                placeholder={t('shipment.selectBatch')}
+                searchPlaceholder={t('common.search')}
+                error={!!formErrors.batchId}
                 disabled={isAdmin && !formData.sourceNodeId}
-              >
-                <option value="">{t('shipment.selectBatch')}</option>
-                {shippableBatches.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.batchCode} ({b.product?.name} &middot; {b.quantity} {b.unit})
-                  </option>
-                ))}
-              </select>
+                required
+              />
               {formErrors.batchId && (
                 <p className="mt-1 text-2xs text-red-600 dark:text-red-400">{formErrors.batchId}</p>
               )}
@@ -331,19 +332,19 @@ export default function ShipmentsPage() {
               <label className="block text-[13px] font-medium text-text-secondary mb-1">
                 {t('shipment.destNode')} <span className="text-red-500">*</span>
               </label>
-              <select
+              <SearchableSelect
+                options={activeDestinationNodes.map((node) => ({
+                  value: node.id,
+                  label: node.name,
+                  subLabel: t(`node.types.${node.nodeType}`, node.nodeType),
+                }))}
                 value={formData.destinationNodeId}
-                onChange={(e) => setFormData({ ...formData, destinationNodeId: e.target.value })}
-                className={`input-field ${formErrors.destinationNodeId ? 'border-red-500' : ''}`}
+                onChange={(val) => setFormData({ ...formData, destinationNodeId: val })}
+                placeholder={t('shipment.selectDestination')}
+                searchPlaceholder={t('common.search')}
+                error={!!formErrors.destinationNodeId}
                 required
-              >
-                <option value="">{t('shipment.selectDestination')}</option>
-                {activeDestinationNodes.map((node) => (
-                  <option key={node.id} value={node.id}>
-                    {node.name} ({t(`node.types.${node.nodeType}`, node.nodeType)})
-                  </option>
-                ))}
-              </select>
+              />
               {formErrors.destinationNodeId && (
                 <p className="mt-1 text-2xs text-red-600 dark:text-red-400">
                   {formErrors.destinationNodeId}

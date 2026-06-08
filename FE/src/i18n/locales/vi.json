@@ -70,7 +70,8 @@
     "auditLogs": "Nhật ký",
     "map": "Bản đồ",
     "administration": "Quản trị hệ thống",
-    "supplyChain": "Chuỗi cung ứng"
+    "supplyChain": "Chuỗi cung ứng",
+    "myWarehouse": "Kho của tôi"
   },
   "dashboard": {
     "title": "Tổng Quan Hệ Thống",
