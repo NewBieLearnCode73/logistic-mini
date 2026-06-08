@@ -1,6 +1,0 @@
-export declare enum NodeType {
-    MANUFACTURER = "MANUFACTURER",
-    DISTRIBUTOR = "DISTRIBUTOR",
-    RETAILER = "RETAILER",
-    WAREHOUSE = "WAREHOUSE"
-}
