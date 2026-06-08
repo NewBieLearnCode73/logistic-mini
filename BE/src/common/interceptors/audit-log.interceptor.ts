@@ -89,7 +89,7 @@ export class AuditLogInterceptor implements NestInterceptor {
             auditLog.actorId = user.userId;
             auditLog.action = method;
             auditLog.entityType = entityName || 'unknown';
-            auditLog.entityId = entityId || responseBody?.id || null;
+            auditLog.entityId = entityId || responseBody?.id || responseBody?.data?.id || null;
             auditLog.oldValues = oldValues ? JSON.parse(JSON.stringify(oldValues)) : null;
             
             if (method === 'DELETE') {

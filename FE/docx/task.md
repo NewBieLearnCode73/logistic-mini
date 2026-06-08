@@ -152,3 +152,29 @@
 - [x] Add "Total value" column and sum footer row in CSV and PDF exports
 - [x] Update frontend `DashboardPage.tsx` to add Date Pickers for custom range in report export widget
 - [x] Run backend tests and compile/build check for BE and FE
+
+## Phase 22: CSV & PDF Report Styling & Clear Date Range (Yêu Cầu 4 Refinement) ✅
+- [x] Display clear resolved date range boundaries ( Từ ngày ... Đến ngày ...) in both PDF and CSV metadata headers
+- [x] Beautify CSV output using structured key-value cells (no wide ASCII separators) to ensure seamless Excel/Sheets parsing
+- [x] Upgrade PDF layout styling using rounded boxes, Slate/Indigo professional palette, increased row heights with vertical text centering, and a neat metadata summary grid
+- [x] Remove the extra trailing closing brace from the service file to fix syntax errors
+- [x] Verify successful compilation and build of the backend
+
+## Phase 23: Premium Excel (XLSX) Export Support ✅
+- [x] Install `exceljs` library in backend to support generation of styled binary spreadsheets
+- [x] Implement Excel (.xlsx) report format generation with slate headers, zebra rows, double-border total footers, and auto column widths
+- [x] Configure numeric and currency cells to export as real numbers with Excel custom formats (`#,##0" VND"` and `#,##0`) instead of text
+- [x] Integrate standard Excel SUM formulas (e.g. `=SUM(G15:G30)`) for the total row computation
+- [x] Extend Validation in `ExportReportDto` and controller to support `xlsx` format option
+- [x] Add Excel (XLSX) option to the frontend `DashboardPage.tsx` format dropdown and state
+- [x] Verify successful frontend and backend TypeScript compilation and builds
+
+## Phase 24: Brevo Email Notification & Created User Audit Logging (Yêu Cầu 5) ✅
+- [x] Add Brevo API key and Admin sender details to backend `.env` file
+- [x] Create `MailService` and its encapsulating NestJS module `MailModule`
+- [x] Register `MailModule` in `UsersModule` imports
+- [x] Inject `MailService` into `UsersService` and call it on Admin user creation
+- [x] Enhance global `AuditLogInterceptor` to capture nested response body entity IDs
+- [x] Verify compilation and test suite execution
+
+

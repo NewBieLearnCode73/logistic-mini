@@ -537,6 +537,102 @@ Chúng ta đã mở rộng và hoàn thiện tính năng xuất báo cáo (CSV v
 - **Biên dịch & Build**: Cả Backend (`nest build`) và Frontend (`npm run build`) đều được đóng gói thành công mà không phát sinh bất kỳ lỗi cảnh báo nào.
 - **Trải nghiệm thực tế**: Người dùng chọn khoảng ngày tự chọn, xuất file CSV/PDF thành công, thông tin tiếng Việt có dấu hiển thị hoàn hảo, các cột tổng giá trị và dòng tổng cộng chân trang khớp chính xác giá trị số lượng nhân đơn giá.
 
+---
 
+## Phase 22: Cải tiến Định dạng Báo cáo CSV & PDF và Bổ sung Ngày tháng Chi tiết ✅
 
+Chúng ta đã cải tiến toàn diện thẩm mỹ xuất báo cáo, tối ưu hóa bố cục trực quan và hiển thị chi tiết khoảng thời gian của kỳ báo cáo.
 
+### Các thành phần đã triển khai:
+
+1. **Hiển thị Ngày tháng Kỳ báo cáo Rõ ràng (Date Bounds Resolution)**:
+   - Trong cả hai loại xuất dữ liệu PDF và CSV, hệ thống tự động phân tích và hiển thị cụ thể khoảng ngày bắt đầu và kết thúc của kỳ lọc.
+   - Ví dụ:
+     - Khi chọn `"Tháng này"`: `Kỳ báo cáo: Tháng này (01/06/2026 - 30/06/2026)`
+     - Khi chọn `"Hôm nay"`: `Kỳ báo cáo: Hôm nay (08/06/2026 - 08/06/2026)`
+     - Khi chọn `"Khoảng tự chọn"`: `Khoảng tự chọn (15/05/2026 - 25/05/2026)`
+   - Giúp người xem báo cáo nhận biết ngay lập tức phạm vi thời gian chính xác của dữ liệu.
+
+2. **Cải tiến định dạng tệp CSV (Excel-Friendly CSV Structure)**:
+   - Loại bỏ các đường kẻ viền ASCII rườm rà như `========` hoặc `--------` vốn gây loãng và phá vỡ cấu trúc cột của Excel.
+   - Định dạng thông tin siêu dữ liệu (metadata) đầu trang thành các ô key-value có cấu trúc rõ ràng (ví dụ: `"Loại báo cáo:","Tồn kho hàng hóa"`). Khi mở trong Excel, thông tin này hiển thị gọn gàng ở cột A và B.
+   - Đảm bảo dữ liệu bảng nằm trong các cột chuẩn để các trình phân tích CSV tự động nhận dạng tiêu đề và hàng dữ liệu mà không bị lệch cột.
+
+3. **Nâng cấp Thẩm mỹ Báo cáo PDF (Modern Enterprise PDF Layout)**:
+   - **Bố cục Siêu dữ liệu**: Thiết lập hộp thông tin metadata ở đầu trang với nền xám dịu `#f8fafc`, viền mảnh `#e2e8f0` và bo góc tròn `r=4`. Cấu trúc dạng lưới 2 cột hiển thị cân đối và dễ đọc.
+   - **Dashboard Stats Widget**: Tách biệt 3 cột thống kê bằng các đường kẻ phân cách dọc mảnh `#e2e8f0`. Sử dụng bo góc `r=6` cho hộp thống kê và tô màu dịu mắt.
+   - **Tối ưu hóa Bảng Dữ liệu**:
+     - Chiều cao mỗi dòng được tăng lên mức tối thiểu `24pt` (và tự động co giãn nếu nội dung nhiều dòng).
+     - Áp dụng thuật toán căn giữa văn bản theo chiều dọc (Vertical Centering) giúp các ô dữ liệu hiển thị cân đối, không bị lệch sát lề trên.
+     - Sử dụng zebra-striping nhẹ xám Slate `#f8fafc` xen kẽ với dòng trắng tinh và viền mỏng phân cách hàng `#e2e8f0`.
+     - Tiêu đề bảng sử dụng màu nền Slate 800 chuyên nghiệp `#1e293b`.
+     - Dòng tổng cộng cuối trang sử dụng màu nền Slate 100 `#f1f5f9` và chữ in đậm màu Indigo `#4f46e5` cho giá trị tổng.
+
+4. **Sửa lỗi Syntax & Đóng gói**:
+   - Loại bỏ một dấu ngoặc nhọn đóng dư thừa tại cuối file `dashboard-system.service.ts` gây lỗi TS1128 khi build.
+   - Xác thực biên dịch thành công `npm run build` cho backend (0 errors).
+
+---
+
+## Phase 23: Tích hợp Xuất file Excel (.xlsx) Định dạng Cao cấp ✅
+
+Để mang lại trải nghiệm chuyên nghiệp và trực quan nhất cho người dùng khi phân tích số liệu trên các công cụ bảng tính (Microsoft Excel, Google Sheets), chúng ta đã triển khai chức năng xuất báo cáo dạng tệp Excel Binary chuẩn (`.xlsx`) thay thế cho tệp văn bản CSV thô sơ.
+
+### Các thành phần đã triển khai:
+
+1. **Thư viện kết xuất ExcelJS**:
+   - Cài đặt và tích hợp package `exceljs` để xây dựng cấu trúc bảng tính nhị phân hoàn chỉnh từ Backend.
+
+2. **Thiết kế Mỹ thuật Bảng tính (Premium Spreadsheet Styling)**:
+   - **Màu sắc & Phân cấp thị giác**:
+     - Tiêu đề báo cáo lớn cỡ 14pt (Arial Bold, màu Slate 900 `#0f172a`), đặt trên dải màu nền nhạt của dòng 1.
+     - Các phần đầu mục như "TÓM TẮT THỐNG KÊ" sử dụng font Arial 10pt Bold màu Slate 800 `#1e293b`.
+     - Nhãn thuộc tính (labels) dùng font Arial 9pt Bold màu Slate 600 `#475569`.
+   - **Table Header & Data rows**:
+     - Tiêu đề cột của bảng được tô màu nền Slate 800 đậm `#1e293b`, chữ màu trắng tinh khiết, căn giữa theo chiều dọc và viền xám đậm.
+     - Các hàng dữ liệu được thiết kế zebra-striping xen kẽ dòng trắng và xám Slate nhạt `#f8fafc` kèm viền xám siêu mảnh `#e2e8f0`.
+     - Độ rộng các cột (`Column Widths`) được tính toán tối ưu giúp nội dung không bao giờ bị che lấp hoặc lỗi hiển thị `###` của Excel.
+
+3. **Công thức động & Định dạng Số thông minh (Smart Data Formatting & SUM Formula)**:
+   - **Kiểu dữ liệu số học thực tế (Numeric cells)**: Các giá trị số lượng, đơn giá và tổng giá trị được ghi nhận dưới dạng số thực thay vì chuỗi văn bản thô. Điều này cho phép người dùng Excel trực tiếp thực hiện các hàm tính toán, vẽ đồ thị.
+   - **Định dạng hiển thị tùy chỉnh**: Tự động áp dụng định dạng tiền tệ `#,##0" VND"` và số lượng `#,##0` để Excel hiển thị trực quan và tinh tế.
+   - **Công thức SUM tự động**: Tại dòng "Tổng cộng" ở cuối bảng, ô Tổng giá trị được gắn công thức tự động của Excel dạng `=SUM(G15:G30)`. Nhờ đó, nếu người dùng điều chỉnh số lượng hoặc đơn giá trên tệp đã tải xuống, tổng giá trị báo cáo sẽ tự động cập nhật chính xác!
+
+4. **Tích hợp Frontend**:
+   - Bổ sung tùy chọn `Excel (XLSX)` vào dropdown chọn định dạng xuất báo cáo tại widget Dashboard.
+   - Cập nhật định nghĩa kiểu dữ liệu và giá trị mặc định cho export state sang `xlsx`.
+   - Cập nhật DTO backend `ExportReportDto` để xác thực định dạng `'xlsx'` hợp lệ.
+
+---
+
+## Phase 24: Brevo Email Notification & Created User Audit Logging (Yêu Cầu 5) ✅
+
+Chúng ta đã triển khai thành công tính năng tự động gửi email thông báo mật khẩu tạm thời cho nhân viên mới thông qua dịch vụ Brevo, đồng thời cải tiến interceptor ghi nhật ký hệ thống để chụp chính xác ID của nhân sự mới được tạo.
+
+### Các thành phần đã triển khai:
+
+1. **Tích hợp SDK Brevo & Cấu hình Email**:
+   - Cấu hình các biến môi trường phục vụ gửi email trong [BE/.env](file:///d:/Personal%20Projects/University%20Project/logistic-mini/BE/.env): `BREVO_API_KEY`, `ADMIN_EMAIL_ADDRESS`, `ADMIN_EMAIL_NAME`.
+   - Cài đặt thư viện SDK `@getbrevo/brevo` phiên bản `3.0.1` để giao tiếp với API Brevo.
+
+2. **Dịch vụ Mail (Mail Service)**:
+   - Tạo mới [mail.service.ts](file:///d:/Personal%20Projects/University%20Project/logistic-mini/BE/src/modules/mail/mail.service.ts) định nghĩa class `MailService`.
+   - Triển khai phương thức `sendTemporaryPassword` để sinh nội dung HTML gửi thư chuyên nghiệp, cung cấp thông tin tài khoản (Email, Mật khẩu tạm thời) cho nhân viên mới.
+   - Bọc logic gửi email trong khối `try-catch` kèm logger ghi nhận lỗi để tránh làm gián đoạn transaction tạo tài khoản nếu API Brevo gặp sự cố.
+   - Tạo mới [mail.module.ts](file:///d:/Personal%20Projects/University%20Project/logistic-mini/BE/src/modules/mail/mail.module.ts) đóng gói dịch vụ mail để import vào các module khác.
+
+3. **Tự động gửi email trong luồng Tạo tài khoản**:
+   - Import `MailModule` vào [users.module.ts](file:///d:/Personal%20Projects/University%20Project/logistic-mini/BE/src/modules/users/users.module.ts).
+   - Inject `MailService` vào [users.service.ts](file:///d:/Personal%20Projects/University%20Project/logistic-mini/BE/src/modules/users/users.service.ts).
+   - Trong phương thức `create`, tự động sinh mật khẩu tạm thời ngẫu nhiên 8 ký tự bằng `Math.random().toString(36).slice(-8)`.
+   - Mã hóa mật khẩu tạm thời bằng bcrypt (12 rounds) trước khi lưu vào cơ sở dữ liệu.
+   - Gọi `await this.mailService.sendTemporaryPassword(savedUser.email, temporaryPassword)` sau khi lưu user thành công để kích hoạt tiến trình gửi email.
+
+4. **Cải tiến Audit Logging Interceptor**:
+   - Cập nhật [audit-log.interceptor.ts](file:///d:/Personal%20Projects/University%20Project/logistic-mini/BE/src/common/interceptors/audit-log.interceptor.ts) để giải quyết mã định danh thực thể được tạo qua phản hồi API.
+   - Bổ sung kiểm tra `responseBody?.data?.id` bên cạnh `responseBody?.id`. Nhờ đó, với các endpoint bọc ngoài dạng `{ message, data }` (như tạo người dùng mới), ID của tài khoản nhân viên mới được ghi nhận chính xác trong trường `entityId` của bảng `audit_logs`.
+
+### Kết quả kiểm tra & Xác thực:
+- **Backend Unit Tests**: Toàn bộ suite gồm **67/67 tests PASS** thành công.
+- **Biên dịch & Build**: Cả Backend (`nest build`) và Frontend (`npm run build`) biên dịch và đóng gói hoàn hảo không lỗi.
+- **Trải nghiệm thực tế**: Admin tạo tài khoản nhân viên mới thành công, hệ thống tự động lưu trữ, gửi email chứa mật khẩu tạm thời về địa chỉ đăng ký qua Brevo, và ghi nhật ký hoạt động chính xác với ID của tài khoản mới.

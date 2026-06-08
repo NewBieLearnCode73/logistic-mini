@@ -13,6 +13,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserRoleEntity } from './entities/user-role.entity';
 import { UserEntity } from './entities/user.entity';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class UsersService {
@@ -25,7 +26,8 @@ export class UsersService {
     private readonly roleRepository: Repository<RoleEntity>,
     @InjectRepository(NodeEntity)
     private readonly nodeRepository: Repository<NodeEntity>,
-  ) {}
+    private readonly mailService: MailService,
+  ) { }
 
   async findByEmail(email: string): Promise<UserEntity | null> {
     const formattedEmail = email.trim().toLowerCase();
@@ -99,9 +101,12 @@ export class UsersService {
     userRole.roleId = roleEntity.id;
     await this.userRoleRepository.save(userRole);
 
-    // Log simulated email activation
-    console.log(`[EMAIL SIMULATION] Gửi email kích hoạt mật khẩu tới ${savedUser.email}`);
-    console.log(`[EMAIL SIMULATION] Mật khẩu tạm thời: ${temporaryPassword}`);
+    // Send actual email using Brevo
+    await this.mailService.sendTemporaryPassword(savedUser.email, temporaryPassword);
+
+    // Log simulated email activation for records
+    console.log(`[EMAIL DISPATCHED] Gửi email kích hoạt mật khẩu tới ${savedUser.email}`);
+    console.log(`[EMAIL DISPATCHED] Mật khẩu tạm thời: ${temporaryPassword}`);
 
     // Load roles to return
     savedUser.userRoles = [userRole];
@@ -207,7 +212,7 @@ export class UsersService {
     }
 
     const updatedUser = await this.userRepository.save(user);
-    
+
     // Reload full relations
     const result = await this.findAdminDetail(updatedUser.id);
     if (result) {
@@ -250,6 +255,9 @@ export class UsersService {
 
     user.passwordHash = passwordHash;
     const savedUser = await this.userRepository.save(user);
+
+    // Send actual email using Brevo
+    await this.mailService.sendTemporaryPassword(savedUser.email, temporaryPassword);
 
     // Log simulated email activation
     console.log(`[EMAIL SIMULATION] Gửi email cấp lại mật khẩu tới ${savedUser.email}`);

@@ -112,7 +112,7 @@ describe('DashboardSystemService', () => {
 
       expect(report.contentType).toBe('text/csv; charset=utf-8');
       expect(report.filename).toBe('report_inventory_month.csv');
-      expect(report.content.toString()).toContain('BÁO CÁO CHUỖI CUNG ỨNG MINI');
+      expect(report.content.toString()).toContain('BÁO CÁO HỆ THỐNG LOGISTICS MINI');
     });
 
     it('should support custom date range with custom period', async () => {

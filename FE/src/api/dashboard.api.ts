@@ -10,7 +10,7 @@ export const dashboardApi = {
   getStats: () => api.get<DashboardStats>('/dashboard/stats'),
   exportReport: (data: {
     reportType: 'inventory' | 'shipments' | 'incidents';
-    format: 'csv' | 'pdf';
+    format: 'csv' | 'pdf' | 'xlsx';
     period?: 'today' | 'month' | 'quarter' | 'year' | 'custom';
     startDate?: string;
     endDate?: string;
