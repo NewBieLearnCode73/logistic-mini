@@ -190,6 +190,9 @@ export class NodesService {
     if (updateNodeDto.longitude !== undefined) node.longitude = updateNodeDto.longitude;
 
     if (updateNodeDto.version !== undefined) {
+      if (node.version !== updateNodeDto.version) {
+        throw new ConflictException('Dữ liệu đã bị thay đổi bởi người dùng khác. Vui lòng tải lại trang.');
+      }
       node.version = updateNodeDto.version;
     }
 
