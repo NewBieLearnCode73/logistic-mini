@@ -48,16 +48,17 @@ ON CONFLICT (id) DO NOTHING;
 
 -- 4. INSERT PRODUCTS
 INSERT INTO products (id, name, sku, unit, description, category, unit_price, is_active, created_at, updated_at) VALUES
-('770e8400-e29b-41d4-a716-446655440001', N'Xi Măng Hà Tiên PCB40', 'PROD-CEM-01', N'Tấn', N'Xi măng Portland hỗn hợp PCB40 Hà Tiên chất lượng cao', N'Vật liệu thô', 1200000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('770e8400-e29b-41d4-a716-446655440002', N'Thép Cuộn Hòa Phát Φ6', 'PROD-STE-02', N'Tấn', N'Thép cuộn xây dựng Hòa Phát phi 6 tiêu chuẩn', N'Sắt thép', 22000000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('770e8400-e29b-41d4-a716-446655440003', N'Cát Xây Dựng Sông Đồng Nai', 'PROD-SND-03', N'Khối', N'Cát vàng hạt lớn chuyên dùng cho bê tông đổ móng', N'Cát đá', 350000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('770e8400-e29b-41d4-a716-446655440004', N'Cát Thạch Anh Lọc Nước', 'PROD-QSD-04', N'kg', N'Cát thạch anh mịn dùng lọc nước tiêu chuẩn công nghiệp', N'Cát đá', 15000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('770e8400-e29b-41d4-a716-446655440005', N'Gạch Ống Đồng Tâm 4 Lỗ', 'PROD-BRK-05', N'Viên', N'Gạch ống đất nung 4 lỗ Đồng Tâm kích thước chuẩn', N'Gạch ngói', 1200.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('770e8400-e29b-41d4-a716-446655440006', N'Ngói Lợp Đất Nung Viglacera', 'PROD-TLE-06', N'Hộp', N'Ngói lợp 22 viên/m2 Viglacera màu đỏ tươi', N'Gạch ngói', 120000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('770e8400-e29b-41d4-a716-446655440007', N'Sơn Nước Ngoại Thất Dulux Weathershield', 'PROD-PNT-07', N'Thùng', N'Sơn nước ngoại thất Dulux WeatherShield bóng mờ 15L', N'Sơn phủ', 1850000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('770e8400-e29b-41d4-a716-446655440008', N'Bê Tông Tươi Holcim Mác 250', 'PROD-CNC-08', N'Khối', N'Bê tông thương phẩm Holcim Mác 250 độ sụt 10+-2', N'Bê tông', 950000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('770e8400-e29b-41d4-a716-446655440009', N'Đá Mi Sàng Đen 1x2', 'PROD-GRV-09', N'Khối', N'Đá mi sàng đen kích cỡ 1x2 cm dùng cho bê tông nhựa', N'Cát đá', 280000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('770e8400-e29b-41d4-a716-446655440010', N'Vữa Xây Tô Trộn Sẵn Sika Murar', 'PROD-MTR-10', N'Bao', N'Vữa xây tô khô trộn sẵn cao cấp Sika bao 40kg', N'Vật liệu đóng bao', 85000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+('770e8400-e29b-41d4-a716-446655440001', N'Xi Măng Hà Tiên PCB40', 'PROD-CEM-01', N'Tấn', N'Xi măng Portland hỗn hợp PCB40 Hà Tiên chất lượng cao', N'Vật liệu thô', 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440002', N'Thép Cuộn Hòa Phát Φ6', 'PROD-STE-02', N'Tấn', N'Thép cuộn xây dựng Hòa Phát phi 6 tiêu chuẩn', N'Cosmetics', 50000000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440003', N'Cát Xây Dựng Sông Đồng Nai', 'PROD-SND-03', N'Khối', N'Cát vàng hạt lớn chuyên dùng cho bê tông đổ móng', N'Cát đá', 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440004', N'Cát Thạch Anh Lọc Nước', 'PROD-QSD-04', N'kg', N'Cát thạch anh mịn dùng lọc nước tiêu chuẩn công nghiệp', N'Cát đá', 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440005', N'Gạch Ống Đồng Tâm 4 Lỗ', 'PROD-BRK-05', N'Viên', N'Gạch ống đất nung 4 lỗ Đồng Tâm kích thước chuẩn', N'Gạch ngói', 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440006', N'Ngói Lợp Đất Nung Viglacera', 'PROD-TLE-06', N'Hộp', N'Ngói lợp 22 viên/m2 Viglacera màu đỏ tươi', N'Gạch ngói', 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440007', N'Sơn Nước Ngoại Thất Dulux Weathershield', 'PROD-PNT-07', N'Thùng', N'Sơn nước ngoại thất Dulux WeatherShield bóng mờ 15L', N'Sơn phủ', 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440008', N'Bê Tông Tươi Holcim Mác 250', 'PROD-CNC-08', N'Khối', N'Bê tông thương phẩm Holcim Mác 250 độ sụt 10+-2', N'Bê tông', 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440009', N'Đá Mi Sàng Đen 1x2', 'PROD-GRV-09', N'Khối', N'Đá mi sàng đen kích cỡ 1x2 cm dùng cho bê tông nhựa', N'Cát đá', 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440010', N'Vữa Xây Tô Trộn Sẵn Sika Murar', 'PROD-MTR-10', N'Bao', N'Vữa xây tô khô trộn sẵn cao cấp Sika bao 40kg', N'Vật liệu đóng bao', 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('583f29b4-58bc-4205-a97c-6fd231423793', N'Khô Gà Bã Mía', 'SKU-CHICKEN', N'Hộp', N'Khô gà nhà a Độ', N'Food', 120000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 ON CONFLICT (id) DO NOTHING;
 
 -- 5. INSERT USERS (Passwords are 'password123' encrypted with Bcrypt 10 rounds)
@@ -100,12 +101,13 @@ DECLARE
         '770e8400-e29b-41d4-a716-446655440007'::uuid,
         '770e8400-e29b-41d4-a716-446655440008'::uuid,
         '770e8400-e29b-41d4-a716-446655440009'::uuid,
-        '770e8400-e29b-41d4-a716-446655440010'::uuid
+        '770e8400-e29b-41d4-a716-446655440010'::uuid,
+        '583f29b4-58bc-4205-a97c-6fd231423793'::uuid
     ];
-    units text[] := ARRAY[N'Tấn', N'Tấn', N'Khối', N'kg', N'Viên', N'Hộp', N'Thùng', N'Khối', N'Khối', N'Bao'];
-    skus text[] := ARRAY['PROD-CEM-01', 'PROD-STE-02', 'PROD-SND-03', 'PROD-QSD-04', 'PROD-BRK-05', 'PROD-TLE-06', 'PROD-PNT-07', 'PROD-CNC-08', 'PROD-GRV-09', 'PROD-MTR-10'];
-    prod_names text[] := ARRAY[N'Xi Măng Hà Tiên PCB40', N'Thép Cuộn Hòa Phát Φ6', N'Cát Xây Dựng Sông Đồng Nai', N'Cát Thạch Anh Lọc Nước', N'Gạch Ống Đồng Tâm 4 Lỗ', N'Ngói Lợp Đất Nung Viglacera', N'Sơn Nước Ngoại Thất Dulux Weathershield', N'Bê Tông Tươi Holcim Mác 250', N'Đá Mi Sàng Đen 1x2', N'Vữa Xây Tô Trộn Sẵn Sika Murar'];
-    unit_prices numeric[] := ARRAY[1200000.00, 22000000.00, 350000.00, 15000.00, 1200.00, 120000.00, 1850000.00, 950000.00, 280000.00, 85000.00];
+    units text[] := ARRAY[N'Tấn', N'Tấn', N'Khối', N'kg', N'Viên', N'Hộp', N'Thùng', N'Khối', N'Khối', N'Bao', N'Hộp'];
+    skus text[] := ARRAY['PROD-CEM-01', 'PROD-STE-02', 'PROD-SND-03', 'PROD-QSD-04', 'PROD-BRK-05', 'PROD-TLE-06', 'PROD-PNT-07', 'PROD-CNC-08', 'PROD-GRV-09', 'PROD-MTR-10', 'SKU-CHICKEN'];
+    prod_names text[] := ARRAY[N'Xi Măng Hà Tiên PCB40', N'Thép Cuộn Hòa Phát Φ6', N'Cát Xây Dựng Sông Đồng Nai', N'Cát Thạch Anh Lọc Nước', N'Gạch Ống Đồng Tâm 4 Lỗ', N'Ngói Lợp Đất Nung Viglacera', N'Sơn Nước Ngoại Thất Dulux Weathershield', N'Bê Tông Tươi Holcim Mác 250', N'Đá Mi Sàng Đen 1x2', N'Vữa Xây Tô Trộn Sẵn Sika Murar', N'Khô Gà Bã Mía'];
+    unit_prices numeric[] := ARRAY[0.00, 50000000.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 120000.00];
     -- Node references
     mfr_nodes uuid[] := ARRAY[
         '550e8400-e29b-41d4-a716-446655440001'::uuid, -- HCM Factory
@@ -211,7 +213,7 @@ BEGIN
         ship_id := gen_random_uuid();
         
         -- B. Select product attributes
-        p_idx := floor(random() * 10) + 1; -- 1 to 10
+        p_idx := floor(random() * 11) + 1; -- 1 to 11
         qty := round((random() * 2000 + 50)::numeric, 3);
         
         -- C. Select manufacturing factory
@@ -489,4 +491,4 @@ END;
 $$;
 
 -- 8. COMPLETED LOGGING PRINT
-SELECT 'SUCCESS: Imported 10 nodes, 10 products, 9 core users with passwords, and generated over 1500 batches, 1200 shipments, 2500 events, 200 incidents, 2500 scans, and 4000 audit logs.' AS result_message;
+SELECT 'SUCCESS: Imported 10 nodes, 11 products, 9 core users with passwords, and generated over 1500 batches, 1200 shipments, 2500 events, 200 incidents, 2500 scans, and 4000 audit logs.' AS result_message;
