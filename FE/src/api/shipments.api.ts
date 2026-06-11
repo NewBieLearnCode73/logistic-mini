@@ -12,6 +12,6 @@ export const shipmentsApi = {
   create: (data: CreateShipmentDto) =>
     api.post<Shipment>('/shipments', data),
 
-  receive: (id: string) =>
-    api.patch<Shipment>(`/shipments/${id}/receive`),
+  receive: (id: string, data?: any) =>
+    api.patch<Shipment>(`/shipments/${id}/receive`, data),
 };

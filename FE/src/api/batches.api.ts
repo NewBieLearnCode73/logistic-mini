@@ -21,7 +21,7 @@ export const batchesApi = {
   create: (data: CreateBatchDto) =>
     api.post<Batch>('/batches', data),
 
-  sell: (id: string, data: { quantity: number }) =>
+  sell: (id: string, data: { quantity: number; saleDate?: string; salePrice?: number; costPrice?: number }) =>
     api.post<void>(`/batches/${id}/sell`, data),
 
   regenerateQr: (id: string) =>

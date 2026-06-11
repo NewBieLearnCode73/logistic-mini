@@ -37,7 +37,12 @@ export default function BatchDetailPage() {
   // Modals state
   const [isSellOpen, setIsSellOpen] = useState(false);
   const [sellQuantity, setSellQuantity] = useState(1);
+  const [saleDate, setSaleDate] = useState('');
   const [sellError, setSellError] = useState('');
+  const [salePrice, setSalePrice] = useState<number | ''>('');
+  const [salePriceError, setSalePriceError] = useState('');
+  const [costPrice, setCostPrice] = useState<number | ''>('');
+  const [costPriceError, setCostPriceError] = useState('');
 
   if (isLoading) {
     return (
@@ -70,20 +75,78 @@ export default function BatchDetailPage() {
   }
 
   const handleOpenSell = () => {
+    const defaultCostPrice = batch?.product?.unitPrice || 0;
+
     setSellQuantity(1);
+    setCostPrice(Number(defaultCostPrice));
+    setSalePrice(Number(defaultCostPrice));
+    setSaleDate(new Date().toISOString().split('T')[0]);
     setSellError('');
+    setSalePriceError('');
+    setCostPriceError('');
     setIsSellOpen(true);
+  };
+
+  const handleQuantityChange = (val: string) => {
+    const qty = parseFloat(val);
+    setSellQuantity(qty);
+    if (!isNaN(qty) && qty > 0) {
+      setSellError('');
+    } else {
+      setSellError(t('batch.sellQuantityError'));
+    }
   };
 
   const handleSellSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (sellQuantity <= 0) {
+    
+    let hasError = false;
+    setSellError('');
+    setSalePriceError('');
+    setCostPriceError('');
+
+    if (isNaN(sellQuantity) || sellQuantity <= 0) {
       setSellError(t('batch.sellQuantityError'));
-      return;
+      hasError = true;
+    } else if (sellQuantity > (batch?.quantity || 0)) {
+      setSellError(`Số lượng bán vượt quá số lượng hiện có (${batch?.quantity})`);
+      hasError = true;
     }
+
+    if (costPrice === '' || isNaN(Number(costPrice)) || Number(costPrice) <= 0) {
+      setCostPriceError('Giá mua phải lớn hơn 0');
+      hasError = true;
+    }
+
+    if (salePrice === '' || isNaN(Number(salePrice)) || Number(salePrice) <= 0) {
+      setSalePriceError('Giá bán phải lớn hơn 0');
+      hasError = true;
+    }
+
+    if (costPrice !== '' && salePrice !== '' && Number(salePrice) < Number(costPrice)) {
+      setSalePriceError('Giá bán không được nhỏ hơn giá mua');
+      hasError = true;
+    }
+
+    if (hasError) return;
     
     sellMutation.mutate(
-      { id: batch.id, quantity: Number(sellQuantity) },
+      {
+        id: batch.id,
+        quantity: Number(sellQuantity),
+        saleDate: (() => {
+          if (!saleDate) return undefined;
+          const parts = saleDate.split('-');
+          const y = parseInt(parts[0], 10);
+          const m = parseInt(parts[1], 10) - 1;
+          const d = parseInt(parts[2], 10);
+          const date = new Date();
+          date.setFullYear(y, m, d);
+          return date.toISOString();
+        })(),
+        salePrice: Number(salePrice),
+        costPrice: Number(costPrice),
+      },
       {
         onSuccess: () => {
           setIsSellOpen(false);
@@ -159,18 +222,22 @@ export default function BatchDetailPage() {
                   {batch.quantity} {batch.unit}
                 </span>
               </div>
-              <div>
-                <span className="text-zinc-400 dark:text-zinc-500 block text-2xs">{t('product.unitPrice', 'Đơn giá')}</span>
-                <span className="font-medium text-zinc-900 dark:text-zinc-50">
-                  {formatCurrency(batch.product?.unitPrice)}
-                </span>
-              </div>
-              <div>
-                <span className="text-zinc-400 dark:text-zinc-500 block text-2xs">{t('batch.totalValue', 'Tổng giá trị')}</span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
-                  {formatCurrency(batch.totalValue)}
-                </span>
-              </div>
+              {(isAdmin || isRetailer) && (
+                <>
+                  <div>
+                    <span className="text-zinc-400 dark:text-zinc-500 block text-2xs">{t('product.unitPrice', 'Đơn giá')}</span>
+                    <span className="font-medium text-zinc-900 dark:text-zinc-50">
+                      {formatCurrency(batch.product?.unitPrice)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-zinc-400 dark:text-zinc-500 block text-2xs">{t('batch.totalValue', 'Tổng giá trị')}</span>
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                      {formatCurrency(batch.totalValue)}
+                    </span>
+                  </div>
+                </>
+              )}
               <div>
                 <span className="text-zinc-400 dark:text-zinc-500 block text-2xs">{t('batch.manufactureDate')}</span>
                 <span className="font-medium text-zinc-900 dark:text-zinc-50">
@@ -251,8 +318,8 @@ export default function BatchDetailPage() {
               {t('batch.retailSellDesc')} (<strong>{t('batch.unit')}: {batch.unit}</strong>)
             </p>
 
-            <div>
-              <label className="block text-[13px] font-medium text-zinc-700 dark:text-zinc-355 mb-1">
+             <div>
+              <label className="block text-[13px] font-medium text-zinc-700 dark:text-zinc-300 mb-1">
                 {t('batch.sellQuantity')} <span className="text-red-500">*</span>
               </label>
               <input
@@ -260,7 +327,7 @@ export default function BatchDetailPage() {
                 min="0.001"
                 step="any"
                 value={sellQuantity || ''}
-                onChange={(e) => setSellQuantity(parseFloat(e.target.value))}
+                onChange={(e) => handleQuantityChange(e.target.value)}
                 className={`input-field ${sellError ? 'border-red-500 focus:ring-red-500' : ''}`}
                 placeholder="10"
                 required
@@ -270,6 +337,96 @@ export default function BatchDetailPage() {
                 <p className="mt-1 text-2xs text-red-600 dark:text-red-400">{sellError}</p>
               )}
             </div>
+
+            <div>
+              <label className="block text-[13px] font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                Ngày bán hàng <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                value={saleDate}
+                onChange={(e) => setSaleDate(e.target.value)}
+                className="input-field"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                Đơn giá mua / đơn vị ({batch.unit}) <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                min="0.01"
+                step="any"
+                value={costPrice}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setCostPrice(val === '' ? '' : Number(val));
+                  setCostPriceError('');
+                }}
+                className={`input-field ${costPriceError ? 'border-red-500 focus:ring-red-500' : ''}`}
+                placeholder="10000"
+                required
+              />
+              {costPriceError && (
+                <p className="mt-1 text-2xs text-red-600 dark:text-red-400">{costPriceError}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-medium text-zinc-700 dark:text-zinc-300 mb-1">
+                Đơn giá bán lẻ / đơn vị ({batch.unit}) <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                min="0.01"
+                step="any"
+                value={salePrice}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setSalePrice(val === '' ? '' : Number(val));
+                  setSalePriceError('');
+                }}
+                className={`input-field ${salePriceError ? 'border-red-500 focus:ring-red-500' : ''}`}
+                placeholder="15000"
+                required
+              />
+              {salePriceError && (
+                <p className="mt-1 text-2xs text-red-600 dark:text-red-400">{salePriceError}</p>
+              )}
+            </div>
+
+            {/* Profit Preview */}
+            {sellQuantity > 0 && costPrice !== '' && salePrice !== '' && (
+              <div className="bg-zinc-50 dark:bg-zinc-900/50 p-3 rounded-lg border border-zinc-200/50 dark:border-zinc-800/40 text-xs space-y-1.5">
+                <h5 className="font-semibold text-zinc-700 dark:text-zinc-300 text-2xs uppercase tracking-wider mb-1">
+                  Xem trước lợi nhuận
+                </h5>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500 dark:text-zinc-400">Đơn giá mua:</span>
+                  <span className="font-medium text-zinc-900 dark:text-zinc-50">{formatCurrency(Number(costPrice))}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500 dark:text-zinc-400">Đơn giá bán lẻ:</span>
+                  <span className="font-medium text-zinc-900 dark:text-zinc-50">{formatCurrency(Number(salePrice))}</span>
+                </div>
+                <div className="flex justify-between border-t border-zinc-200/50 dark:border-zinc-800/40 pt-1.5">
+                  <span className="text-zinc-500 dark:text-zinc-400">Tổng doanh thu:</span>
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-50">{formatCurrency(sellQuantity * Number(salePrice))}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-zinc-500 dark:text-zinc-400">Tổng giá vốn:</span>
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-50">{formatCurrency(sellQuantity * Number(costPrice))}</span>
+                </div>
+                <div className="flex justify-between border-t border-zinc-200/50 dark:border-zinc-800/40 pt-1.5 font-bold">
+                  <span className="text-zinc-700 dark:text-zinc-300">Lợi nhuận ước tính:</span>
+                  <span className={`font-bold ${(sellQuantity * Number(salePrice)) - (sellQuantity * Number(costPrice)) >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-600 dark:text-red-400'}`}>
+                    {formatCurrency((sellQuantity * Number(salePrice)) - (sellQuantity * Number(costPrice)))}
+                  </span>
+                </div>
+              </div>
+            )}
 
             <div className="flex justify-end gap-2 pt-3 border-t border-zinc-200/50 dark:border-zinc-800/40">
               <button

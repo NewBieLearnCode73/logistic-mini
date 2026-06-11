@@ -15,6 +15,7 @@ import {
   ArrowLeftOnRectangleIcon,
   QrCodeIcon,
   KeyIcon,
+  BanknotesIcon,
 } from '@heroicons/react/24/outline';
 import { RoleName } from '../../utils/constants';
 import FormModal from '../ui/FormModal';
@@ -41,6 +42,12 @@ const navItems: NavItem[] = [
     label: 'sidebar.myWarehouse',
     roles: [RoleName.MANUFACTURER, RoleName.DISTRIBUTOR, RoleName.RETAILER],
     dynamicPath: (nodeId) => `/nodes/${nodeId}`,
+  },
+  {
+    icon: BanknotesIcon,
+    label: 'sidebar.financialReport',
+    path: '/reports/financial',
+    roles: [RoleName.RETAILER],
   },
   { icon: QrCodeIcon, label: 'sidebar.scan', path: '/scan', roles: '*' },
   { type: 'divider', label: 'sidebar.administration', roles: [RoleName.ADMIN] },

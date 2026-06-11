@@ -7,11 +7,13 @@ import { PublicTraceController } from './public-trace.controller';
 import { AuditLogInterceptor } from '../../common/interceptors/audit-log.interceptor';
 import { BatchEntity } from '../batches/entities/batch.entity';
 import { TimelineEventEntity } from '../batches/entities/timeline-event.entity';
+import { JwtService } from '@nestjs/jwt';
 
 describe('Audit & Trace Module', () => {
   let service: AuditService;
   let controller: PublicTraceController;
   let interceptor: AuditLogInterceptor;
+  let jwtService: JwtService;
 
   const mockManager = {
     findOne: jest.fn(),
@@ -36,6 +38,10 @@ describe('Audit & Trace Module', () => {
     getRepository: jest.fn().mockReturnValue(mockRepository),
   };
 
+  const mockJwtService = {
+    verify: jest.fn(),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -45,12 +51,14 @@ describe('Audit & Trace Module', () => {
         AuditService,
         AuditLogInterceptor,
         { provide: DataSource, useValue: mockDataSource },
+        { provide: JwtService, useValue: mockJwtService },
       ],
     }).compile();
 
     service = module.get<AuditService>(AuditService);
     controller = module.get<PublicTraceController>(PublicTraceController);
     interceptor = module.get<AuditLogInterceptor>(AuditLogInterceptor);
+    jwtService = module.get<JwtService>(JwtService);
   });
 
   describe('PublicTraceController', () => {
@@ -186,6 +194,59 @@ describe('Audit & Trace Module', () => {
 
       expect(result).toEqual(responseObj);
       expect(mockRepository.save).toHaveBeenCalled();
+    });
+  });
+
+  describe('AuditService', () => {
+    it('should return complete timeline for Admin', async () => {
+      const events = [
+        { id: '1', eventType: 'CREATED', occurredAt: new Date('2026-06-01') },
+        { id: '2', eventType: 'SHIPPED', shipmentId: 'ship-1', occurredAt: new Date('2026-06-02') },
+        { id: '3', eventType: 'RECEIVED', shipmentId: 'ship-1', occurredAt: new Date('2026-06-03') },
+      ];
+
+      const spyRepo = jest.spyOn(mockDataSource, 'getRepository').mockImplementation((entity: any) => {
+        if (entity.name === 'TimelineEventEntity') {
+          return { find: jest.fn().mockResolvedValue(events) } as any;
+        }
+        return {} as any;
+      });
+
+      const user = { userId: 'admin-uuid', role: 'Admin' };
+      const result = await service.getBatchTimeline('batch-uuid', user);
+
+      expect(result.length).toBe(3);
+      spyRepo.mockRestore();
+    });
+
+    it('should filter timeline for Manufacturer up to first received event', async () => {
+      const events = [
+        { id: '1', eventType: 'CREATED', nodeId: 'mfr-node-uuid', occurredAt: new Date('2026-06-01') },
+        { id: '2', eventType: 'SHIPPED', shipmentId: 'ship-1', nodeId: 'mfr-node-uuid', occurredAt: new Date('2026-06-02') },
+        { id: '3', eventType: 'RECEIVED', shipmentId: 'ship-1', nodeId: 'dist-a-node-uuid', occurredAt: new Date('2026-06-03') },
+        { id: '4', eventType: 'SHIPPED', shipmentId: 'ship-2', nodeId: 'dist-a-node-uuid', occurredAt: new Date('2026-06-04') },
+        { id: '5', eventType: 'RECEIVED', shipmentId: 'ship-2', nodeId: 'dist-b-node-uuid', occurredAt: new Date('2026-06-05') },
+      ];
+
+      const spyRepo = jest.spyOn(mockDataSource, 'getRepository').mockImplementation((entity: any) => {
+        if (entity.name === 'TimelineEventEntity') {
+          return { find: jest.fn().mockResolvedValue(events) } as any;
+        }
+        if (entity.name === 'ShipmentEntity') {
+          return {
+            find: jest.fn().mockResolvedValue([{ id: 'ship-1', sourceNodeId: 'mfr-node-uuid' }]),
+          } as any;
+        }
+        return {} as any;
+      });
+
+      const user = { userId: 'mfr-uuid', role: 'Manufacturer', nodeId: 'mfr-node-uuid' };
+      const result = await service.getBatchTimeline('batch-uuid', user);
+
+      expect(result.length).toBe(5);
+      expect(result[result.length - 1].eventType).toBe('RECEIVED');
+      expect(result[result.length - 1].shipmentId).toBe('ship-2');
+      spyRepo.mockRestore();
     });
   });
 });

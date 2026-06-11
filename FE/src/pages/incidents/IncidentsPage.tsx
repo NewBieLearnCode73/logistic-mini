@@ -202,24 +202,26 @@ export default function IncidentsPage() {
       render: (inc) => {
         if (inc.status !== 'OPEN') return <span className="text-2xs text-zinc-400 dark:text-zinc-500">—</span>;
 
-        const isReporter = inc.reportedBy === currentUserId;
+        const isLostDisabled = !!(
+          inc.firstApprovedBy &&
+          (currentUserId === inc.firstApprovedBy || currentUserId === inc.reportedBy)
+        );
 
         return (
           <div className="flex justify-end gap-1.5">
             <button
               onClick={() => handleOpenFoundConfirm(inc)}
-              disabled={isReporter}
-              className={`btn-ghost p-1 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20 disabled:opacity-40 disabled:cursor-not-allowed`}
-              title={isReporter ? t('incident.dualApprovalWarn') : t('incident.confirmFound')}
+              className={`btn-ghost p-1 text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/20`}
+              title={t('incident.confirmFound')}
             >
               <CheckIcon className="h-4 w-4 inline" />
               <span className="text-2xs font-semibold ml-0.5">{t('incident.confirmFound')}</span>
             </button>
             <button
               onClick={() => handleOpenLostConfirm(inc)}
-              disabled={isReporter}
+              disabled={isLostDisabled}
               className={`btn-ghost p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 disabled:opacity-40 disabled:cursor-not-allowed`}
-              title={isReporter ? t('incident.dualApprovalWarn') : t('incident.confirmLost')}
+              title={isLostDisabled ? t('incident.dualApprovalWarn') : t('incident.confirmLost')}
             >
               <XMarkIcon className="h-4 w-4 inline" />
               <span className="text-2xs font-semibold ml-0.5">{t('incident.confirmLost')}</span>

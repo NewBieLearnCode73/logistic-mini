@@ -48,16 +48,16 @@ ON CONFLICT (id) DO NOTHING;
 
 -- 4. INSERT PRODUCTS
 INSERT INTO products (id, name, sku, unit, description, category, unit_price, is_active, created_at, updated_at) VALUES
-('770e8400-e29b-41d4-a716-446655440001', N'Xi Măng Hà Tiên PCB40', 'PROD-CEM-01', N'Tấn', N'Xi măng Portland hỗn hợp PCB40 Hà Tiên chất lượng cao', N'Vật liệu thô', 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('770e8400-e29b-41d4-a716-446655440002', N'Thép Cuộn Hòa Phát Φ6', 'PROD-STE-02', N'Tấn', N'Thép cuộn xây dựng Hòa Phát phi 6 tiêu chuẩn', N'Cosmetics', 50000000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('770e8400-e29b-41d4-a716-446655440003', N'Cát Xây Dựng Sông Đồng Nai', 'PROD-SND-03', N'Khối', N'Cát vàng hạt lớn chuyên dùng cho bê tông đổ móng', N'Cát đá', 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('770e8400-e29b-41d4-a716-446655440004', N'Cát Thạch Anh Lọc Nước', 'PROD-QSD-04', N'kg', N'Cát thạch anh mịn dùng lọc nước tiêu chuẩn công nghiệp', N'Cát đá', 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('770e8400-e29b-41d4-a716-446655440005', N'Gạch Ống Đồng Tâm 4 Lỗ', 'PROD-BRK-05', N'Viên', N'Gạch ống đất nung 4 lỗ Đồng Tâm kích thước chuẩn', N'Gạch ngói', 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('770e8400-e29b-41d4-a716-446655440006', N'Ngói Lợp Đất Nung Viglacera', 'PROD-TLE-06', N'Hộp', N'Ngói lợp 22 viên/m2 Viglacera màu đỏ tươi', N'Gạch ngói', 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('770e8400-e29b-41d4-a716-446655440007', N'Sơn Nước Ngoại Thất Dulux Weathershield', 'PROD-PNT-07', N'Thùng', N'Sơn nước ngoại thất Dulux WeatherShield bóng mờ 15L', N'Sơn phủ', 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('770e8400-e29b-41d4-a716-446655440008', N'Bê Tông Tươi Holcim Mác 250', 'PROD-CNC-08', N'Khối', N'Bê tông thương phẩm Holcim Mác 250 độ sụt 10+-2', N'Bê tông', 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('770e8400-e29b-41d4-a716-446655440009', N'Đá Mi Sàng Đen 1x2', 'PROD-GRV-09', N'Khối', N'Đá mi sàng đen kích cỡ 1x2 cm dùng cho bê tông nhựa', N'Cát đá', 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
-('770e8400-e29b-41d4-a716-446655440010', N'Vữa Xây Tô Trộn Sẵn Sika Murar', 'PROD-MTR-10', N'Bao', N'Vữa xây tô khô trộn sẵn cao cấp Sika bao 40kg', N'Vật liệu đóng bao', 0.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440001', N'Xi Măng Hà Tiên PCB40', 'PROD-CEM-01', N'Tấn', N'Xi măng Portland hỗn hợp PCB40 Hà Tiên chất lượng cao', N'Vật liệu thô', 1200000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440002', N'Thép Cuộn Hòa Phát Φ6', 'PROD-STE-02', N'Tấn', N'Thép cuộn xây dựng Hòa Phát phi 6 tiêu chuẩn', N'Cosmetics', 15000000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440003', N'Cát Xây Dựng Sông Đồng Nai', 'PROD-SND-03', N'Khối', N'Cát vàng hạt lớn chuyên dùng cho bê tông đổ móng', N'Cát đá', 250000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440004', N'Cát Thạch Anh Lọc Nước', 'PROD-QSD-04', N'kg', N'Cát thạch anh mịn dùng lọc nước tiêu chuẩn công nghiệp', N'Cát đá', 15000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440005', N'Gạch Ống Đồng Tâm 4 Lỗ', 'PROD-BRK-05', N'Viên', N'Gạch ống đất nung 4 lỗ Đồng Tâm kích thước chuẩn', N'Gạch ngói', 1200.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440006', N'Ngói Lợp Đất Nung Viglacera', 'PROD-TLE-06', N'Hộp', N'Ngói lợp 22 viên/m2 Viglacera màu đỏ tươi', N'Gạch ngói', 150000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440007', N'Sơn Nước Ngoại Thất Dulux Weathershield', 'PROD-PNT-07', N'Thùng', N'Sơn nước ngoại thất Dulux WeatherShield bóng mờ 15L', N'Sơn phủ', 2200000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440008', N'Bê Tông Tươi Holcim Mác 250', 'PROD-CNC-08', N'Khối', N'Bê tông thương phẩm Holcim Mác 250 độ sụt 10+-2', N'Bê tông', 1350000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440009', N'Đá Mi Sàng Đen 1x2', 'PROD-GRV-09', N'Khối', N'Đá mi sàng đen kích cỡ 1x2 cm dùng cho bê tông nhựa', N'Cát đá', 320000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('770e8400-e29b-41d4-a716-446655440010', N'Vữa Xây Tô Trộn Sẵn Sika Murar', 'PROD-MTR-10', N'Bao', N'Vữa xây tô khô trộn sẵn cao cấp Sika bao 40kg', N'Vật liệu đóng bao', 95000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
 ('583f29b4-58bc-4205-a97c-6fd231423793', N'Khô Gà Bã Mía', 'SKU-CHICKEN', N'Hộp', N'Khô gà nhà a Độ', N'Food', 120000.00, true, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 ON CONFLICT (id) DO NOTHING;
 
@@ -107,7 +107,7 @@ DECLARE
     units text[] := ARRAY[N'Tấn', N'Tấn', N'Khối', N'kg', N'Viên', N'Hộp', N'Thùng', N'Khối', N'Khối', N'Bao', N'Hộp'];
     skus text[] := ARRAY['PROD-CEM-01', 'PROD-STE-02', 'PROD-SND-03', 'PROD-QSD-04', 'PROD-BRK-05', 'PROD-TLE-06', 'PROD-PNT-07', 'PROD-CNC-08', 'PROD-GRV-09', 'PROD-MTR-10', 'SKU-CHICKEN'];
     prod_names text[] := ARRAY[N'Xi Măng Hà Tiên PCB40', N'Thép Cuộn Hòa Phát Φ6', N'Cát Xây Dựng Sông Đồng Nai', N'Cát Thạch Anh Lọc Nước', N'Gạch Ống Đồng Tâm 4 Lỗ', N'Ngói Lợp Đất Nung Viglacera', N'Sơn Nước Ngoại Thất Dulux Weathershield', N'Bê Tông Tươi Holcim Mác 250', N'Đá Mi Sàng Đen 1x2', N'Vữa Xây Tô Trộn Sẵn Sika Murar', N'Khô Gà Bã Mía'];
-    unit_prices numeric[] := ARRAY[0.00, 50000000.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 120000.00];
+    unit_prices numeric[] := ARRAY[1200000.00, 15000000.00, 250000.00, 15000.00, 1200.00, 150000.00, 2200000.00, 1350000.00, 320000.00, 95000.00, 120000.00];
     -- Node references
     mfr_nodes uuid[] := ARRAY[
         '550e8400-e29b-41d4-a716-446655440001'::uuid, -- HCM Factory
@@ -203,6 +203,11 @@ DECLARE
     u_agent text;
     lat_offset numeric;
     lng_offset numeric;
+    prod_cost_price numeric;
+    prod_sale_price numeric;
+    total_cost numeric;
+    total_revenue numeric;
+    total_profit numeric;
 
 BEGIN
     -- MAIN SEEDING LOOP (Runs 1,500 times)
@@ -372,9 +377,23 @@ BEGIN
                     id, batch_id, event_type, node_id, actor_id, shipment_id, quantity_delta, notes, occurred_at, metadata
                 ) VALUES (
                     gen_random_uuid(), b_id, 'RECEIVED', current_n_id, reported_user, ship_id, qty,
-                    N'Đã kiểm tra chất lượng và nhận hàng vào kho dự trữ.', r_time,
+                    N'Đã nhận hàng thành công tại kho nhận. Mã vận đơn: ' || t_code, r_time,
                     jsonb_build_object('received_qty', qty, 'receiver_id', reported_user)
                 );
+                
+                -- If received by a Retailer, insert PRICE_CONFIGURED event
+                IF current_n_id IN (SELECT id FROM nodes WHERE node_type = 'RETAILER') THEN
+                    prod_cost_price := unit_prices[p_idx];
+                    prod_sale_price := prod_cost_price * 1.3;
+                    
+                    INSERT INTO timeline_events (
+                        id, batch_id, event_type, node_id, actor_id, shipment_id, quantity_delta, notes, occurred_at, metadata
+                    ) VALUES (
+                        gen_random_uuid(), b_id, 'PRICE_CONFIGURED', current_n_id, reported_user, NULL, NULL,
+                        N'Đã cấu hình giá mua và bán lẻ cho lô hàng.', r_time + interval '1 minute',
+                        jsonb_build_object('cost_price', prod_cost_price, 'sale_price', prod_sale_price)
+                    );
+                END IF;
                 
                 -- Update inventory
                 IF b_status = 'RECEIVED' THEN
@@ -386,13 +405,26 @@ BEGIN
                     INSERT INTO inventory (batch_id, node_id, quantity_available, last_updated_at, version)
                     VALUES (b_id, current_n_id, 0, sold_time, 1);
                     
+                    prod_cost_price := unit_prices[p_idx];
+                    prod_sale_price := prod_cost_price * 1.3;
+                    total_cost := qty * prod_cost_price;
+                    total_revenue := qty * prod_sale_price;
+                    total_profit := total_revenue - total_cost;
+
                     -- Insert SOLD timeline event
                     INSERT INTO timeline_events (
                         id, batch_id, event_type, node_id, actor_id, shipment_id, quantity_delta, notes, occurred_at, metadata
                     ) VALUES (
                         gen_random_uuid(), b_id, 'SOLD', current_n_id, reported_user, NULL, -qty,
                         N'Đã bán lẻ toàn bộ số lượng hàng hóa cho khách hàng tại cửa hàng.', sold_time,
-                        jsonb_build_object('sale_qty', qty)
+                        jsonb_build_object(
+                            'qty_sold', qty,
+                            'cost_price', prod_cost_price,
+                            'sale_price', prod_sale_price,
+                            'revenue', total_revenue,
+                            'cost', total_cost,
+                            'profit', total_profit
+                        )
                     );
                 END IF;
                 

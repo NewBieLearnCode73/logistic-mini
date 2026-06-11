@@ -51,8 +51,8 @@ export function useSellBatch() {
   const { t } = useTranslation();
 
   return useMutation({
-    mutationFn: ({ id, quantity }: { id: string; quantity: number }) =>
-      batchesApi.sell(id, { quantity }),
+    mutationFn: ({ id, quantity, saleDate, salePrice, costPrice }: { id: string; quantity: number; saleDate?: string; salePrice?: number; costPrice?: number }) =>
+      batchesApi.sell(id, { quantity, saleDate, salePrice, costPrice }),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: ['batches'] });
       queryClient.invalidateQueries({ queryKey: ['batches', id] });

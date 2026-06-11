@@ -34,7 +34,7 @@ export class DashboardSystemController {
   }
 
   @Post('reports/export')
-  @Roles(RoleName.ADMIN, RoleName.MANUFACTURER)
+  @Roles(RoleName.ADMIN, RoleName.MANUFACTURER, RoleName.RETAILER)
   async exportReport(
     @Body() dto: ExportReportDto,
     @Request() req: any,
@@ -51,5 +51,17 @@ export class DashboardSystemController {
     res.setHeader('Content-Type', report.contentType);
     res.setHeader('Content-Disposition', `attachment; filename=${report.filename}`);
     res.send(report.content);
+  }
+
+  @Get('reports/financial')
+  @Roles(RoleName.RETAILER)
+  @HttpCode(HttpStatus.OK)
+  async getFinancialReport(
+    @Request() req: any,
+    @Query('period') period?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.service.getFinancialReport(period || 'custom', req.user, startDate, endDate);
   }
 }

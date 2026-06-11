@@ -6,6 +6,7 @@ import { QrService } from './qr.service';
 import { CreateBatchDto } from './dto/create-batch.dto';
 import { ProductEntity } from '../products/entities/product.entity';
 import { NodeEntity } from '../nodes/entities/node.entity';
+import { TimelineEventEntity } from './entities/timeline-event.entity';
 
 describe('BatchesService', () => {
   let service: BatchesService;
@@ -170,6 +171,18 @@ describe('BatchesService', () => {
   });
 
   describe('sell', () => {
+    beforeEach(() => {
+      mockManager.findOne = jest.fn().mockImplementation((entityClass, options) => {
+        if (entityClass === TimelineEventEntity) {
+          return Promise.resolve({
+            id: 'price-event-uuid',
+            metadata: { cost_price: 1000, sale_price: 1500 },
+          });
+        }
+        return Promise.resolve({ id: 'batch-id', status: 'RECEIVED' });
+      });
+    });
+
     it('should throw BadRequestException if user is not assigned to a nodeId', async () => {
       const user = { userId: 'user-uuid', role: 'Retailer', nodeId: null };
       await expect(service.sell('batch-id', { quantity: 10 }, user)).rejects.toThrow(
@@ -186,7 +199,7 @@ describe('BatchesService', () => {
       };
       (mockDataSource.createQueryRunner().manager as any).createQueryBuilder = jest.fn().mockReturnValue(mockQueryBuilder);
 
-      await expect(service.sell('batch-id', { quantity: 10 }, user)).rejects.toThrow(
+      await expect(service.sell('batch-id', { quantity: 10, costPrice: 1000, salePrice: 1500 }, user)).rejects.toThrow(
         new NotFoundException('Lô hàng không tồn tại hoặc không còn hàng tồn kho tại cửa hàng của bạn'),
       );
     });
@@ -201,7 +214,10 @@ describe('BatchesService', () => {
       };
       (mockDataSource.createQueryRunner().manager as any).createQueryBuilder = jest.fn().mockReturnValue(mockQueryBuilder);
 
-      await expect(service.sell('batch-id', { quantity: 10 }, user)).rejects.toThrow(
+      const manager = mockDataSource.createQueryRunner().manager as any;
+      manager.findOne = jest.fn().mockResolvedValue({ id: 'batch-id', product: { unitPrice: 1000 } });
+
+      await expect(service.sell('batch-id', { quantity: 10, costPrice: 1000, salePrice: 1500 }, user)).rejects.toThrow(
         new BadRequestException(
           `Không đủ số lượng hàng tồn kho khả dụng để bán. Hiện có: 5 (yêu cầu: 10)`,
         ),
@@ -218,9 +234,9 @@ describe('BatchesService', () => {
       };
       const manager = mockDataSource.createQueryRunner().manager as any;
       manager.createQueryBuilder = jest.fn().mockReturnValue(mockQueryBuilder);
-      manager.findOne = jest.fn().mockResolvedValue({ id: 'batch-id', status: 'RECEIVED' });
+      manager.findOne = jest.fn().mockResolvedValue({ id: 'batch-id', product: { unitPrice: 1000 } });
 
-      await service.sell('batch-id', { quantity: 10 }, user);
+      await service.sell('batch-id', { quantity: 10, costPrice: 1000, salePrice: 1500 }, user);
 
       expect(inventory.quantityAvailable).toBe(5);
       expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
@@ -236,10 +252,12 @@ describe('BatchesService', () => {
       };
       const manager = mockDataSource.createQueryRunner().manager as any;
       manager.createQueryBuilder = jest.fn().mockReturnValue(mockQueryBuilder);
-      const mockBatch = { id: 'batch-id', status: 'RECEIVED' };
-      manager.findOne = jest.fn().mockResolvedValue(mockBatch);
+      const mockBatch = { id: 'batch-id', status: 'RECEIVED', product: { unitPrice: 1000 } };
+      manager.findOne = jest.fn().mockImplementation((entityClass, options) => {
+        return Promise.resolve(mockBatch);
+      });
 
-      await service.sell('batch-id', { quantity: 10 }, user);
+      await service.sell('batch-id', { quantity: 10, costPrice: 1000, salePrice: 1500 }, user);
 
       expect(inventory.quantityAvailable).toBe(0);
       expect(mockBatch.status).toBe('SOLD');
@@ -307,7 +325,7 @@ describe('BatchesService', () => {
   });
 
   describe('getTimeline', () => {
-    it('should return timeline event history sorted by occurredAt ASC', async () => {
+    it('should return timeline event history sorted by occurredAt ASC for Admin', async () => {
       const batch = { id: 'batch-uuid', originNodeId: 'node-uuid' };
       const events = [{ id: 'event-uuid' }];
 
@@ -322,6 +340,87 @@ describe('BatchesService', () => {
       const result = await service.getTimeline('batch-uuid', user);
 
       expect(result).toEqual(events);
+      spyRepo.mockRestore();
+    });
+
+    it('should filter timeline for Manufacturer up to first received event', async () => {
+      const batch = { id: 'batch-uuid', originNodeId: 'mfr-node-uuid' };
+      const events = [
+        { id: '1', eventType: 'CREATED', occurredAt: new Date('2026-06-01') },
+        { id: '2', eventType: 'SHIPPED', shipmentId: 'ship-1', occurredAt: new Date('2026-06-02') },
+        { id: '3', eventType: 'RECEIVED', shipmentId: 'ship-1', occurredAt: new Date('2026-06-03') },
+        { id: '4', eventType: 'SHIPPED', shipmentId: 'ship-2', occurredAt: new Date('2026-06-04') },
+        { id: '5', eventType: 'RECEIVED', shipmentId: 'ship-2', occurredAt: new Date('2026-06-05') },
+      ];
+
+      const spyRepo = jest.spyOn(mockDataSource, 'getRepository').mockImplementation((entity: any) => {
+        if (entity.name === 'BatchEntity') {
+          return {
+            findOne: jest.fn().mockResolvedValue(batch),
+          } as any;
+        }
+        if (entity.name === 'BatchQrCodeEntity') {
+          return {
+            findOne: jest.fn().mockResolvedValue(null),
+          } as any;
+        }
+        if (entity.name === 'TimelineEventEntity') {
+          return {
+            find: jest.fn().mockResolvedValue(events),
+          } as any;
+        }
+        if (entity.name === 'ShipmentEntity') {
+          return {
+            find: jest.fn().mockResolvedValue([{ id: 'ship-1', sourceNodeId: 'mfr-node-uuid' }]),
+          } as any;
+        }
+        return {} as any;
+      });
+
+      const user = { userId: 'mfr-uuid', role: 'Manufacturer', nodeId: 'mfr-node-uuid' };
+      const result = await service.getTimeline('batch-uuid', user);
+
+      expect(result.length).toBe(5);
+      expect(result[result.length - 1].eventType).toBe('RECEIVED');
+      expect(result[result.length - 1].shipmentId).toBe('ship-2');
+      spyRepo.mockRestore();
+    });
+
+    it('should not filter timeline for Manufacturer if shipment is not received yet', async () => {
+      const batch = { id: 'batch-uuid', originNodeId: 'mfr-node-uuid' };
+      const events = [
+        { id: '1', eventType: 'CREATED', occurredAt: new Date('2026-06-01') },
+        { id: '2', eventType: 'SHIPPED', shipmentId: 'ship-1', occurredAt: new Date('2026-06-02') },
+      ];
+
+      const spyRepo = jest.spyOn(mockDataSource, 'getRepository').mockImplementation((entity: any) => {
+        if (entity.name === 'BatchEntity') {
+          return {
+            findOne: jest.fn().mockResolvedValue(batch),
+          } as any;
+        }
+        if (entity.name === 'BatchQrCodeEntity') {
+          return {
+            findOne: jest.fn().mockResolvedValue(null),
+          } as any;
+        }
+        if (entity.name === 'TimelineEventEntity') {
+          return {
+            find: jest.fn().mockResolvedValue(events),
+          } as any;
+        }
+        if (entity.name === 'ShipmentEntity') {
+          return {
+            find: jest.fn().mockResolvedValue([{ id: 'ship-1', sourceNodeId: 'mfr-node-uuid' }]),
+          } as any;
+        }
+        return {} as any;
+      });
+
+      const user = { userId: 'mfr-uuid', role: 'Manufacturer', nodeId: 'mfr-node-uuid' };
+      const result = await service.getTimeline('batch-uuid', user);
+
+      expect(result.length).toBe(2);
       spyRepo.mockRestore();
     });
   });

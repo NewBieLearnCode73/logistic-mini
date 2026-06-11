@@ -9,10 +9,12 @@ describe('BatchModule (e2e)', () => {
   let adminToken: string;
   let mfrToken: string;
   let retToken: string;
+  let distToken: string;
   let db: DataSource;
 
   const createdBatchIds: string[] = [];
   const createdProductIds: string[] = [];
+  const createdShipmentIds: string[] = [];
   let testProductId: string;
 
   // Manufacturer's node: 550e8400-e29b-41d4-a716-446655440001 (Nhà Máy Hà Tiên - TP.HCM)
@@ -27,6 +29,7 @@ describe('BatchModule (e2e)', () => {
     adminToken = await getLoginToken(app, 'admin@logistic.com');
     mfrToken = await getLoginToken(app, 'mfr_a@logistic.com');
     retToken = await getLoginToken(app, 'ret_a@logistic.com');
+    distToken = await getLoginToken(app, 'dist_a@logistic.com');
 
     // Create a product to associate batches with
     const resProd = await request(app.getHttpServer())
@@ -34,7 +37,7 @@ describe('BatchModule (e2e)', () => {
       .set('Authorization', `Bearer ${adminToken}`)
       .send({
         name: 'Sản phẩm Test Batch',
-        sku: 'SKU-BATCH-TEST',
+        sku: 'SKU-BATCH-TEST-' + Date.now(),
         unit: 'Hộp',
         unitPrice: 100,
         category: 'Dược phẩm',
@@ -49,11 +52,18 @@ describe('BatchModule (e2e)', () => {
     // Delete any created inventory records first
     if (createdBatchIds.length) {
       await db.query(`DELETE FROM inventory WHERE batch_id = ANY($1)`, [createdBatchIds]);
+    }
+    if (createdShipmentIds.length) {
+      await db.query(`DELETE FROM timeline_events WHERE shipment_id = ANY($1)`, [createdShipmentIds]);
+      await db.query(`DELETE FROM shipments WHERE id = ANY($1)`, [createdShipmentIds]);
+    }
+    if (createdBatchIds.length) {
       await db.query(`DELETE FROM timeline_events WHERE batch_id = ANY($1)`, [createdBatchIds]);
     }
     await cleanupCreatedEntities(app, {
       batchIds: createdBatchIds,
       productIds: createdProductIds,
+      shipmentIds: createdShipmentIds,
     });
     await app.close();
   });
@@ -212,7 +222,7 @@ describe('BatchModule (e2e)', () => {
       const res = await request(app.getHttpServer())
         .post(`/api/v1/batches/${targetBatchId}/sell`)
         .set('Authorization', `Bearer ${retToken}`)
-        .send({ quantity: 40 })
+        .send({ quantity: 40, costPrice: 10, salePrice: 15 })
         .expect(200);
 
       // Verify inventory decreased to 60
@@ -235,7 +245,7 @@ describe('BatchModule (e2e)', () => {
       const res = await request(app.getHttpServer())
         .post(`/api/v1/batches/${targetBatchId}/sell`)
         .set('Authorization', `Bearer ${retToken}`)
-        .send({ quantity: 100 })
+        .send({ quantity: 100, costPrice: 10, salePrice: 15 })
         .expect(400);
 
       expect(res.body.message).toContain('Không đủ số lượng hàng tồn kho khả dụng để bán. Hiện có: 60');
@@ -246,12 +256,196 @@ describe('BatchModule (e2e)', () => {
       const res = await request(app.getHttpServer())
         .post(`/api/v1/batches/${targetBatchId}/sell`)
         .set('Authorization', `Bearer ${retToken}`)
-        .send({ quantity: 60 })
+        .send({ quantity: 60, costPrice: 10, salePrice: 15 })
         .expect(200);
 
       // Verify batch status transitioned to SOLD
       const batch = await db.query(`SELECT status FROM batches WHERE id = $1`, [targetBatchId]);
       expect(batch[0].status).toBe('SOLD');
+    });
+  });
+
+  describe('Batch Timeline & Detail Visibility Rules', () => {
+    let batchId: string;
+    const distNodeId = '550e8400-e29b-41d4-a716-446655440003';
+
+    beforeAll(async () => {
+      // 1. Create a batch as Manufacturer
+      const mDate = new Date();
+      const eDate = new Date();
+      eDate.setMonth(eDate.getMonth() + 6);
+
+      const resBatch = await request(app.getHttpServer())
+        .post('/api/v1/batches')
+        .set('Authorization', `Bearer ${mfrToken}`)
+        .send({
+          productId: testProductId,
+          quantity: 500,
+          unit: 'Hộp',
+          manufactureDate: mDate.toISOString(),
+          expiryDate: eDate.toISOString(),
+        })
+        .expect(201);
+
+      batchId = resBatch.body.id;
+      createdBatchIds.push(batchId);
+
+      // 2. Simulate shipping from Mfr to Dist
+      const resShip1 = await request(app.getHttpServer())
+        .post('/api/v1/shipments')
+        .set('Authorization', `Bearer ${mfrToken}`)
+        .send({
+          batchId,
+          destinationNodeId: distNodeId,
+          quantityShipped: 200,
+        })
+        .expect(201);
+
+      const shipmentId1 = resShip1.body.id;
+      createdShipmentIds.push(shipmentId1);
+
+      // Receive shipment at Dist
+      await request(app.getHttpServer())
+        .patch(`/api/v1/shipments/${shipmentId1}/receive`)
+        .set('Authorization', `Bearer ${distToken}`)
+        .send()
+        .expect(200);
+
+      // 3. Simulate shipping from Dist to Retailer
+      const resShip2 = await request(app.getHttpServer())
+        .post('/api/v1/shipments')
+        .set('Authorization', `Bearer ${distToken}`)
+        .send({
+          batchId,
+          destinationNodeId: retNodeId,
+          quantityShipped: 200,
+        })
+        .expect(201);
+
+      const shipmentId2 = resShip2.body.id;
+      createdShipmentIds.push(shipmentId2);
+
+      // Receive shipment at Retailer
+      await request(app.getHttpServer())
+        .patch(`/api/v1/shipments/${shipmentId2}/receive`)
+        .set('Authorization', `Bearer ${retToken}`)
+        .expect(200);
+
+      // 4. Retailer sells some products (this writes SOLD event)
+      await request(app.getHttpServer())
+        .post(`/api/v1/batches/${batchId}/sell`)
+        .set('Authorization', `Bearer ${retToken}`)
+        .send({
+          quantity: 50,
+          costPrice: 150,
+          salePrice: 200,
+          saleDate: new Date().toISOString(),
+        })
+        .expect(200);
+    });
+
+    it('should show complete timeline and details (including price configuration and sold events) to Admin', async () => {
+      const resTimeline = await request(app.getHttpServer())
+        .get(`/api/v1/batches/${batchId}/timeline`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      const eventTypes = resTimeline.body.map((e: any) => e.eventType);
+      expect(eventTypes).toContain('PRICE_CONFIGURED');
+      expect(eventTypes).toContain('SOLD');
+
+      const resDetails = await request(app.getHttpServer())
+        .get(`/api/v1/batches/${batchId}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      expect(resDetails.body).toHaveProperty('totalValue');
+      expect(resDetails.body.product).toHaveProperty('unitPrice');
+    });
+
+    it('should show complete timeline and details to Retailer', async () => {
+      const resTimeline = await request(app.getHttpServer())
+        .get(`/api/v1/batches/${batchId}/timeline`)
+        .set('Authorization', `Bearer ${retToken}`)
+        .expect(200);
+
+      const eventTypes = resTimeline.body.map((e: any) => e.eventType);
+      expect(eventTypes).toContain('PRICE_CONFIGURED');
+      expect(eventTypes).toContain('SOLD');
+
+      const resDetails = await request(app.getHttpServer())
+        .get(`/api/v1/batches/${batchId}`)
+        .set('Authorization', `Bearer ${retToken}`)
+        .expect(200);
+
+      expect(resDetails.body).toHaveProperty('totalValue');
+      expect(resDetails.body.product).toHaveProperty('unitPrice');
+    });
+
+    it('should show logistics events but omit PRICE_CONFIGURED and SOLD (and clean metadata / totalValue) for Manufacturer', async () => {
+      const resTimeline = await request(app.getHttpServer())
+        .get(`/api/v1/batches/${batchId}/timeline`)
+        .set('Authorization', `Bearer ${mfrToken}`)
+        .expect(200);
+
+      const eventTypes = resTimeline.body.map((e: any) => e.eventType);
+      expect(eventTypes).not.toContain('PRICE_CONFIGURED');
+      expect(eventTypes).not.toContain('SOLD');
+      expect(eventTypes).toContain('CREATED');
+      expect(eventTypes).toContain('RECEIVED');
+
+      for (const event of resTimeline.body) {
+        if (event.metadata) {
+          expect(event.metadata.cost_price).toBeUndefined();
+          expect(event.metadata.sale_price).toBeUndefined();
+          expect(event.metadata.revenue).toBeUndefined();
+          expect(event.metadata.cost).toBeUndefined();
+          expect(event.metadata.profit).toBeUndefined();
+        }
+      }
+
+      const resDetails = await request(app.getHttpServer())
+        .get(`/api/v1/batches/${batchId}`)
+        .set('Authorization', `Bearer ${mfrToken}`)
+        .expect(200);
+
+      expect(resDetails.body.totalValue).toBeUndefined();
+      if (resDetails.body.product) {
+        expect(resDetails.body.product.unitPrice).toBeUndefined();
+      }
+    });
+
+    it('should show logistics events but omit PRICE_CONFIGURED and SOLD (and clean metadata / totalValue) for Distributor', async () => {
+      const resTimeline = await request(app.getHttpServer())
+        .get(`/api/v1/batches/${batchId}/timeline`)
+        .set('Authorization', `Bearer ${distToken}`)
+        .expect(200);
+
+      const eventTypes = resTimeline.body.map((e: any) => e.eventType);
+      expect(eventTypes).not.toContain('PRICE_CONFIGURED');
+      expect(eventTypes).not.toContain('SOLD');
+      expect(eventTypes).toContain('CREATED');
+      expect(eventTypes).toContain('RECEIVED');
+
+      for (const event of resTimeline.body) {
+        if (event.metadata) {
+          expect(event.metadata.cost_price).toBeUndefined();
+          expect(event.metadata.sale_price).toBeUndefined();
+          expect(event.metadata.revenue).toBeUndefined();
+          expect(event.metadata.cost).toBeUndefined();
+          expect(event.metadata.profit).toBeUndefined();
+        }
+      }
+
+      const resDetails = await request(app.getHttpServer())
+        .get(`/api/v1/batches/${batchId}`)
+        .set('Authorization', `Bearer ${distToken}`)
+        .expect(200);
+
+      expect(resDetails.body.totalValue).toBeUndefined();
+      if (resDetails.body.product) {
+        expect(resDetails.body.product.unitPrice).toBeUndefined();
+      }
     });
   });
 });

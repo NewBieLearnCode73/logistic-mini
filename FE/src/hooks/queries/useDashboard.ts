@@ -27,3 +27,16 @@ export function useRecentBatches() {
     staleTime: 60_000,
   });
 }
+
+export function useFinancialReport(params: {
+  period: 'today' | 'month' | 'quarter' | 'year' | 'custom';
+  startDate?: string;
+  endDate?: string;
+}) {
+  return useQuery({
+    queryKey: ['reports', 'financial', params],
+    queryFn: () => dashboardApi.getFinancialReport(params).then((r) => r.data),
+    staleTime: 10_000,
+    enabled: params.period !== 'custom' || (!!params.startDate && !!params.endDate),
+  });
+}

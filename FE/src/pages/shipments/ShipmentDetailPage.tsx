@@ -16,6 +16,8 @@ export default function ShipmentDetailPage() {
   const userNodeId = getNodeId();
   const isAdmin = role === RoleName.ADMIN;
 
+
+
   // React Query queries/mutations
   const { data: shipment, isLoading, isError } = useShipmentDetail(id || '');
   const receiveMutation = useReceiveShipment();
@@ -53,7 +55,9 @@ export default function ShipmentDetailPage() {
   }
 
   const handleConfirmReceive = () => {
-    receiveMutation.mutate(shipment.id);
+    receiveMutation.mutate({
+      id: shipment.id,
+    });
   };
 
   const formatDate = (dateStr: string | null) => {
@@ -232,6 +236,9 @@ export default function ShipmentDetailPage() {
               <p className="text-2xs text-text-secondary mb-4">
                 Xác nhận đã nhận đủ {shipment.quantityShipped} {shipment.batch?.unit} của lô hàng tại địa điểm của bạn. Số lượng hàng sẽ được ghi có vào kho của bạn ngay lập tức.
               </p>
+
+
+
               <button
                 onClick={handleConfirmReceive}
                 disabled={receiveMutation.isPending}

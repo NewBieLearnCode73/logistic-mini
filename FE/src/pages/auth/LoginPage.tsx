@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../stores/authStore';
 import { useThemeStore } from '../../stores/themeStore';
@@ -22,7 +22,6 @@ import toast from 'react-hot-toast';
 export default function LoginPage() {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const location = useLocation();
   const { setToken, setUser } = useAuthStore();
   const { isDark, toggleTheme } = useThemeStore();
 
@@ -31,8 +30,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || '/dashboard';
 
   const toggleLanguage = () => {
     i18n.changeLanguage(i18n.language === 'vi' ? 'en' : 'vi');
@@ -52,7 +49,7 @@ export default function LoginPage() {
       setUser(meRes.data);
 
       toast.success(`${t('auth.welcomeBack')}, ${meRes.data.fullName}`);
-      navigate(from, { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch {
       setError(t('auth.loginError'));
     } finally {

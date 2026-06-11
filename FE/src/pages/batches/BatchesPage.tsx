@@ -420,7 +420,7 @@ export default function BatchesPage() {
                     label: node.name,
                     subLabel: t(`node.types.${node.nodeType}`, node.nodeType),
                   })) || []}
-                  value={formData.originNodeId}
+                  value={formData.originNodeId || ''}
                   onChange={(val) => setFormData({ ...formData, originNodeId: val })}
                   placeholder={t('batch.selectOrigin')}
                   searchPlaceholder={t('common.search')}

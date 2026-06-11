@@ -176,5 +176,12 @@ describe('DashboardSystemService', () => {
       expect(report.filename).toBe('report_shipments_month.pdf');
       expect(report.content).toBeInstanceOf(Buffer);
     });
+
+    it('should throw BadRequestException if Manufacturer requests incidents report', async () => {
+      const user = { role: RoleName.MANUFACTURER };
+      await expect(
+        service.exportReport('incidents', 'csv', 'month', user)
+      ).rejects.toThrow(BadRequestException);
+    });
   });
 });

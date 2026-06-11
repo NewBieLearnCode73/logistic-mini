@@ -6,7 +6,7 @@ export class ExportReportDto {
   format!: string;
 
   @IsString()
-  @IsIn(['inventory', 'shipments', 'incidents'])
+  @IsIn(['inventory', 'shipments', 'incidents', 'financial'])
   reportType!: string;
 
   @IsString()

@@ -7,8 +7,10 @@ import { randomUUID } from 'crypto';
 import { DataSource } from 'typeorm';
 import { BatchStatus } from '../../common/enums/batch-status.enum';
 import { TimelineEventType } from '../../common/enums/timeline-event-type.enum';
+import { RoleName } from '../../common/enums/role.enum';
 import { NodeEntity } from '../nodes/entities/node.entity';
 import { ProductEntity } from '../products/entities/product.entity';
+import { ShipmentEntity } from '../shipments/entities/shipment.entity';
 import { CreateBatchDto } from './dto/create-batch.dto';
 import { SellBatchDto } from './dto/sell-batch.dto';
 import { BatchQrCodeEntity } from './entities/batch-qr-code.entity';
@@ -235,6 +237,49 @@ export class BatchesService {
       where: { batchId: id },
     });
 
+    if (currentUser.role !== RoleName.ADMIN && currentUser.role !== RoleName.RETAILER) {
+      const filteredEvents = await this.getTimeline(id, currentUser);
+      
+      let simulatedStatus = BatchStatus.CREATED;
+      let simulatedCurrentNode = batch.originNode;
+
+      for (const event of filteredEvents) {
+        if (event.node) {
+          simulatedCurrentNode = event.node;
+        }
+        if (event.eventType === TimelineEventType.CREATED) {
+          simulatedStatus = BatchStatus.CREATED;
+        } else if (event.eventType === TimelineEventType.SHIPPED) {
+          simulatedStatus = BatchStatus.IN_TRANSIT;
+        } else if (event.eventType === TimelineEventType.RECEIVED) {
+          simulatedStatus = BatchStatus.RECEIVED;
+        } else if (event.eventType === TimelineEventType.SOLD) {
+          simulatedStatus = BatchStatus.SOLD;
+        } else if (event.eventType === TimelineEventType.LOST) {
+          simulatedStatus = BatchStatus.LOST;
+        } else if (event.eventType === TimelineEventType.DISCARDED) {
+          simulatedStatus = BatchStatus.DISCARDED;
+        } else if (event.eventType === TimelineEventType.DELAYED) {
+          simulatedStatus = BatchStatus.DELAYED;
+        } else if (event.eventType === TimelineEventType.INVESTIGATING) {
+          simulatedStatus = BatchStatus.INVESTIGATING;
+        }
+      }
+
+      batch.status = simulatedStatus;
+      batch.currentNode = simulatedCurrentNode;
+      if (simulatedCurrentNode) {
+        batch.currentNodeId = simulatedCurrentNode.id;
+      }
+    }
+
+    if (currentUser.role === RoleName.MANUFACTURER || currentUser.role === RoleName.DISTRIBUTOR) {
+      delete (batch as any).totalValue;
+      if (batch.product) {
+        delete (batch.product as any).unitPrice;
+      }
+    }
+
     return {
       ...batch,
       qrCode: qrCode || null,
@@ -243,7 +288,24 @@ export class BatchesService {
 
   async getTimeline(id: string, currentUser: any): Promise<TimelineEventEntity[]> {
     // Validate accessibility first
-    await this.findDetails(id, currentUser);
+    const batch = await this.findById(id);
+
+    if (currentUser.role !== 'Admin') {
+      if (currentUser.role === 'Manufacturer') {
+        if (batch.originNodeId !== currentUser.nodeId) {
+          throw new BadRequestException('Bạn không có quyền truy cập lô hàng này');
+        }
+      } else if (currentUser.role === 'Distributor' || currentUser.role === 'Retailer') {
+        const hasInventory = await this.dataSource.getRepository(InventoryEntity).findOne({
+          where: { batchId: id, nodeId: currentUser.nodeId },
+        });
+        if (!hasInventory) {
+          throw new BadRequestException('Lô hàng này chưa từng đi qua cơ sở của bạn');
+        }
+      } else {
+        throw new BadRequestException('Vai trò của bạn không có quyền xem thông tin lô hàng');
+      }
+    }
 
     const events = await this.dataSource.getRepository(TimelineEventEntity).find({
       where: { batchId: id },
@@ -251,10 +313,73 @@ export class BatchesService {
       order: { occurredAt: 'ASC' },
     });
 
+    const eventTypePriority: Record<string, number> = {
+      CREATED: 1,
+      PRICE_CONFIGURED: 2,
+      SHIPPED: 3,
+      RECEIVED: 4,
+      INVENTORY_ADJUSTED: 5,
+      DELAYED: 6,
+      INVESTIGATING: 7,
+      LOST: 8,
+      DAMAGED: 9,
+      CANCELLED: 10,
+      INCIDENT_CLOSED: 11,
+      SOLD: 12,
+      DISCARDED: 13,
+    };
+
+    events.sort((a, b) => {
+      const timeA = new Date(a.occurredAt).getTime();
+      const timeB = new Date(b.occurredAt).getTime();
+      if (timeA !== timeB) {
+        return timeA - timeB;
+      }
+      const priorityA = eventTypePriority[a.eventType] ?? 99;
+      const priorityB = eventTypePriority[b.eventType] ?? 99;
+      return priorityA - priorityB;
+    });
+
     for (const event of events) {
       if (event.actor) {
         delete (event.actor as any).passwordHash;
       }
+    }
+
+    if (currentUser.role === RoleName.ADMIN || currentUser.role === RoleName.RETAILER) {
+      return events;
+    }
+
+    if (currentUser.role === RoleName.MANUFACTURER || currentUser.role === RoleName.DISTRIBUTOR) {
+      const restrictedEventTypes = [
+        'PRICE_CONFIGURED',
+        'SOLD',
+        'REVENUE_RECORDED',
+        'PROFIT_CALCULATED',
+        'FINANCIAL_EVENT',
+        'FINANCIAL_REPORT',
+      ];
+      const filteredEvents = events.filter(
+        event => !restrictedEventTypes.includes(event.eventType)
+      );
+
+      for (const event of filteredEvents) {
+        if (event.metadata) {
+          const sensitiveKeys = [
+            'cost_price',
+            'sale_price',
+            'revenue',
+            'cost',
+            'profit',
+            'price',
+            'unitPrice',
+          ];
+          for (const key of sensitiveKeys) {
+            delete event.metadata[key];
+          }
+        }
+      }
+      return filteredEvents;
     }
 
     return events;
@@ -295,10 +420,28 @@ export class BatchesService {
   }
 
   async sell(id: string, sellBatchDto: SellBatchDto, currentUser: any): Promise<any> {
-    const { quantity } = sellBatchDto;
+    const { quantity, saleDate, salePrice, costPrice } = sellBatchDto;
 
     if (!currentUser.nodeId) {
       throw new BadRequestException('Tài khoản của bạn chưa được gán vào Node nào để bán hàng');
+    }
+
+    if (currentUser.role === RoleName.RETAILER) {
+      if (costPrice === undefined || costPrice === null) {
+        throw new BadRequestException('Cost Price is required for Retailer');
+      }
+      if (salePrice === undefined || salePrice === null) {
+        throw new BadRequestException('Sale Price is required for Retailer');
+      }
+      if (costPrice <= 0) {
+        throw new BadRequestException('Cost Price must be greater than 0');
+      }
+      if (salePrice <= 0) {
+        throw new BadRequestException('Sale Price must be greater than 0');
+      }
+      if (salePrice < costPrice) {
+        throw new BadRequestException('Sale Price must be greater than or equal to Cost Price');
+      }
     }
 
     const queryRunner = this.dataSource.createQueryRunner();
@@ -306,6 +449,21 @@ export class BatchesService {
     await queryRunner.startTransaction();
 
     try {
+      const batchForPrice = await queryRunner.manager.findOne(BatchEntity, {
+        where: { id },
+        relations: { product: true },
+      });
+      if (!batchForPrice) {
+        throw new NotFoundException('Không tìm thấy lô hàng');
+      }
+
+      const costPriceNum = costPrice !== undefined ? Number(costPrice) : Number(batchForPrice.product?.unitPrice || 0);
+      const salePriceNum = salePrice !== undefined ? Number(salePrice) : costPriceNum;
+
+      const revenue = Number((quantity * salePriceNum).toFixed(2));
+      const cost = Number((quantity * costPriceNum).toFixed(2));
+      const profit = Number((revenue - cost).toFixed(2));
+
       const inventory = await queryRunner.manager.createQueryBuilder(InventoryEntity, 'inventory')
         .setLock('pessimistic_write')
         .where('inventory.batchId = :batchId AND inventory.nodeId = :nodeId', {
@@ -327,6 +485,24 @@ export class BatchesService {
       inventory.quantityAvailable = Number((inventory.quantityAvailable - quantity).toFixed(3));
       await queryRunner.manager.save(InventoryEntity, inventory);
 
+      if (currentUser.role === RoleName.RETAILER) {
+        const priceEvent = new TimelineEventEntity();
+        priceEvent.batchId = id;
+        priceEvent.eventType = TimelineEventType.PRICE_CONFIGURED;
+        priceEvent.nodeId = currentUser.nodeId;
+        priceEvent.actorId = currentUser.userId;
+        priceEvent.quantityDelta = null;
+        priceEvent.notes = `Đã cấu hình giá mua và bán lẻ cho lô hàng.`;
+        priceEvent.metadata = {
+          cost_price: costPriceNum,
+          sale_price: salePriceNum,
+        };
+        if (saleDate) {
+          priceEvent.occurredAt = new Date(saleDate);
+        }
+        await queryRunner.manager.save(TimelineEventEntity, priceEvent);
+      }
+
       const event = new TimelineEventEntity();
       event.batchId = id;
       event.eventType = TimelineEventType.SOLD;
@@ -334,6 +510,17 @@ export class BatchesService {
       event.actorId = currentUser.userId;
       event.quantityDelta = -quantity;
       event.notes = `Đã bán lẻ ${quantity} sản phẩm từ lô hàng.`;
+      event.metadata = {
+        qty_sold: Number(quantity),
+        cost_price: costPriceNum,
+        sale_price: salePriceNum,
+        revenue: revenue,
+        cost: cost,
+        profit: profit,
+      };
+      if (saleDate) {
+        event.occurredAt = new Date(saleDate);
+      }
       await queryRunner.manager.save(TimelineEventEntity, event);
 
       const batch = await queryRunner.manager.findOne(BatchEntity, {

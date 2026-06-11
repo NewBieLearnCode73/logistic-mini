@@ -44,7 +44,7 @@ export function useReceiveShipment() {
   const { t } = useTranslation();
 
   return useMutation({
-    mutationFn: (id: string) => shipmentsApi.receive(id).then((r) => r.data),
+    mutationFn: ({ id, data }: { id: string; data?: any }) => shipmentsApi.receive(id, data).then((r) => r.data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['shipments'] });
       queryClient.invalidateQueries({ queryKey: ['shipments', data.id] });

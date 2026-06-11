@@ -47,6 +47,7 @@ export interface TimelineEvent {
     email: string;
     fullName: string;
   };
+  metadata?: any;
 }
 
 export interface CreateBatchDto {

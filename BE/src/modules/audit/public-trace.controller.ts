@@ -8,10 +8,14 @@ import {
 } from '@nestjs/common';
 import { AuditService } from './audit.service';
 import { Public } from '../../common/decorators/public.decorator';
+import { JwtService } from '@nestjs/jwt';
 
 @Controller('public/trace')
 export class PublicTraceController {
-  constructor(private readonly auditService: AuditService) {}
+  constructor(
+    private readonly auditService: AuditService,
+    private readonly jwtService: JwtService,
+  ) {}
 
   @Get(':batchCode')
   @Public()
@@ -26,7 +30,25 @@ export class PublicTraceController {
       throw new NotFoundException(`Không tìm thấy lô hàng với mã ${batchCode}`);
     }
 
-    const timelineEvents = await this.auditService.getBatchTimeline(batch.id);
+    const authHeader = req.headers['authorization'];
+    let currentUser: any = null;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      try {
+        const decoded = this.jwtService.verify(token);
+        currentUser = {
+          userId: decoded.sub,
+          role: decoded.role,
+          nodeId: decoded.nodeId,
+        };
+      } catch (err) {
+        // Ignore invalid/expired token and treat as public guest
+      }
+    }
+
+    await this.auditService.validateBatchAccess(batch, currentUser);
+
+    const timelineEvents = await this.auditService.getBatchTimeline(batch.id, currentUser);
 
     const ip = req.ip || req.headers['x-forwarded-for'] || null;
     const userAgent = req.headers['user-agent'] || null;
@@ -46,13 +68,44 @@ export class PublicTraceController {
       // Intentionally empty to avoid interrupting responses
     });
 
+    let simulatedStatus: any = batch.status;
+    let simulatedCurrentNode = batch.currentNode;
+
+    if (!currentUser || (currentUser.role !== 'Admin' && currentUser.role !== 'Retailer')) {
+      simulatedStatus = 'CREATED';
+      simulatedCurrentNode = batch.originNode;
+
+      for (const event of timelineEvents) {
+        if (event.node) {
+          simulatedCurrentNode = event.node;
+        }
+        if (event.eventType === 'CREATED') {
+          simulatedStatus = 'CREATED';
+        } else if (event.eventType === 'SHIPPED') {
+          simulatedStatus = 'IN_TRANSIT';
+        } else if (event.eventType === 'RECEIVED') {
+          simulatedStatus = 'RECEIVED';
+        } else if (event.eventType === 'SOLD') {
+          simulatedStatus = 'SOLD';
+        } else if (event.eventType === 'LOST') {
+          simulatedStatus = 'LOST';
+        } else if (event.eventType === 'DISCARDED') {
+          simulatedStatus = 'DISCARDED';
+        } else if (event.eventType === 'DELAYED') {
+          simulatedStatus = 'DELAYED';
+        } else if (event.eventType === 'INVESTIGATING') {
+          simulatedStatus = 'INVESTIGATING';
+        }
+      }
+    }
+
     // Sanitize and minimize the response payload
     return {
       batch: {
         batchCode: batch.batchCode,
         manufactureDate: batch.manufactureDate,
         expiryDate: batch.expiryDate,
-        status: batch.status,
+        status: simulatedStatus,
         product: batch.product ? {
           name: batch.product.name,
           sku: batch.product.sku,
@@ -67,12 +120,12 @@ export class PublicTraceController {
           latitude: batch.originNode.latitude,
           longitude: batch.originNode.longitude,
         } : null,
-        currentNode: batch.currentNode ? {
-          name: batch.currentNode.name,
-          nodeType: batch.currentNode.nodeType,
-          address: batch.currentNode.address,
-          latitude: batch.currentNode.latitude,
-          longitude: batch.currentNode.longitude,
+        currentNode: simulatedCurrentNode ? {
+          name: simulatedCurrentNode.name,
+          nodeType: simulatedCurrentNode.nodeType,
+          address: simulatedCurrentNode.address,
+          latitude: simulatedCurrentNode.latitude,
+          longitude: simulatedCurrentNode.longitude,
         } : null,
       },
       timelineEvents: timelineEvents.map(event => ({

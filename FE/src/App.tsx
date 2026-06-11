@@ -14,6 +14,7 @@ import RoleGuard from './components/guards/RoleGuard';
 // Pages
 import LoginPage from './pages/auth/LoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
+import FinancialReportPage from './pages/dashboard/FinancialReportPage';
 import NodesPage from './pages/nodes/NodesPage';
 import NodeDetailPage from './pages/nodes/NodeDetailPage';
 import ProductsPage from './pages/products/ProductsPage';
@@ -98,6 +99,11 @@ export default function App() {
                 <Route path="/shipments/:id" element={<ShipmentDetailPage />} />
                 <Route path="/products" element={<ProductsPage />} />
                 <Route path="/nodes/:id" element={<NodeDetailPage />} />
+
+                {/* Admin and Retailer financial reports */}
+                <Route element={<RoleGuard allowed={['Admin', 'Retailer']} />}>
+                  <Route path="/reports/financial" element={<FinancialReportPage />} />
+                </Route>
 
                 {/* Admin only */}
                 <Route element={<RoleGuard allowed={['Admin']} />}>

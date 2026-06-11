@@ -279,7 +279,7 @@ export default function ShipmentsPage() {
                     label: node.name,
                     subLabel: t(`node.types.${node.nodeType}`, node.nodeType),
                   }))}
-                  value={formData.sourceNodeId}
+                  value={formData.sourceNodeId || ''}
                   onChange={(val) =>
                     setFormData({ ...formData, sourceNodeId: val, batchId: '' })
                   }

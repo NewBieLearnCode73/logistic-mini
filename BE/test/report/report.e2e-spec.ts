@@ -8,12 +8,14 @@ describe('ReportAndDashboardModule (e2e)', () => {
   let adminToken: string;
   let mfrToken: string;
   let retToken: string;
+  let distToken: string;
 
   beforeAll(async () => {
     app = await bootstrapTestApp();
     adminToken = await getLoginToken(app, 'admin@logistic.com');
     mfrToken = await getLoginToken(app, 'mfr_a@logistic.com');
     retToken = await getLoginToken(app, 'ret_a@logistic.com');
+    distToken = await getLoginToken(app, 'dist_a@logistic.com');
   });
 
   afterAll(async () => {
@@ -72,15 +74,68 @@ describe('ReportAndDashboardModule (e2e)', () => {
       expect(res.headers['content-type']).toContain('application/pdf');
     });
 
-    it('should forbid Retailer from exporting reports', async () => {
+    it('should forbid Distributor from exporting reports', async () => {
       await request(app.getHttpServer())
+        .post('/api/v1/reports/export')
+        .set('Authorization', `Bearer ${distToken}`)
+        .send({
+          format: 'csv',
+          reportType: 'incidents',
+          period: 'today',
+        })
+        .expect(403);
+    });
+  });
+
+  describe('Financial Reports Accessibility', () => {
+    it('should allow Retailer to get financial report', async () => {
+      const res = await request(app.getHttpServer())
+        .get('/api/v1/reports/financial?period=month')
+        .set('Authorization', `Bearer ${retToken}`)
+        .expect(200);
+
+      expect(res.body).toHaveProperty('kpi');
+      expect(res.body.kpi).toHaveProperty('totalRevenue');
+    });
+
+    it('should forbid Admin from getting financial report', async () => {
+      await request(app.getHttpServer())
+        .get('/api/v1/reports/financial?period=month')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(400);
+    });
+
+    it('should forbid Manufacturer from getting financial report', async () => {
+      await request(app.getHttpServer())
+        .get('/api/v1/reports/financial?period=month')
+        .set('Authorization', `Bearer ${mfrToken}`)
+        .expect(403);
+    });
+
+    it('should allow Retailer to export financial report', async () => {
+      const res = await request(app.getHttpServer())
         .post('/api/v1/reports/export')
         .set('Authorization', `Bearer ${retToken}`)
         .send({
           format: 'csv',
-          reportType: 'incidents',
+          reportType: 'financial',
+          period: 'month',
         })
-        .expect(403);
+        .expect(201);
+
+      expect(res.headers['content-type']).toContain('text/csv');
+    });
+
+    it('should forbid Admin from exporting financial report', async () => {
+      await request(app.getHttpServer())
+        .post('/api/v1/reports/export')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          format: 'csv',
+          reportType: 'financial',
+          period: 'month',
+        })
+        .expect(400);
     });
   });
 

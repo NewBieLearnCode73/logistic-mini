@@ -1,6 +1,7 @@
 import { Controller, Post, Patch, Get, Query, Body, Param, Request, HttpCode, HttpStatus, ParseUUIDPipe } from '@nestjs/common';
 import { ShipmentsService } from './shipments.service';
 import { CreateShipmentDto } from './dto/create-shipment.dto';
+import { ReceiveShipmentDto } from './dto/receive-shipment.dto';
 import { ShipmentEntity } from './entities/shipment.entity';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RoleName } from '../../common/enums/role.enum';
@@ -44,8 +45,9 @@ export class ShipmentsController {
   @HttpCode(HttpStatus.OK)
   async receive(
     @Param('id', new ParseUUIDPipe({ version: '4', errorHttpStatusCode: HttpStatus.BAD_REQUEST })) id: string,
+    @Body() receiveShipmentDto: ReceiveShipmentDto,
     @Request() req: any,
   ): Promise<ShipmentEntity> {
-    return this.shipmentsService.receiveShipment(id, req.user);
+    return this.shipmentsService.receiveShipment(id, receiveShipmentDto, req.user);
   }
 }

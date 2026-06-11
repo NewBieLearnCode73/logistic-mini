@@ -71,7 +71,8 @@
     "map": "Map",
     "administration": "Administration",
     "supplyChain": "Supply Chain",
-    "myWarehouse": "My Warehouse"
+    "myWarehouse": "My Warehouse",
+    "financialReport": "Financial Report"
   },
   "dashboard": {
     "title": "System Overview",

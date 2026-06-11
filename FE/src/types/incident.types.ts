@@ -14,6 +14,7 @@ export interface IncidentReport {
   description: string;
   resolution: string | null;
   resolutionType: string | null;
+  firstApprovedBy: string | null;
   approvedBy: string | null;
   evidenceJsonb: any;
   openedAt: string;

@@ -6,6 +6,8 @@ import { IncidentReportEntity } from '../incidents/entities/incident-report.enti
 import { AuditLogEntity } from '../audit/entities/audit-log.entity';
 import { RoleName } from '../../common/enums/role.enum';
 import { ShipmentStatus } from '../../common/enums/shipment-status.enum';
+import { TimelineEventEntity } from '../batches/entities/timeline-event.entity';
+import { TimelineEventType } from '../../common/enums/timeline-event-type.enum';
 import * as path from 'path';
 import * as fs from 'fs';
 import PDFDocument from 'pdfkit';
@@ -176,6 +178,10 @@ export class DashboardSystemService {
     startDate?: string,
     endDate?: string,
   ): Promise<any> {
+    if (currentUser.role === RoleName.MANUFACTURER && reportType !== 'inventory' && reportType !== 'shipments') {
+      throw new BadRequestException('Vai trò Manufacturer chỉ được phép xuất báo cáo inventory và shipments');
+    }
+
     let data: any[] = [];
     const userNodeId = currentUser.nodeId;
     const reportPeriod = period || 'custom';
@@ -215,6 +221,21 @@ export class DashboardSystemService {
         qb.andWhere('(s.sourceNodeId = :nodeId OR s.destinationNodeId = :nodeId)', { nodeId: userNodeId });
       }
       data = await qb.getMany();
+    } else if (reportType === 'financial') {
+      if (currentUser.role !== RoleName.RETAILER) {
+        throw new BadRequestException('Chỉ Retailer mới có quyền truy cập báo cáo tài chính');
+      }
+      const qb = this.dataSource.getRepository(TimelineEventEntity).createQueryBuilder('event')
+        .leftJoinAndSelect('event.batch', 'batch')
+        .leftJoinAndSelect('batch.product', 'product')
+        .where('event.eventType = :eventType', { eventType: TimelineEventType.SOLD })
+        .andWhere('event.occurredAt >= :start', { start })
+        .andWhere('event.occurredAt <= :end', { end });
+      if (userNodeId) {
+        qb.andWhere('event.nodeId = :nodeId', { nodeId: userNodeId });
+      }
+      qb.orderBy('event.occurredAt', 'DESC');
+      data = await qb.getMany();
     }
 
     data = data || [];
@@ -223,6 +244,12 @@ export class DashboardSystemService {
     const productIds = new Set<string>();
     const batchIds = new Set<string>();
     let totalBatchValue = 0;
+    const financialKpi = {
+      totalRevenue: 0,
+      totalCost: 0,
+      totalProfit: 0,
+      totalUnitsSold: 0,
+    };
 
     if (reportType === 'inventory') {
       for (const item of data) {
@@ -244,6 +271,17 @@ export class DashboardSystemService {
         if (item.batchId) batchIds.add(item.batchId);
         totalBatchValue += Number(item.batch?.totalValue || 0);
       }
+    } else if (reportType === 'financial') {
+      for (const event of data) {
+        const metadata = event.metadata || {};
+        financialKpi.totalRevenue += Number(metadata.revenue || 0);
+        financialKpi.totalCost += Number(metadata.cost || 0);
+        financialKpi.totalProfit += Number(metadata.profit || 0);
+        financialKpi.totalUnitsSold += Number(metadata.qty_sold || 0);
+        if (event.batch?.productId) productIds.add(event.batch.productId);
+        if (event.batchId) batchIds.add(event.batchId);
+        totalBatchValue += Number(metadata.revenue || 0);
+      }
     }
 
     const totalProducts = productIds.size;
@@ -260,19 +298,28 @@ export class DashboardSystemService {
     if (format === 'csv') {
       let csvContent = '\ufeff'; // UTF-8 BOM
       csvContent += `"BÁO CÁO HỆ THỐNG LOGISTICS MINI",,,,,,,,\n`;
-      csvContent += `"Loại báo cáo:","${reportType === 'inventory' ? 'Tồn kho hàng hóa' : reportType === 'shipments' ? 'Vận chuyển / Điều phối' : 'Sự cố phát sinh'}",,,,,,,,\n`;
+      csvContent += `"Loại báo cáo:","${reportType === 'inventory' ? 'Tồn kho hàng hóa' : reportType === 'shipments' ? 'Vận chuyển / Điều phối' : reportType === 'incidents' ? 'Sự cố phát sinh' : reportType === 'financial' ? 'Báo cáo tài chính' : 'Sự cố phát sinh'}",,,,,,,,\n`;
       csvContent += `"Kỳ báo cáo:","${periodLabel}",,,,,,,,\n`;
       csvContent += `"Ngày xuất bản:","${this.formatDateTime(new Date())}",,,,,,,,\n`;
-      csvContent += `"Tài khoản xuất:","${currentUser.fullName} (${currentUser.role})",,,,,,,,\n`;
+      if (reportType !== 'financial') {
+        csvContent += `"Tài khoản xuất:","${currentUser.fullName} (${currentUser.role})",,,,,,,,\n`;
+      }
       csvContent += `,,,,,,,,\n`;
       csvContent += `"TÓM TẮT THỐNG KÊ",,,,,,,,\n`;
-      csvContent += `"Tổng số mặt hàng khác nhau:","${totalProducts}",,,,,,,,\n`;
-      if (reportType !== 'incidents') {
-        csvContent += `"Tổng số lô hàng liên quan:","${totalBatches}",,,,,,,,\n`;
+      if (reportType === 'financial') {
+        csvContent += `"Tổng doanh thu:","${this.formatCurrency(financialKpi.totalRevenue)}",,,,,,,,\n`;
+        csvContent += `"Tổng chi phí mua hàng:","${this.formatCurrency(financialKpi.totalCost)}",,,,,,,,\n`;
+        csvContent += `"Tổng lợi nhuận:","${this.formatCurrency(financialKpi.totalProfit)}",,,,,,,,\n`;
+        csvContent += `"Tổng số lượng đã bán:","${financialKpi.totalUnitsSold}",,,,,,,,\n`;
       } else {
-        csvContent += `"Tổng số vụ sự cố liên quan:","${data.length}",,,,,,,,\n`;
+        csvContent += `"Tổng số mặt hàng khác nhau:","${totalProducts}",,,,,,,,\n`;
+        if (reportType !== 'incidents') {
+          csvContent += `"Tổng số lô hàng liên quan:","${totalBatches}",,,,,,,,\n`;
+        } else {
+          csvContent += `"Tổng số vụ sự cố liên quan:","${data.length}",,,,,,,,\n`;
+        }
+        csvContent += `"Tổng giá trị ghi nhận:","${this.formatCurrency(totalBatchValue)}",,,,,,,,\n`;
       }
-      csvContent += `"Tổng giá trị ghi nhận:","${this.formatCurrency(totalBatchValue)}",,,,,,,,\n`;
       csvContent += `,,,,,,,,\n`;
 
       if (reportType === 'inventory') {
@@ -289,12 +336,19 @@ export class DashboardSystemService {
           return `"${item.trackingCode || ''}","${item.batch?.batchCode || ''}","${(item.batch?.product?.name || '').replace(/"/g, '""')}",${item.quantityShipped || 0},"${item.batch?.unit || ''}",${item.batch?.product?.unitPrice || 0},${itemVal.toFixed(2)},"${item.status || ''}","${(item.sourceNode?.name || '').replace(/"/g, '""')}","${(item.destinationNode?.name || '').replace(/"/g, '""')}","${this.formatDateTime(item.shippedAt)}"`;
         }).join('\n');
         csvContent += `\n"Tổng cộng",,,,,,"${totalBatchValue.toFixed(2)}",,,,`;
-      } else {
+      } else if (reportType === 'incidents') {
         csvContent += '"Mã sự cố","Loại sự cố","Trạng thái","Mức độ ưu tiên","Mô tả","Mã lô hàng","Tổng giá trị (VND)","Ngày báo cáo"\n';
         csvContent += data.map(item => 
           `"${item.incidentCode || ''}","${item.incidentType || ''}","${item.status || ''}","${item.priority || ''}","${(item.description || '').replace(/"/g, '""')}","${item.batch?.batchCode || ''}",${item.batch?.totalValue || 0},"${this.formatDateTime(item.openedAt)}"`
         ).join('\n');
         csvContent += `\n"Tổng cộng",,,,,,"${totalBatchValue.toFixed(2)}",`;
+      } else if (reportType === 'financial') {
+        csvContent += '"Ngày bán","Mã lô hàng","Tên sản phẩm","Số lượng bán","Giá mua (VND)","Giá bán (VND)","Doanh thu (VND)","Lợi nhuận (VND)"\n';
+        csvContent += data.map(event => {
+          const metadata = event.metadata || {};
+          return `"${this.formatDateTime(event.occurredAt)}","${event.batch?.batchCode || ''}","${(event.batch?.product?.name || '').replace(/"/g, '""')}",${metadata.qty_sold || 0},${metadata.cost_price || 0},${metadata.sale_price || 0},${metadata.revenue || 0},${metadata.profit || 0}`;
+        }).join('\n');
+        csvContent += `\n"Tổng cộng",,,${financialKpi.totalUnitsSold},,,${financialKpi.totalRevenue.toFixed(2)},${financialKpi.totalProfit.toFixed(2)}`;
       }
 
       return { content: Buffer.from(csvContent, 'utf-8'), contentType: 'text/csv; charset=utf-8', filename: `report_${reportType}_${filenamePeriod}.csv` };
@@ -328,11 +382,25 @@ export class DashboardSystemService {
 
       // Metadata Block
       const metadata = [
-        ['Loại báo cáo:', reportType === 'inventory' ? 'Tồn kho hàng hóa' : reportType === 'shipments' ? 'Vận chuyển / Điều phối' : 'Sự cố phát sinh'],
+        ['Loại báo cáo:', reportType === 'inventory' 
+          ? 'Tồn kho hàng hóa' 
+          : reportType === 'shipments' 
+          ? 'Vận chuyển / Điều phối' 
+          : reportType === 'financial'
+          ? 'Báo cáo tài chính'
+          : 'Sự cố phát sinh'],
         ['Kỳ báo cáo:', periodLabel],
-        ['Ngày xuất bản:', this.formatDateTime(new Date())],
-        ['Tài khoản xuất:', `${currentUser.fullName} (${currentUser.role})`]
+        ['Ngày xuất bản:', this.formatDateTime(new Date())]
       ];
+      if (reportType !== 'financial') {
+        metadata.push(['Tài khoản xuất:', `${currentUser.fullName} (${currentUser.role})`]);
+      }
+
+      // Clear the metadata cells in case it's financial so we don't have leftover values
+      for (let r = 3; r <= 6; r++) {
+        worksheet.getCell(`A${r}`).value = null;
+        worksheet.getCell(`B${r}`).value = null;
+      }
 
       metadata.forEach((row, i) => {
         const rowNum = 3 + i;
@@ -348,11 +416,23 @@ export class DashboardSystemService {
       worksheet.getCell('A8').font = sectionFont;
       worksheet.getRow(8).height = 22;
 
-      const stats = [
-        ['Tổng số mặt hàng khác nhau:', totalProducts],
-        [reportType !== 'incidents' ? 'Tổng số lô hàng liên quan:' : 'Tổng số vụ sự cố liên quan:', reportType !== 'incidents' ? totalBatches : data.length],
-        ['Tổng giá trị ghi nhận:', totalBatchValue]
-      ];
+      // Clear the statistics cells first
+      for (let r = 9; r <= 13; r++) {
+        worksheet.getCell(`A${r}`).value = null;
+        worksheet.getCell(`B${r}`).value = null;
+      }
+
+      const stats: [string, any][] = [];
+      if (reportType === 'financial') {
+        stats.push(['Tổng doanh thu:', financialKpi.totalRevenue]);
+        stats.push(['Tổng chi phí mua hàng:', financialKpi.totalCost]);
+        stats.push(['Tổng lợi nhuận:', financialKpi.totalProfit]);
+        stats.push(['Tổng số lượng đã bán:', financialKpi.totalUnitsSold]);
+      } else {
+        stats.push(['Tổng số mặt hàng khác nhau:', totalProducts]);
+        stats.push([reportType !== 'incidents' ? 'Tổng số lô hàng liên quan:' : 'Tổng số vụ sự cố liên quan:', reportType !== 'incidents' ? totalBatches : data.length]);
+        stats.push(['Tổng giá trị ghi nhận:', totalBatchValue]);
+      }
 
       stats.forEach((row, i) => {
         const rowNum = 9 + i;
@@ -362,8 +442,12 @@ export class DashboardSystemService {
         const valCell = worksheet.getCell(`B${rowNum}`);
         valCell.value = row[1];
         valCell.font = valueFont;
-        if (row[0] === 'Tổng giá trị ghi nhận:') {
-          valCell.font = totalValFont;
+        if (row[0] === 'Tổng giá trị ghi nhận:' || row[0] === 'Tổng doanh thu:' || row[0] === 'Tổng chi phí mua hàng:' || row[0] === 'Tổng lợi nhuận:') {
+          if (row[0] === 'Tổng lợi nhuận:') {
+            valCell.font = { name: 'Arial', size: 10, bold: true, color: { argb: 'FF10B981' } }; // green text
+          } else {
+            valCell.font = totalValFont;
+          }
           valCell.numFmt = '#,##0" VND"';
         }
         worksheet.getRow(rowNum).height = 18;
@@ -399,6 +483,17 @@ export class DashboardSystemService {
           { header: 'Điểm gửi', key: 'sourceNode', width: 25, align: 'left' },
           { header: 'Điểm nhận', key: 'destNode', width: 25, align: 'left' },
           { header: 'Ngày gửi', key: 'shippedAt', width: 20, align: 'center' }
+        ];
+      } else if (reportType === 'financial') {
+        colsMeta = [
+          { header: 'Ngày bán', key: 'saleDate', width: 20, align: 'center' },
+          { header: 'Mã lô hàng', key: 'batchCode', width: 18, align: 'left' },
+          { header: 'Tên sản phẩm', key: 'productName', width: 25, align: 'left' },
+          { header: 'Số lượng bán', key: 'quantitySold', width: 15, align: 'right', type: 'numeric' },
+          { header: 'Giá mua', key: 'costPrice', width: 16, align: 'right', type: 'currency' },
+          { header: 'Giá bán', key: 'salePrice', width: 16, align: 'right', type: 'currency' },
+          { header: 'Doanh thu', key: 'revenue', width: 18, align: 'right', type: 'currency' },
+          { header: 'Lợi nhuận', key: 'profit', width: 18, align: 'right', type: 'currency' },
         ];
       } else {
         colsMeta = [
@@ -468,6 +563,18 @@ export class DashboardSystemService {
             item.sourceNode?.name || '',
             item.destinationNode?.name || '',
             this.formatDateTime(item.shippedAt)
+          ];
+        } else if (reportType === 'financial') {
+          const metadata = item.metadata || {};
+          rowValues = [
+            this.formatDateTime(item.occurredAt),
+            item.batch?.batchCode || '',
+            item.batch?.product?.name || '',
+            Number(metadata.qty_sold || 0),
+            Number(metadata.cost_price || 0),
+            Number(metadata.sale_price || 0),
+            Number(metadata.revenue || 0),
+            Number(metadata.profit || 0),
           ];
         } else {
           rowValues = [
@@ -553,24 +660,53 @@ export class DashboardSystemService {
       totalLabelCell.font = totalFont;
       totalLabelCell.alignment = { horizontal: 'left', vertical: 'middle' };
 
-      const totalValColIdx = colsMeta.findIndex(c => c.header === 'Tổng giá trị') + 1;
-      if (totalValColIdx > 0) {
-        const totalValCell = totalRow.getCell(totalValColIdx);
+      if (reportType === 'financial') {
+        const colLetterQty = String.fromCharCode(64 + 4);
+        const colLetterRev = String.fromCharCode(64 + 7);
+        const colLetterProf = String.fromCharCode(64 + 8);
         const formulaStartRow = startTableRows + 1;
         const formulaEndRow = currentTableY - 1;
-        // If there is data, use SUM formula, otherwise default to 0
+
         if (data.length > 0) {
-          const colLetter = String.fromCharCode(64 + totalValColIdx);
-          totalValCell.value = {
-            formula: `=SUM(${colLetter}${formulaStartRow}:${colLetter}${formulaEndRow})`,
-            result: totalBatchValue
-          };
+          totalRow.getCell(4).value = { formula: `=SUM(${colLetterQty}${formulaStartRow}:${colLetterQty}${formulaEndRow})`, result: financialKpi.totalUnitsSold };
+          totalRow.getCell(7).value = { formula: `=SUM(${colLetterRev}${formulaStartRow}:${colLetterRev}${formulaEndRow})`, result: financialKpi.totalRevenue };
+          totalRow.getCell(8).value = { formula: `=SUM(${colLetterProf}${formulaStartRow}:${colLetterProf}${formulaEndRow})`, result: financialKpi.totalProfit };
         } else {
-          totalValCell.value = 0;
+          totalRow.getCell(4).value = 0;
+          totalRow.getCell(7).value = 0;
+          totalRow.getCell(8).value = 0;
         }
-        totalValCell.font = totalValFont;
-        totalValCell.numFmt = '#,##0" VND"';
-        totalValCell.alignment = { horizontal: 'right', vertical: 'middle' };
+
+        totalRow.getCell(4).font = totalFont;
+        totalRow.getCell(4).alignment = { horizontal: 'right', vertical: 'middle' };
+
+        totalRow.getCell(7).font = totalValFont;
+        totalRow.getCell(7).numFmt = '#,##0" VND"';
+        totalRow.getCell(7).alignment = { horizontal: 'right', vertical: 'middle' };
+
+        totalRow.getCell(8).font = totalValFont;
+        totalRow.getCell(8).numFmt = '#,##0" VND"';
+        totalRow.getCell(8).alignment = { horizontal: 'right', vertical: 'middle' };
+      } else {
+        const totalValColIdx = colsMeta.findIndex(c => c.header === 'Tổng giá trị') + 1;
+        if (totalValColIdx > 0) {
+          const totalValCell = totalRow.getCell(totalValColIdx);
+          const formulaStartRow = startTableRows + 1;
+          const formulaEndRow = currentTableY - 1;
+          // If there is data, use SUM formula, otherwise default to 0
+          if (data.length > 0) {
+            const colLetter = String.fromCharCode(64 + totalValColIdx);
+            totalValCell.value = {
+              formula: `=SUM(${colLetter}${formulaStartRow}:${colLetter}${formulaEndRow})`,
+              result: totalBatchValue
+            };
+          } else {
+            totalValCell.value = 0;
+          }
+          totalValCell.font = totalValFont;
+          totalValCell.numFmt = '#,##0" VND"';
+          totalValCell.alignment = { horizontal: 'right', vertical: 'middle' };
+        }
       }
 
       // Auto-fit column widths (minimum width or auto-fitted based on meta)
@@ -609,7 +745,13 @@ export class DashboardSystemService {
       doc.moveDown(1.5);
 
       // Metadata Block (Clean key-value layout with light background)
-      const typeLabel = reportType === 'inventory' ? 'Tồn kho hàng hóa' : reportType === 'shipments' ? 'Vận chuyển / Điều phối' : 'Sự cố phát sinh';
+      const typeLabel = reportType === 'inventory'
+        ? 'Tồn kho hàng hóa'
+        : reportType === 'shipments'
+        ? 'Vận chuyển / Điều phối'
+        : reportType === 'financial'
+        ? 'Báo cáo tài chính'
+        : 'Sự cố phát sinh';
       doc.roundedRect(50, 80, 495, 55, 4).fill('#f8fafc');
       doc.strokeColor('#e2e8f0').lineWidth(1).roundedRect(50, 80, 495, 55, 4).stroke();
 
@@ -617,13 +759,17 @@ export class DashboardSystemService {
       doc.text('Loại báo cáo:', 65, 90);
       doc.text('Kỳ báo cáo:', 65, 110);
       doc.text('Ngày xuất bản:', 290, 90);
-      doc.text('Tài khoản:', 290, 110);
+      if (reportType !== 'financial') {
+        doc.text('Tài khoản:', 290, 110);
+      }
 
       doc.font('DejaVuSans').fontSize(8.5).fillColor('#0f172a');
       doc.text(typeLabel, 135, 90);
       doc.text(periodLabel, 135, 110);
       doc.text(this.formatDateTime(new Date()), 365, 90);
-      doc.text(`${currentUser.fullName} (${currentUser.role})`, 365, 110);
+      if (reportType !== 'financial') {
+        doc.text(`${currentUser.fullName} (${currentUser.role})`, 365, 110);
+      }
 
       // Summary Stats Box (Operational cockpit dashboard style)
       const statsY = 150;
@@ -636,26 +782,40 @@ export class DashboardSystemService {
       doc.strokeColor('#e2e8f0').lineWidth(1)
         .moveTo(350, statsY + 10).lineTo(350, statsY + 50).stroke();
 
-      // Column 1: Products
-      doc.fillColor('#64748b').font('DejaVuSans-Bold').fontSize(7.5).text('TỔNG MẶT HÀNG', 65, statsY + 14);
-      doc.fillColor('#0f172a').font('DejaVuSans-Bold').fontSize(14).text(String(totalProducts), 65, statsY + 28);
+      if (reportType === 'financial') {
+        // Column 1: Units Sold
+        doc.fillColor('#64748b').font('DejaVuSans-Bold').fontSize(7.5).text('TỔNG ĐÃ BÁN', 65, statsY + 14);
+        doc.fillColor('#0f172a').font('DejaVuSans-Bold').fontSize(14).text(String(financialKpi.totalUnitsSold), 65, statsY + 28);
 
-      if (reportType !== 'incidents') {
-        // Column 2: Batches
-        doc.fillColor('#64748b').font('DejaVuSans-Bold').fontSize(7.5).text('TỔNG SỐ LÔ HÀNG', 215, statsY + 14);
-        doc.fillColor('#0f172a').font('DejaVuSans-Bold').fontSize(14).text(String(totalBatches), 215, statsY + 28);
+        // Column 2: Revenue
+        doc.fillColor('#64748b').font('DejaVuSans-Bold').fontSize(7.5).text('TỔNG DOANH THU', 215, statsY + 14);
+        doc.fillColor('#0f172a').font('DejaVuSans-Bold').fontSize(11).text(this.formatCurrency(financialKpi.totalRevenue), 215, statsY + 28);
 
-        // Column 3: Total Value (Indigo accent)
-        doc.fillColor('#64748b').font('DejaVuSans-Bold').fontSize(7.5).text('TỔNG GIÁ TRỊ BÁO CÁO', 365, statsY + 14);
-        doc.fillColor('#4f46e5').font('DejaVuSans-Bold').fontSize(12).text(this.formatCurrency(totalBatchValue), 365, statsY + 28);
+        // Column 3: Profit
+        doc.fillColor('#64748b').font('DejaVuSans-Bold').fontSize(7.5).text('TỔNG LỢI NHUẬN', 365, statsY + 14);
+        doc.fillColor('#10b981').font('DejaVuSans-Bold').fontSize(11).text(this.formatCurrency(financialKpi.totalProfit), 365, statsY + 28);
       } else {
-        // Column 2: Incidents
-        doc.fillColor('#64748b').font('DejaVuSans-Bold').fontSize(7.5).text('TỔNG SỐ SỰ CỐ', 215, statsY + 14);
-        doc.fillColor('#0f172a').font('DejaVuSans-Bold').fontSize(14).text(String(data.length), 215, statsY + 28);
+        // Column 1: Products
+        doc.fillColor('#64748b').font('DejaVuSans-Bold').fontSize(7.5).text('TỔNG MẶT HÀNG', 65, statsY + 14);
+        doc.fillColor('#0f172a').font('DejaVuSans-Bold').fontSize(14).text(String(totalProducts), 65, statsY + 28);
 
-        // Column 3: Total Affected Value (Red warning color)
-        doc.fillColor('#64748b').font('DejaVuSans-Bold').fontSize(7.5).text('TỔNG GIÁ TRỊ SỰ CỐ', 365, statsY + 14);
-        doc.fillColor('#dc2626').font('DejaVuSans-Bold').fontSize(12).text(this.formatCurrency(totalBatchValue), 365, statsY + 28);
+        if (reportType !== 'incidents') {
+          // Column 2: Batches
+          doc.fillColor('#64748b').font('DejaVuSans-Bold').fontSize(7.5).text('TỔNG SỐ LÔ HÀNG', 215, statsY + 14);
+          doc.fillColor('#0f172a').font('DejaVuSans-Bold').fontSize(14).text(String(totalBatches), 215, statsY + 28);
+
+          // Column 3: Total Value (Indigo accent)
+          doc.fillColor('#64748b').font('DejaVuSans-Bold').fontSize(7.5).text('TỔNG GIÁ TRỊ BÁO CÁO', 365, statsY + 14);
+          doc.fillColor('#4f46e5').font('DejaVuSans-Bold').fontSize(12).text(this.formatCurrency(totalBatchValue), 365, statsY + 28);
+        } else {
+          // Column 2: Incidents
+          doc.fillColor('#64748b').font('DejaVuSans-Bold').fontSize(7.5).text('TỔNG SỐ SỰ CỐ', 215, statsY + 14);
+          doc.fillColor('#0f172a').font('DejaVuSans-Bold').fontSize(14).text(String(data.length), 215, statsY + 28);
+
+          // Column 3: Total Affected Value (Red warning color)
+          doc.fillColor('#64748b').font('DejaVuSans-Bold').fontSize(7.5).text('TỔNG GIÁ TRỊ SỰ CỐ', 365, statsY + 14);
+          doc.fillColor('#dc2626').font('DejaVuSans-Bold').fontSize(12).text(this.formatCurrency(totalBatchValue), 365, statsY + 28);
+        }
       }
 
       doc.x = 50;
@@ -682,6 +842,17 @@ export class DashboardSystemService {
           { header: 'Trạng thái', width: 50, getValue: (item) => item.status || '-' },
           { header: 'Nơi gửi/nhận', width: 65, getValue: (item) => `${item.sourceNode?.name || '-'}\n-> ${item.destinationNode?.name || '-'}` },
           { header: 'Ngày gửi', width: 55, getValue: (item) => this.formatDate(item.shippedAt) }
+        ];
+      } else if (reportType === 'financial') {
+        columns = [
+          { header: 'Ngày bán', width: 85, getValue: (item) => this.formatDateTime(item.occurredAt) },
+          { header: 'Mã lô', width: 50, getValue: (item) => item.batch?.batchCode || '-' },
+          { header: 'Tên sản phẩm', width: 100, getValue: (item) => item.batch?.product?.name || '-' },
+          { header: 'Số lượng', width: 45, align: 'right', getValue: (item) => String(item.metadata?.qty_sold || 0) },
+          { header: 'Giá mua', width: 50, align: 'right', getValue: (item) => this.formatCurrency(item.metadata?.cost_price || 0) },
+          { header: 'Giá bán', width: 50, align: 'right', getValue: (item) => this.formatCurrency(item.metadata?.sale_price || 0) },
+          { header: 'Doanh thu', width: 60, align: 'right', getValue: (item) => this.formatCurrency(item.metadata?.revenue || 0) },
+          { header: 'Lợi nhuận', width: 55, align: 'right', getValue: (item) => this.formatCurrency(item.metadata?.profit || 0) }
         ];
       } else {
         columns = [
@@ -797,6 +968,16 @@ export class DashboardSystemService {
             width: col.width - 8,
             align: 'right'
           });
+        } else if (reportType === 'financial' && col.header === 'Doanh thu') {
+          doc.fillColor('#4f46e5').text(this.formatCurrency(financialKpi.totalRevenue), currentX + 4, tableY + 8, {
+            width: col.width - 8,
+            align: 'right'
+          });
+        } else if (reportType === 'financial' && col.header === 'Lợi nhuận') {
+          doc.fillColor('#10b981').text(this.formatCurrency(financialKpi.totalProfit), currentX + 4, tableY + 8, {
+            width: col.width - 8,
+            align: 'right'
+          });
         }
         currentX += col.width;
       }
@@ -833,5 +1014,77 @@ export class DashboardSystemService {
 
       return { content: pdfBuffer, contentType: 'application/pdf', filename: `report_${reportType}_${filenamePeriod}.${format}` };
     }
+  }
+
+  async getFinancialReport(
+    period: string,
+    currentUser: any,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<any> {
+    if (currentUser.role !== RoleName.RETAILER) {
+      throw new BadRequestException('Chỉ Retailer mới có quyền truy cập báo cáo tài chính');
+    }
+
+    const { start, end } = this.getDateRange(period, startDate, endDate);
+
+    const qb = this.dataSource.getRepository(TimelineEventEntity).createQueryBuilder('event')
+      .leftJoinAndSelect('event.batch', 'batch')
+      .leftJoinAndSelect('batch.product', 'product')
+      .where('event.eventType = :eventType', { eventType: TimelineEventType.SOLD })
+      .andWhere('event.occurredAt >= :start', { start })
+      .andWhere('event.occurredAt <= :end', { end });
+
+    if (!currentUser.nodeId) {
+      qb.andWhere('1=0');
+    } else {
+      qb.andWhere('event.nodeId = :nodeId', { nodeId: currentUser.nodeId });
+    }
+
+    qb.orderBy('event.occurredAt', 'DESC');
+    const events = await qb.getMany();
+
+    let totalRevenue = 0;
+    let totalCost = 0;
+    let totalProfit = 0;
+    let totalUnitsSold = 0;
+
+    const transactions = events.map(event => {
+      const metadata = event.metadata || {};
+      const qtySold = Number(metadata.qty_sold || 0);
+      const costPrice = Number(metadata.cost_price || 0);
+      const salePrice = Number(metadata.sale_price || 0);
+      const revenue = Number(metadata.revenue || 0);
+      const cost = Number(metadata.cost || 0);
+      const profit = Number(metadata.profit || 0);
+
+      totalRevenue += revenue;
+      totalCost += cost;
+      totalProfit += profit;
+      totalUnitsSold += qtySold;
+
+      return {
+        id: event.id,
+        saleDate: event.occurredAt,
+        batchCode: event.batch?.batchCode || '-',
+        productName: event.batch?.product?.name || '-',
+        quantitySold: qtySold,
+        costPrice: costPrice,
+        salePrice: salePrice,
+        revenue: revenue,
+        cost: cost,
+        profit: profit,
+      };
+    });
+
+    return {
+      kpi: {
+        totalRevenue: Number(totalRevenue.toFixed(2)),
+        totalCost: Number(totalCost.toFixed(2)),
+        totalProfit: Number(totalProfit.toFixed(2)),
+        totalUnitsSold: Number(totalUnitsSold.toFixed(3)),
+      },
+      transactions,
+    };
   }
 }

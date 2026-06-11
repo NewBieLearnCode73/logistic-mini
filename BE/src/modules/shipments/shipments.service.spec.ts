@@ -289,7 +289,7 @@ describe('ShipmentsService', () => {
       mockManager.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
       await expect(
-        service.receiveShipment('shipment-id', { role: 'Retailer', nodeId: 'node-uuid' }),
+        service.receiveShipment('shipment-id', {}, { role: 'Distributor', nodeId: 'node-uuid' }),
       ).rejects.toThrow(NotFoundException);
     });
 
@@ -303,7 +303,7 @@ describe('ShipmentsService', () => {
       mockManager.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
       await expect(
-        service.receiveShipment('shipment-id', { role: 'Retailer', nodeId: 'node-uuid' }),
+        service.receiveShipment('shipment-id', {}, { role: 'Distributor', nodeId: 'node-uuid' }),
       ).rejects.toThrow(BadRequestException);
     });
 
@@ -317,9 +317,11 @@ describe('ShipmentsService', () => {
       mockManager.createQueryBuilder.mockReturnValue(mockQueryBuilder);
 
       await expect(
-        service.receiveShipment('shipment-id', { role: 'Retailer', nodeId: 'node-B' }),
+        service.receiveShipment('shipment-id', {}, { role: 'Distributor', nodeId: 'node-B' }),
       ).rejects.toThrow(ForbiddenException);
     });
+
+
 
     it('should successfully receive shipment, execute upsert query, and transition batch status', async () => {
       const shipment = {
@@ -344,7 +346,7 @@ describe('ShipmentsService', () => {
 
       mockManager.findOne.mockResolvedValueOnce(batch);
 
-      const result = await service.receiveShipment('shipment-id', { role: 'Retailer', nodeId: 'node-B' });
+      const result = await service.receiveShipment('shipment-id', {}, { role: 'Distributor', nodeId: 'node-B' });
 
       expect(result).toBeDefined();
       expect(result.status).toBe(ShipmentStatus.RECEIVED);

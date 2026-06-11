@@ -8,6 +8,7 @@ import { DataSource } from 'typeorm';
 import { randomUUID } from 'crypto';
 import { ShipmentEntity } from './entities/shipment.entity';
 import { CreateShipmentDto } from './dto/create-shipment.dto';
+import { ReceiveShipmentDto } from './dto/receive-shipment.dto';
 import { BatchEntity } from '../batches/entities/batch.entity';
 import { InventoryEntity } from '../batches/entities/inventory.entity';
 import { TimelineEventEntity } from '../batches/entities/timeline-event.entity';
@@ -16,6 +17,7 @@ import { ShipmentStatus } from '../../common/enums/shipment-status.enum';
 import { BatchStatus } from '../../common/enums/batch-status.enum';
 import { TimelineEventType } from '../../common/enums/timeline-event-type.enum';
 import { ShipmentIssueEntity } from '../incidents/entities/shipment-issue.entity';
+import { RoleName } from '../../common/enums/role.enum';
 
 @Injectable()
 export class ShipmentsService {
@@ -238,7 +240,7 @@ export class ShipmentsService {
     }
   }
 
-  async receiveShipment(id: string, currentUser: any): Promise<ShipmentEntity> {
+  async receiveShipment(id: string, receiveShipmentDto: ReceiveShipmentDto, currentUser: any): Promise<ShipmentEntity> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -263,6 +265,7 @@ export class ShipmentsService {
       if (currentUser.role !== 'Admin' && currentUser.nodeId !== shipment.destinationNodeId) {
         throw new ForbiddenException('Bạn không thuộc Node nhận của vận đơn này');
       }
+
 
       shipment.status = ShipmentStatus.RECEIVED;
       shipment.actualDeliveryDate = new Date();
@@ -297,6 +300,7 @@ export class ShipmentsService {
       event.quantityDelta = shipment.quantityShipped;
       event.notes = `Đã nhận hàng thành công tại kho nhận. Mã vận đơn: ${shipment.trackingCode}`;
       await queryRunner.manager.save(TimelineEventEntity, event);
+
 
       await queryRunner.commitTransaction();
 

@@ -145,7 +145,9 @@ export default function DashboardPage() {
               >
                 <option value="inventory">{t('reports.inventory')}</option>
                 <option value="shipments">{t('reports.shipments')}</option>
-                <option value="incidents">{t('reports.incidents')}</option>
+                {role !== 'Manufacturer' && (
+                  <option value="incidents">{t('reports.incidents')}</option>
+                )}
               </select>
             </div>
             <div className="w-40 space-y-1.5">

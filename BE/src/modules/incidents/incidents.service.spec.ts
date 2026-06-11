@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { BadRequestException, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { IncidentsService } from './incidents.service';
+import { BrevoEmailService } from './brevo-email.service';
 import { CreateIncidentDto } from './dto/create-incident.dto';
 import { IncidentReportEntity } from './entities/incident-report.entity';
 import { ShipmentEntity } from '../shipments/entities/shipment.entity';
@@ -44,6 +45,10 @@ describe('IncidentsService', () => {
     getRepository: jest.fn().mockReturnValue(mockRepository),
   };
 
+  const mockBrevoEmailService = {
+    sendEmail: jest.fn().mockResolvedValue(undefined),
+  };
+
   beforeEach(async () => {
     jest.clearAllMocks();
 
@@ -51,6 +56,7 @@ describe('IncidentsService', () => {
       providers: [
         IncidentsService,
         { provide: DataSource, useValue: mockDataSource },
+        { provide: BrevoEmailService, useValue: mockBrevoEmailService },
       ],
     }).compile();
 
@@ -259,6 +265,7 @@ describe('IncidentsService', () => {
       shipment.trackingCode = 'SHP-OVERDUE';
 
       const mockQueryBuilder = {
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         andWhere: jest.fn().mockReturnThis(),
         getMany: jest.fn().mockResolvedValue([shipment]),

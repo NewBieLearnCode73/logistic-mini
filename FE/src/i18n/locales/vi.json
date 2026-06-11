@@ -71,7 +71,8 @@
     "map": "Bản đồ",
     "administration": "Quản trị hệ thống",
     "supplyChain": "Chuỗi cung ứng",
-    "myWarehouse": "Kho của tôi"
+    "myWarehouse": "Kho của tôi",
+    "financialReport": "Báo cáo tài chính"
   },
   "dashboard": {
     "title": "Tổng Quan Hệ Thống",
