@@ -195,19 +195,19 @@ export class IncidentsService {
 
     const formattedShipmentDate = new Date(shipment.shippedAt).toISOString().replace('T', ' ').substring(0, 16);
 
-    const subject = `[Mini Supply Chain] Delayed Shipment Detected`;
+    const subject = `[Mini Supply Chain] Phát hiện vận đơn trễ hạn`;
     const htmlContent = `
-A delayed shipment has been detected.
+Phát hiện vận đơn trễ hạn trong hệ thống.
 
-Batch Code: ${shipment.batch?.batchCode || ''}
-Status: DELAYED
-Source: ${shipment.sourceNode?.name || ''}
-Destination: ${shipment.destinationNode?.name || ''}
-Quantity: ${shipment.quantityShipped}
-Shipment Date: ${formattedShipmentDate}
-Delay Duration: ${delayDurationHours} hours
+Mã lô hàng: ${shipment.batch?.batchCode || ''}
+Trạng thái: TRỄ HẠN (DELAYED)
+Nguồn: ${shipment.sourceNode?.name || ''}
+Đích: ${shipment.destinationNode?.name || ''}
+Số lượng: ${shipment.quantityShipped}
+Ngày gửi: ${formattedShipmentDate}
+Thời gian trễ: ${delayDurationHours} giờ
 
-An incident has been automatically created for investigation.
+Một báo cáo sự cố đã được tạo tự động. Vui lòng đăng nhập hệ thống để xử lý.
 `;
 
     await this.brevoEmailService.sendEmail(recipients, subject, htmlContent);
@@ -216,6 +216,30 @@ An incident has been automatically created for investigation.
 
   async createIncident(dto: CreateIncidentDto, currentUser: any): Promise<IncidentReportEntity> {
     const { shipmentId, incidentType, description, priority } = dto;
+
+    // BUG-3 FIX: Validate shipment exists and has eligible status
+    const shipmentCheck = await this.dataSource.getRepository(ShipmentEntity).findOne({
+      where: { id: shipmentId },
+    });
+    if (!shipmentCheck) {
+      throw new NotFoundException(`Không tìm thấy vận đơn với ID ${shipmentId}`);
+    }
+    const eligibleStatuses: string[] = [ShipmentStatus.IN_TRANSIT, ShipmentStatus.DELAYED];
+    if (!eligibleStatuses.includes(shipmentCheck.status)) {
+      throw new BadRequestException(
+        `Chỉ có thể mở sự cố cho vận đơn đang ở trạng thái IN_TRANSIT hoặc DELAYED. Trạng thái hiện tại: ${shipmentCheck.status}`,
+      );
+    }
+
+    // BUG-4 FIX: Check for existing open incident on the same shipment
+    const existingOpenIncident = await this.dataSource.getRepository(IncidentReportEntity).findOne({
+      where: { shipmentId, status: 'OPEN' },
+    });
+    if (existingOpenIncident) {
+      throw new BadRequestException(
+        `Vận đơn này đã có sự cố đang mở (mã: ${existingOpenIncident.incidentCode}). Không thể tạo sự cố trùng lặp.`,
+      );
+    }
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -263,6 +287,17 @@ An incident has been automatically created for investigation.
       event.notes = `Bắt đầu mở cuộc điều tra sự cố ${incidentType}. Mã sự cố: ${incidentCode}`;
       await queryRunner.manager.save(TimelineEventEntity, event);
 
+      const auditLog = new AuditLogEntity();
+      auditLog.actorId = currentUser.userId;
+      auditLog.action = 'OPEN_INVESTIGATION';
+      auditLog.entityType = 'incident_reports';
+      auditLog.entityId = savedIncident.id;
+      auditLog.oldValues = { shipmentStatus: shipment.status };
+      auditLog.newValues = { incidentCode, batchStatus: 'INVESTIGATING' };
+      auditLog.ipAddress = null;
+      auditLog.userAgent = null;
+      await queryRunner.manager.save(AuditLogEntity, auditLog);
+
       await queryRunner.commitTransaction();
       return savedIncident;
     } catch (error) {
@@ -298,41 +333,41 @@ An incident has been automatically created for investigation.
       }
 
       if (!incident.firstApprovedBy) {
-        // --- FIRST CONFIRMATION (Admin 1) ---
+        // --- FIRST CONFIRMATION (Admin 1) – chỉ ghi nhận yêu cầu, CHƯA thay đổi batch/shipment ---
         incident.firstApprovedBy = currentUser.userId;
         const savedIncident = await queryRunner.manager.save(IncidentReportEntity, incident);
 
-        const batch = await queryRunner.manager.findOne(BatchEntity, {
-          where: { id: shipment.batchId },
-        });
-        if (batch) {
-          batch.status = BatchStatus.LOST;
-          await queryRunner.manager.save(BatchEntity, batch);
-        }
-
+        // BUG-2 FIX: Dùng PENDING_LOST_APPROVAL thay vì LOST
         const event = new TimelineEventEntity();
         event.batchId = shipment.batchId;
-        event.eventType = TimelineEventType.LOST;
+        event.eventType = TimelineEventType.PENDING_LOST_APPROVAL;
         event.nodeId = shipment.sourceNodeId;
         event.actorId = currentUser.userId;
         event.shipmentId = shipment.id;
         event.quantityDelta = null;
-        event.notes = `Yêu cầu xác nhận thất lạc hàng hóa (Chờ phê duyệt kép). Người đề xuất: ${currentUser.userId}.`;
+        event.notes = `Yêu cầu xác nhận thất lạc hàng hóa – bước 1/2 (Chờ phê duyệt kép). Người đề xuất: Admin ID ${currentUser.userId}.`;
         await queryRunner.manager.save(TimelineEventEntity, event);
+
+        // BUG-9 FIX: Thêm audit log cho lần confirm đầu
+        const auditLog = new AuditLogEntity();
+        auditLog.actorId = currentUser.userId;
+        auditLog.action = 'CONFIRM_LOST_STEP1';
+        auditLog.entityType = 'incident_reports';
+        auditLog.entityId = incident.id;
+        auditLog.oldValues = { firstApprovedBy: null };
+        auditLog.newValues = { firstApprovedBy: currentUser.userId, status: 'PENDING_SECOND_APPROVAL' };
+        auditLog.ipAddress = null;
+        auditLog.userAgent = null;
+        await queryRunner.manager.save(AuditLogEntity, auditLog);
 
         await queryRunner.commitTransaction();
         return savedIncident;
       } else {
-        // --- SECOND CONFIRMATION (Admin 2) ---
+        // --- SECOND CONFIRMATION (Admin 2) – Two-Man Rule hoàn tất ---
+        // Đặc tả chỉ yêu cầu: Admin2 ≠ Admin1 (người xác nhận bước 1)
         if (incident.firstApprovedBy === currentUser.userId) {
           throw new ForbiddenException(
-            'Quy tắc phê duyệt kép: Người xác nhận thứ hai phải khác người đề xuất/xác nhận thứ nhất',
-          );
-        }
-
-        if (incident.reportedBy === currentUser.userId) {
-          throw new ForbiddenException(
-            'Quy tắc phê duyệt kép: Người phê duyệt lần 2 không được trùng với người báo cáo sự cố lần 1',
+            'Quy tắc phê duyệt kép: Người xác nhận thứ hai phải khác người đã xác nhận thứ nhất',
           );
         }
 
@@ -383,11 +418,12 @@ An incident has been automatically created for investigation.
         shipment.status = ShipmentStatus.LOST;
         await queryRunner.manager.save(ShipmentEntity, shipment);
 
+        // BUG-1 FIX: Batch chỉ được set LOST sau khi Two-Man Rule hoàn tất (lần 2)
         const batch = await queryRunner.manager.findOne(BatchEntity, {
           where: { id: shipment.batchId },
         });
         if (batch) {
-          batch.status = BatchStatus.CREATED;
+          batch.status = BatchStatus.LOST;
           batch.currentNodeId = shipment.sourceNodeId;
           await queryRunner.manager.save(BatchEntity, batch);
         }
@@ -399,8 +435,25 @@ An incident has been automatically created for investigation.
         event.actorId = currentUser.userId;
         event.shipmentId = shipment.id;
         event.quantityDelta = null;
-        event.notes = `Xác nhận thất lạc hàng hóa hoàn tất (Phê duyệt kép). Vận đơn: ${shipment.trackingCode}. Đã hoàn trả ${shipment.quantityShipped} sản phẩm vào kho nguồn.`;
+        event.notes = `Xác nhận thất lạc hàng hóa hoàn tất (Phê duyệt kép bởi Admin1: ${incident.firstApprovedBy}, Admin2: ${currentUser.userId}). Vận đơn: ${shipment.trackingCode}. Đã hoàn trả ${shipment.quantityShipped} sản phẩm vào kho nguồn.`;
         await queryRunner.manager.save(TimelineEventEntity, event);
+
+        const auditLog = new AuditLogEntity();
+        auditLog.actorId = currentUser.userId;
+        auditLog.action = 'CONFIRM_LOST_STEP2';
+        auditLog.entityType = 'incident_reports';
+        auditLog.entityId = incident.id;
+        auditLog.oldValues = { batchStatus: 'INVESTIGATING', shipmentStatus: shipment.status };
+        auditLog.newValues = {
+          batchStatus: 'LOST',
+          shipmentStatus: 'LOST',
+          inventoryRollback: shipment.quantityShipped,
+          firstApprover: incident.firstApprovedBy,
+          secondApprover: currentUser.userId,
+        };
+        auditLog.ipAddress = null;
+        auditLog.userAgent = null;
+        await queryRunner.manager.save(AuditLogEntity, auditLog);
 
         await queryRunner.commitTransaction();
         return savedIncident;
@@ -470,6 +523,13 @@ An incident has been automatically created for investigation.
 
       if (incident.status !== 'OPEN') {
         throw new BadRequestException('Sự cố này đã được giải quyết hoặc đóng.');
+      }
+
+      // BUG-5 FIX: Block confirmFound khi đang trong quy trình Two-Man Rule confirmLost
+      if (incident.firstApprovedBy) {
+        throw new BadRequestException(
+          'Không thể xác nhận "Tìm thấy" vì sự cố này đang trong quy trình xác nhận thất lạc (đang chờ phê duyệt kép bước 2/2). Vui lòng hoàn tất hoặc liên hệ Admin để huỷ yêu cầu.',
+        );
       }
 
       const shipment = await queryRunner.manager.findOne(ShipmentEntity, {

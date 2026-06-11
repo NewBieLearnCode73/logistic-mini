@@ -159,7 +159,7 @@ export default function IncidentsPage() {
     {
       key: 'status',
       header: t('common.status'),
-      className: 'w-[110px]',
+      className: 'w-[175px]',
       render: (inc) => {
         const statusClasses: Record<string, string> = {
           OPEN: 'badge-warning',
@@ -167,10 +167,20 @@ export default function IncidentsPage() {
           RESOLVED: 'badge-success',
           CLOSED: 'badge-muted',
         };
+
+        const isPendingSecondApproval = inc.status === 'OPEN' && !!inc.firstApprovedBy;
         return (
-          <span className={`inline-flex px-[10px] py-[3px] rounded-[8px] text-[12px] font-medium transition-colors ${statusClasses[inc.status] || 'badge-muted'}`}>
-            {t(`incident.statuses.${inc.status}`, inc.status)}
-          </span>
+          <div className="flex flex-col gap-0.5">
+            <span className={`inline-flex px-[10px] py-[3px] rounded-[8px] text-[12px] font-medium transition-colors ${statusClasses[inc.status] || 'badge-muted'}`}>
+              {t(`incident.statuses.${inc.status}`, inc.status)}
+            </span>
+            {isPendingSecondApproval && (
+              <span className="inline-flex items-center gap-1 px-[8px] py-[2px] rounded-[6px] text-[11px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 animate-pulse">
+                <span>⏳</span>
+                <span>{t('incident.pendingSecondApproval', 'Chờ phê duyệt kép (1/2)')}</span>
+              </span>
+            )}
+          </div>
         );
       },
     },
@@ -202,9 +212,11 @@ export default function IncidentsPage() {
       render: (inc) => {
         if (inc.status !== 'OPEN') return <span className="text-2xs text-zinc-400 dark:text-zinc-500">—</span>;
 
+        // Two-Man Rule: chỉ disable nếu chính Admin1 (người đã phê duyệt bước 1) muốn bấm bước 2
+        // Đặc tả chỉ yêu cầu Admin2 ≠ Admin1, không cấm người báo cáo phê duyệt lần 2
         const isLostDisabled = !!(
           inc.firstApprovedBy &&
-          (currentUserId === inc.firstApprovedBy || currentUserId === inc.reportedBy)
+          currentUserId === inc.firstApprovedBy
         );
 
         return (
@@ -232,7 +244,9 @@ export default function IncidentsPage() {
     },
   ];
 
-  const inTransitShipments = (shipmentsData?.data || []).filter((s) => s.status === 'IN_TRANSIT');
+  const eligibleShipments = (shipmentsData?.data || []).filter(
+    (s) => s.status === 'IN_TRANSIT' || s.status === 'DELAYED'
+  );
 
   return (
     <div className="space-y-4">
@@ -277,9 +291,9 @@ export default function IncidentsPage() {
               {t('shipment.title')} <span className="text-red-500">*</span>
             </label>
             <SearchableSelect
-              options={inTransitShipments.map((s) => ({
+              options={eligibleShipments.map((s) => ({
                 value: s.id,
-                label: s.trackingCode,
+                label: `${s.trackingCode}${s.status === 'DELAYED' ? 'DELAYED' : ''}`,
                 subLabel: `${s.batch?.batchCode || ''} · ${s.batch?.product?.name || ''}`,
               }))}
               value={formData.shipmentId}
