@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException
 } from '@nestjs/common';
@@ -568,8 +569,13 @@ export class BatchesService {
 
       await queryRunner.commitTransaction();
       return batch;
-    } catch (error) {
+    } catch (error: any) {
       await queryRunner.rollbackTransaction();
+      if (error.name === 'OptimisticLockVersionMismatchError') {
+        throw new ConflictException(
+          'Dữ liệu lô hàng đã bị thay đổi bởi người dùng khác. Vui lòng tải lại trang.',
+        );
+      }
       throw error;
     } finally {
       await queryRunner.release();

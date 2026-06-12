@@ -1,4 +1,4 @@
-import { IsBoolean, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsBoolean, IsEnum, IsNumber, IsOptional, IsString, IsUUID } from 'class-validator';
 import { RoleName } from '../../../common/enums/role.enum';
 
 export class UpdateUserDto {
@@ -17,4 +17,8 @@ export class UpdateUserDto {
   @IsOptional()
   @IsBoolean({ message: 'Trạng thái hoạt động phải là boolean' })
   isActive?: boolean;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'Version phải là số nguyên' })
+  version?: number;
 }

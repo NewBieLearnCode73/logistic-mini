@@ -171,7 +171,16 @@ export class UsersService {
       throw new NotFoundException(`Tài khoản với ID ${id} không tồn tại`);
     }
 
-    const { fullName, role, nodeId, isActive } = updateUserDto;
+    const { fullName, role, nodeId, isActive, version } = updateUserDto;
+
+    // Optimistic Locking: kiểm tra version nếu client gửi lên
+    if (version !== undefined) {
+      if (user.version !== version) {
+        throw new ConflictException(
+          'Dữ liệu tài khoản đã bị thay đổi bởi người dùng khác. Vui lòng tải lại trang.',
+        );
+      }
+    }
 
     if (fullName !== undefined) {
       user.fullName = fullName;
@@ -211,14 +220,23 @@ export class UsersService {
       await this.userRoleRepository.save(userRole);
     }
 
-    const updatedUser = await this.userRepository.save(user);
+    try {
+      const updatedUser = await this.userRepository.save(user);
 
-    // Reload full relations
-    const result = await this.findAdminDetail(updatedUser.id);
-    if (result) {
-      delete (result as any).passwordHash;
+      // Reload full relations
+      const result = await this.findAdminDetail(updatedUser.id);
+      if (result) {
+        delete (result as any).passwordHash;
+      }
+      return result!;
+    } catch (error: any) {
+      if (error.name === 'OptimisticLockVersionMismatchError') {
+        throw new ConflictException(
+          'Dữ liệu tài khoản đã bị thay đổi bởi người dùng khác. Vui lòng tải lại trang.',
+        );
+      }
+      throw error;
     }
-    return result!;
   }
 
   async toggleActive(id: string, requesterId: string): Promise<UserEntity> {

@@ -1,6 +1,7 @@
 import {
   Injectable,
   BadRequestException,
+  ConflictException,
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
@@ -401,8 +402,13 @@ export class ShipmentsService {
         savedShipment.batch = batch;
       }
       return savedShipment;
-    } catch (error) {
+    } catch (error: any) {
       await queryRunner.rollbackTransaction();
+      if (error.name === 'OptimisticLockVersionMismatchError') {
+        throw new ConflictException(
+          'Dữ liệu vận đơn đã bị thay đổi bởi người dùng khác. Vui lòng tải lại trang.',
+        );
+      }
       throw error;
     } finally {
       await queryRunner.release();

@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -273,8 +274,13 @@ export class IncidentsService {
 
       await queryRunner.commitTransaction();
       return savedIncident;
-    } catch (error) {
+    } catch (error: any) {
       await queryRunner.rollbackTransaction();
+      if (error.name === 'OptimisticLockVersionMismatchError') {
+        throw new ConflictException(
+          'Dữ liệu sự cố đã bị thay đổi bởi người dùng khác. Vui lòng tải lại trang.',
+        );
+      }
       throw error;
     } finally {
       await queryRunner.release();
@@ -444,8 +450,13 @@ export class IncidentsService {
         await queryRunner.commitTransaction();
         return savedIncident;
       }
-    } catch (error) {
+    } catch (error: any) {
       await queryRunner.rollbackTransaction();
+      if (error.name === 'OptimisticLockVersionMismatchError') {
+        throw new ConflictException(
+          'Dữ liệu sự cố đã bị thay đổi bởi người dùng khác. Vui lòng tải lại trang.',
+        );
+      }
       throw error;
     } finally {
       await queryRunner.release();
@@ -582,8 +593,13 @@ export class IncidentsService {
 
       await queryRunner.commitTransaction();
       return savedIncident;
-    } catch (error) {
+    } catch (error: any) {
       await queryRunner.rollbackTransaction();
+      if (error.name === 'OptimisticLockVersionMismatchError') {
+        throw new ConflictException(
+          'Dữ liệu sự cố đã bị thay đổi bởi người dùng khác. Vui lòng tải lại trang.',
+        );
+      }
       throw error;
     } finally {
       await queryRunner.release();
