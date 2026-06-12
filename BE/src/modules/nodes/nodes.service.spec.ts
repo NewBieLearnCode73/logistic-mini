@@ -74,7 +74,7 @@ describe('NodesService', () => {
       mockInventoryQueryBuilder.getRawOne.mockResolvedValueOnce({ total: '15' });
 
       await expect(service.delete('node-id')).rejects.toThrow(
-        'Cannot delete this node because inventory still exists at this location. Please transfer, sell, or remove all inventory before deleting the node.',
+        'Không thể xóa node này vì vẫn còn tồn kho tại đây. Vui lòng chuyển, bán hoặc xử lý hết hàng trước khi xóa node.',
       );
     });
 
@@ -89,7 +89,7 @@ describe('NodesService', () => {
       mockInventoryRepository.findOne.mockResolvedValueOnce(activeInventory);
 
       await expect(service.delete('node-id')).rejects.toThrow(
-        'Cannot delete this node because inventory still exists at this location. Please transfer, sell, or remove all inventory before deleting the node.',
+        'Không thể xóa node này vì vẫn còn tồn kho tại đây. Vui lòng chuyển, bán hoặc xử lý hết hàng trước khi xóa node.',
       );
     });
 

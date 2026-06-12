@@ -36,7 +36,11 @@
     "allRoles": "Tất cả vai trò",
     "allNodes": "Tất cả điểm công tác",
     "allStatus": "Tất cả trạng thái",
-    "allProducts": "Tất cả sản phẩm"
+    "allProducts": "Tất cả sản phẩm",
+    "info": "Thông tin",
+    "createdAt": "Ngày tạo",
+    "select": "Chọn...",
+    "noResults": "Không tìm thấy kết quả"
   },
   "auth": {
     "login": "Đăng nhập",
@@ -86,7 +90,7 @@
     "subtitle": "Quản lý vòng đời lô hàng sản xuất, xuất nhập kho và truy xuất nguồn gốc.",
     "batchCode": "Mã lô hàng",
     "product": "Sản phẩm",
-    "quantity": "Số lượng",
+    "quantity": "Tổng số lượng còn lại (lô)",
     "unit": "Đơn vị",
     "manufactureDate": "Ngày sản xuất",
     "expiryDate": "Hạn sử dụng",
@@ -96,6 +100,8 @@
     "sellBatch": "Bán lẻ",
     "timeline": "Lịch sử hành trình",
     "qrCode": "Mã QR",
+    "totalValue": "Tổng giá trị",
+    "totalValueEstimated": "Tổng giá trị tạm tính",
     "status": {
       "CREATED": "Khởi tạo",
       "IN_TRANSIT": "Đang vận chuyển",
@@ -118,7 +124,10 @@
       "mfgRequired": "Vui lòng chọn ngày sản xuất",
       "expRequired": "Vui lòng chọn hạn sử dụng",
       "expAfterMfg": "Hạn sử dụng phải lớn hơn ngày sản xuất",
-      "originRequired": "Vui lòng chọn nhà máy sản xuất (Origin Node)"
+      "originRequired": "Vui lòng chọn nhà máy sản xuất (Origin Node)",
+      "costPriceMin": "Giá mua phải lớn hơn 0",
+      "salePriceMin": "Giá bán phải lớn hơn 0",
+      "salePriceGteCost": "Giá bán không được nhỏ hơn giá mua"
     },
     "notFound": "Không tìm thấy lô hàng",
     "notFoundDesc": "Lô hàng không tồn tại hoặc bạn không có quyền xem thông tin chi tiết lô hàng này.",
@@ -127,7 +136,20 @@
     "retailSellDesc": "Bán lẻ sản phẩm trực tiếp từ lô hàng này tại cửa hàng của bạn. Số lượng bán sẽ được khấu trừ khỏi kho khả dụng.",
     "sellQuantity": "Số lượng bán",
     "sellQuantityError": "Số lượng bán lẻ phải lớn hơn 0",
-    "confirmSell": "Xác nhận bán"
+    "confirmSell": "Xác nhận bán",
+    "sellDate": "Ngày bán hàng",
+    "costPrice": "Đơn giá mua / đơn vị",
+    "salePrice": "Đơn giá bán lẻ / đơn vị",
+    "profitPreview": "Xem trước lợi nhuận",
+    "costPriceLabel": "Đơn giá mua",
+    "salePriceLabel": "Đơn giá bán lẻ",
+    "totalRevenue": "Tổng doanh thu",
+    "totalCost": "Tổng giá vốn",
+    "estimatedProfit": "Lợi nhuận ước tính",
+    "localInventory": "Tồn kho khả dụng tại đây",
+    "inventoryDistribution": "Phân phối tồn kho tại các cơ sở",
+    "sellQuantityExceedsAvailable": "Số lượng bán không được vượt quá số lượng tồn kho khả dụng tại cửa hàng",
+    "lastUpdated": "Cập nhật cuối"
   },
   "shipment": {
     "title": "Quản Lý Vận Đơn",
@@ -212,6 +234,8 @@
     "description": "Mô tả",
     "createProduct": "Thêm sản phẩm",
     "updateProduct": "Cập nhật sản phẩm",
+    "unitPrice": "Đơn giá",
+    "quantity": "Số lượng tồn",
     "searchPlaceholder": "Tìm kiếm tên, mã SKU...",
     "unitLabel": "Đơn vị tính",
     "unitPlaceholder": "Ví dụ: Hộp, Chai, Thùng",
@@ -348,20 +372,28 @@
     "notFoundHint": "Có thể đây là hàng giả. Vui lòng liên hệ nhà sản xuất."
   },
   "map": {
-    "title": "Bản Đồ Chuỗi Cung Ứng",
+    "title": "Bản Đồ Mạng Lưới Chuỗi Cung Ứng",
     "subtitle": "Bản đồ tương tác hiển thị các địa điểm mạng lưới và vận đơn đang di chuyển.",
     "nodeInfo": "Thông Tin Địa Điểm",
     "shipmentInfo": "Thông Tin Vận Đơn",
     "filterNodes": "Lọc Địa Điểm",
     "activeShipments": "Vận Đơn Đang Chạy",
     "allNodes": "Tất Cả Địa Điểm",
-    "legend": "Chú Giải Bản Đồ"
+    "legend": "Chú Giải Bản Đồ",
+    "productBatch": "Sản phẩm (Lô hàng)",
+    "showShipmentFlow": "Hiển thị luồng vận đơn",
+    "networkAnalysis": "Phân tích trực quan mạng lưới",
+    "manufacturerLegend": "M: Sản xuất",
+    "distributorLegend": "D: Phân phối",
+    "warehouseLegend": "W: Kho bãi",
+    "retailerLegend": "R: Cửa hàng"
   },
   "reports": {
     "title": "Báo cáo Hệ thống",
     "subtitle": "Xuất báo cáo tồn kho, vận đơn hoặc sự cố ra tệp CSV hoặc PDF.",
     "export": "Xuất Báo Cáo",
     "reportType": "Loại Báo Cáo",
+    "period": "Khoảng thời gian",
     "format": "Định dạng",
     "selectType": "Chọn loại báo cáo",
     "inventory": "Báo cáo Tồn Kho",

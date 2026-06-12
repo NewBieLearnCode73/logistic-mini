@@ -36,7 +36,11 @@
     "allRoles": "All Roles",
     "allNodes": "All Nodes",
     "allStatus": "All Statuses",
-    "allProducts": "All Products"
+    "allProducts": "All Products",
+    "info": "Info",
+    "createdAt": "Created At",
+    "select": "Select...",
+    "noResults": "No results found"
   },
   "auth": {
     "login": "Login",
@@ -86,7 +90,7 @@
     "subtitle": "Manage batch lifecycles, manufacturing, warehouse inventory and tracing.",
     "batchCode": "Batch Code",
     "product": "Product",
-    "quantity": "Quantity",
+    "quantity": "Total Remaining (Batch)",
     "unit": "Unit",
     "manufactureDate": "Manufacture Date",
     "expiryDate": "Expiry Date",
@@ -96,6 +100,8 @@
     "sellBatch": "Sell",
     "timeline": "Journey History",
     "qrCode": "QR Code",
+    "totalValue": "Total Value",
+    "totalValueEstimated": "Estimated Total Value",
     "status": {
       "CREATED": "Created",
       "IN_TRANSIT": "In Transit",
@@ -118,7 +124,10 @@
       "mfgRequired": "Manufacture date is required",
       "expRequired": "Expiry date is required",
       "expAfterMfg": "Expiry date must be after manufacture date",
-      "originRequired": "Manufacturer node (Origin Node) is required"
+      "originRequired": "Manufacturer node (Origin Node) is required",
+      "costPriceMin": "Cost price must be greater than 0",
+      "salePriceMin": "Sale price must be greater than 0",
+      "salePriceGteCost": "Sale price cannot be less than cost price"
     },
     "notFound": "Batch Not Found",
     "notFoundDesc": "The batch does not exist or you do not have permissions to view its details.",
@@ -127,7 +136,20 @@
     "retailSellDesc": "Sell products directly from this batch at your retail store. Quantity will be deducted from available inventory.",
     "sellQuantity": "Quantity to Sell",
     "sellQuantityError": "Quantity must be greater than 0",
-    "confirmSell": "Confirm Sell"
+    "confirmSell": "Confirm Sell",
+    "sellDate": "Sale Date",
+    "costPrice": "Cost Price / unit",
+    "salePrice": "Retail Price / unit",
+    "profitPreview": "Profit Preview",
+    "costPriceLabel": "Cost Price",
+    "salePriceLabel": "Retail Price",
+    "totalRevenue": "Total Revenue",
+    "totalCost": "Total Cost",
+    "estimatedProfit": "Estimated Profit",
+    "localInventory": "Available at your node",
+    "inventoryDistribution": "Inventory Distribution",
+    "sellQuantityExceedsAvailable": "Sell quantity cannot exceed available stock at your store",
+    "lastUpdated": "Last Updated"
   },
   "shipment": {
     "title": "Shipment Management",
@@ -212,6 +234,8 @@
     "description": "Description",
     "createProduct": "Add Product",
     "updateProduct": "Update Product",
+    "unitPrice": "Unit Price",
+    "quantity": "In Stock",
     "searchPlaceholder": "Search name, SKU code...",
     "unitLabel": "Unit of Measure",
     "unitPlaceholder": "e.g., Case, Box, Bottle",
@@ -355,13 +379,21 @@
     "filterNodes": "Filter Nodes",
     "activeShipments": "Active Shipments",
     "allNodes": "All Nodes",
-    "legend": "Map Legend"
+    "legend": "Map Legend",
+    "productBatch": "Product (Batch)",
+    "showShipmentFlow": "Show Shipment Flow",
+    "networkAnalysis": "Network Visual Analysis",
+    "manufacturerLegend": "M: Manufacturer",
+    "distributorLegend": "D: Distributor",
+    "warehouseLegend": "W: Warehouse",
+    "retailerLegend": "R: Retailer"
   },
   "reports": {
     "title": "System Reports",
     "subtitle": "Export inventory, shipment, or incident reports to CSV or PDF.",
     "export": "Export Report",
     "reportType": "Report Type",
+    "period": "Period",
     "format": "Format",
     "selectType": "Select report type",
     "inventory": "Inventory Report",

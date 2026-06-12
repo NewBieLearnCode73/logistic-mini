@@ -105,7 +105,7 @@ export default function NodeDetailPage() {
         <div className="md:col-span-1 space-y-6">
           <div className="card space-y-5">
             <h2 className="card-title text-[18px] font-semibold border-b border-border pb-3">
-              {t('common.info', 'Thông tin điểm')}
+              {t('common.info')}
             </h2>
             <div className="space-y-4 text-[13px] leading-relaxed">
               <div>
@@ -136,7 +136,7 @@ export default function NodeDetailPage() {
               </div>
               {node.createdAt && (
                 <div>
-                  <span className="text-text-muted block text-2xs uppercase font-semibold tracking-wider">{t('common.createdAt', 'Ngày tạo')}</span>
+                  <span className="text-text-muted block text-2xs uppercase font-semibold tracking-wider">{t('common.createdAt')}</span>
                   <span className="font-medium text-text-secondary">{formatDate(node.createdAt)}</span>
                 </div>
               )}
@@ -185,11 +185,11 @@ export default function NodeDetailPage() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b border-border bg-muted/30">
-                      <th className="table-header-cell">{t('product.name', 'Sản phẩm')}</th>
+                      <th className="table-header-cell">{t('batch.product')}</th>
                       <th className="table-header-cell">SKU</th>
-                      <th className="table-header-cell text-right">{t('product.quantity', 'Số lượng tồn')}</th>
-                      <th className="table-header-cell text-right">{t('product.unitPrice', 'Đơn giá')}</th>
-                      <th className="table-header-cell text-right">{t('batch.totalValue', 'Tổng giá trị')}</th>
+                      <th className="table-header-cell text-right">{t('product.quantity')}</th>
+                      <th className="table-header-cell text-right">{t('product.unitPrice')}</th>
+                      <th className="table-header-cell text-right">{t('batch.totalValue')}</th>
                     </tr>
                   </thead>
                   <tbody>

@@ -20,6 +20,21 @@ export interface Batch {
   product?: Product;
   originNode?: Node;
   currentNode?: Node;
+  localInventory?: {
+    batchId: string;
+    nodeId: string;
+    quantityAvailable: number;
+    lastUpdatedAt: string;
+    version: number;
+  } | null;
+  inventories?: Array<{
+    batchId: string;
+    nodeId: string;
+    quantityAvailable: number;
+    lastUpdatedAt: string;
+    version: number;
+    node?: Node;
+  }>;
 }
 
 export interface BatchQrCode {

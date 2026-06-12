@@ -151,23 +151,23 @@ export default function DashboardPage() {
               </select>
             </div>
             <div className="w-40 space-y-1.5">
-              <label className="block text-[13px] font-semibold text-text-secondary">{t('reports.period', 'Khoảng thời gian')}</label>
+              <label className="block text-[13px] font-semibold text-text-secondary">{t('reports.period')}</label>
               <select
                 value={exportPeriod}
                 onChange={(e) => setExportPeriod(e.target.value as any)}
                 className="input-field"
               >
-                <option value="today">{t('reports.periods.today', 'Hôm nay')}</option>
-                <option value="month">{t('reports.periods.month', 'Tháng này')}</option>
-                <option value="quarter">{t('reports.periods.quarter', 'Quý này')}</option>
-                <option value="year">{t('reports.periods.year', 'Năm nay')}</option>
-                <option value="custom">{t('reports.periods.custom', 'Khoảng tự chọn')}</option>
+                <option value="today">{t('reports.periods.today')}</option>
+                <option value="month">{t('reports.periods.month')}</option>
+                <option value="quarter">{t('reports.periods.quarter')}</option>
+                <option value="year">{t('reports.periods.year')}</option>
+                <option value="custom">{t('reports.periods.custom')}</option>
               </select>
             </div>
             {exportPeriod === 'custom' && (
               <>
                 <div className="w-40 space-y-1.5">
-                  <label className="block text-[13px] font-semibold text-text-secondary">{t('reports.startDate', 'Từ ngày')}</label>
+                  <label className="block text-[13px] font-semibold text-text-secondary">{t('reports.startDate')}</label>
                   <input
                     type="date"
                     value={startDate}
@@ -176,7 +176,7 @@ export default function DashboardPage() {
                   />
                 </div>
                 <div className="w-40 space-y-1.5">
-                  <label className="block text-[13px] font-semibold text-text-secondary">{t('reports.endDate', 'Đến ngày')}</label>
+                  <label className="block text-[13px] font-semibold text-text-secondary">{t('reports.endDate')}</label>
                   <input
                     type="date"
                     value={endDate}

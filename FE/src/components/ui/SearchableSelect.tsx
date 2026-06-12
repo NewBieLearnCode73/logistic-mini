@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { MagnifyingGlassIcon, ChevronUpDownIcon, XMarkIcon } from '@heroicons/react/24/outline';
 
 export interface SearchableOption {
@@ -31,13 +32,16 @@ export default function SearchableSelect({
   options,
   value,
   onChange,
-  placeholder = 'Chọn...',
-  searchPlaceholder = 'Tìm kiếm...',
+  placeholder,
+  searchPlaceholder,
   disabled = false,
   error = false,
   required = false,
   className = '',
 }: SearchableSelectProps) {
+  const { t } = useTranslation();
+  const selectPlaceholder = placeholder || t('common.select');
+  const selectSearchPlaceholder = searchPlaceholder || t('common.search');
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
@@ -109,7 +113,7 @@ export default function SearchableSelect({
               : 'text-text-muted'
           }`}
         >
-          {selectedOption ? selectedOption.label : placeholder}
+          {selectedOption ? selectedOption.label : selectPlaceholder}
         </span>
         <span className="flex items-center gap-0.5 shrink-0">
           {value && !disabled && (
@@ -149,7 +153,7 @@ export default function SearchableSelect({
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder={searchPlaceholder}
+                placeholder={selectSearchPlaceholder}
                 className="w-full rounded-md border border-border bg-muted/30 py-1.5 pl-8 pr-3 text-[12px] text-text-primary placeholder:text-text-muted focus:outline-none focus:ring-1 focus:ring-accent"
               />
             </div>
@@ -159,7 +163,7 @@ export default function SearchableSelect({
           <div className="max-h-[320px] overflow-y-auto py-1">
             {filtered.length === 0 ? (
               <div className="px-3 py-4 text-center text-[12px] text-text-muted">
-                Không tìm thấy kết quả
+                {t('common.noResults')}
               </div>
             ) : (
               filtered.map((option) => (

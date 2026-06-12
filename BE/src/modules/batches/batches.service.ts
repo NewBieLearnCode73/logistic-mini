@@ -302,9 +302,26 @@ export class BatchesService {
       }
     }
 
+    let localInventory = null;
+    if (currentUser.nodeId) {
+      localInventory = await this.dataSource.getRepository(InventoryEntity).findOne({
+        where: { batchId: id, nodeId: currentUser.nodeId },
+      });
+    }
+
+    let inventories = undefined;
+    if (currentUser.role === RoleName.ADMIN) {
+      inventories = await this.dataSource.getRepository(InventoryEntity).find({
+        where: { batchId: id },
+        relations: { node: true },
+      });
+    }
+
     return {
       ...batch,
       qrCode: qrCode || null,
+      localInventory: localInventory || null,
+      inventories: inventories || undefined,
     };
   }
 
@@ -561,7 +578,7 @@ export class BatchesService {
         batch.quantity = Number((batch.quantity - quantity).toFixed(3));
         const unitPrice = batch.product?.unitPrice || 0;
         batch.totalValue = Number((unitPrice * batch.quantity).toFixed(2));
-        if (inventory.quantityAvailable === 0) {
+        if (batch.quantity <= 0) {
           batch.status = BatchStatus.SOLD;
         }
         await queryRunner.manager.save(BatchEntity, batch);

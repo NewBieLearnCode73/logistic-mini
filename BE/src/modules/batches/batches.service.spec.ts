@@ -215,7 +215,7 @@ describe('BatchesService', () => {
       (mockDataSource.createQueryRunner().manager as any).createQueryBuilder = jest.fn().mockReturnValue(mockQueryBuilder);
 
       const manager = mockDataSource.createQueryRunner().manager as any;
-      manager.findOne = jest.fn().mockResolvedValue({ id: 'batch-id', product: { unitPrice: 1000 } });
+      manager.findOne = jest.fn().mockResolvedValue({ id: 'batch-id', status: 'RECEIVED', product: { unitPrice: 1000 } });
 
       await expect(service.sell('batch-id', { quantity: 10, costPrice: 1000, salePrice: 1500 }, user)).rejects.toThrow(
         new BadRequestException(
@@ -234,7 +234,7 @@ describe('BatchesService', () => {
       };
       const manager = mockDataSource.createQueryRunner().manager as any;
       manager.createQueryBuilder = jest.fn().mockReturnValue(mockQueryBuilder);
-      manager.findOne = jest.fn().mockResolvedValue({ id: 'batch-id', product: { unitPrice: 1000 } });
+      manager.findOne = jest.fn().mockResolvedValue({ id: 'batch-id', status: 'RECEIVED', product: { unitPrice: 1000 } });
 
       await service.sell('batch-id', { quantity: 10, costPrice: 1000, salePrice: 1500 }, user);
 
@@ -252,7 +252,7 @@ describe('BatchesService', () => {
       };
       const manager = mockDataSource.createQueryRunner().manager as any;
       manager.createQueryBuilder = jest.fn().mockReturnValue(mockQueryBuilder);
-      const mockBatch = { id: 'batch-id', status: 'RECEIVED', product: { unitPrice: 1000 } };
+      const mockBatch = { id: 'batch-id', status: 'RECEIVED', quantity: 10, product: { unitPrice: 1000 } };
       manager.findOne = jest.fn().mockImplementation((entityClass, options) => {
         return Promise.resolve(mockBatch);
       });
@@ -300,6 +300,7 @@ describe('BatchesService', () => {
         findOne: jest.fn()
           .mockResolvedValueOnce(batch) // first findById
           .mockResolvedValueOnce(qrCode), // then QR code
+        find: jest.fn().mockResolvedValue([]),
       } as any);
 
       const user = { userId: 'admin-uuid', role: 'Admin' };

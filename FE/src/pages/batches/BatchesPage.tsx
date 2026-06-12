@@ -156,13 +156,13 @@ export default function BatchesPage() {
     },
     {
       key: 'unitPrice',
-      header: t('product.unitPrice', 'Đơn giá'),
+      header: t('product.unitPrice'),
       className: 'w-[120px] text-right',
       render: (b) => formatCurrency(b.product?.unitPrice),
     },
     {
       key: 'totalValue',
-      header: t('batch.totalValue', 'Tổng giá trị'),
+      header: t('batch.totalValue'),
       className: 'w-[140px] text-right font-medium',
       render: (b) => formatCurrency(b.totalValue),
     },
@@ -357,7 +357,7 @@ export default function BatchesPage() {
               <div className="grid grid-cols-2 gap-4 bg-zinc-50 dark:bg-zinc-900/50 p-3 rounded-lg border border-zinc-200/50 dark:border-zinc-800/40">
                 <div>
                   <span className="block text-2xs uppercase text-zinc-400 dark:text-zinc-500 font-semibold mb-0.5">
-                    {t('product.unitPrice', 'Đơn giá')}
+                    {t('product.unitPrice')}
                   </span>
                   <span className="text-zinc-700 dark:text-zinc-300 font-medium">
                     {formatCurrency(selectedProdDetails.unitPrice)}
@@ -365,7 +365,7 @@ export default function BatchesPage() {
                 </div>
                 <div>
                   <span className="block text-2xs uppercase text-zinc-400 dark:text-zinc-500 font-semibold mb-0.5">
-                    {t('batch.totalValue', 'Tổng giá trị tạm tính')}
+                    {t('batch.totalValueEstimated')}
                   </span>
                   <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
                     {formatCurrency(calculatedTotalValue)}

@@ -163,7 +163,7 @@ export default function MapPage() {
             <h4 class="font-bold text-text-primary mt-1 leading-none">${node.name}</h4>
           </div>
           <div class="text-text-secondary">
-            <span class="text-text-muted block text-3xs">Địa chỉ</span>
+            <span class="text-text-muted block text-3xs">${t('node.address')}</span>
             <p className="mt-0.5 leading-snug">${node.address || '—'}</p>
           </div>
           <div class="grid grid-cols-2 gap-1 text-[10px] text-text-muted font-mono">
@@ -178,22 +178,22 @@ export default function MapPage() {
       <div class="p-2 font-sans text-2xs space-y-1.5 min-w-[200px]">
         <div class="border-b border-border pb-1">
           <span class="text-3xs font-semibold uppercase tracking-wider px-1 py-0.5 rounded bg-status-intransit-bg text-status-intransit-text border border-border/25">
-            Vận đơn: ${shipment.trackingCode}
+            ${t('shipment.trackingCode')}: ${shipment.trackingCode}
           </span>
         </div>
         <div class="space-y-1 text-text-secondary">
           <div>
-            <span class="text-text-muted text-3xs block">Sản phẩm (Lô hàng)</span>
+            <span class="text-text-muted text-3xs block">${t('map.productBatch')}</span>
             <span class="font-semibold">${shipment.batch?.product?.name || '—'}</span> 
             <span class="text-3xs font-mono text-text-muted block">${shipment.batch?.batchCode || ''}</span>
           </div>
           <div class="grid grid-cols-2 gap-2 text-3xs">
             <div>
-              <span class="text-text-muted block">Số lượng</span>
+              <span class="text-text-muted block">${t('batch.quantity')}</span>
               <span class="font-bold text-text-primary font-mono">${shipment.quantityShipped} ${shipment.batch?.unit || ''}</span>
             </div>
             <div>
-              <span class="text-text-muted block">Trạng thái</span>
+              <span class="text-text-muted block">${t('common.status')}</span>
               <span class="font-bold text-status-intransit-text">${t(`shipment.status.${shipment.status}`, shipment.status)}</span>
             </div>
           </div>
@@ -290,7 +290,7 @@ export default function MapPage() {
               {t('map.title')}
             </h2>
             <p className="text-4xs text-text-muted leading-none mt-0.5">
-              Phân tích trực quan mạng lưới
+              {t('map.networkAnalysis')}
             </p>
           </div>
         </div>
@@ -307,12 +307,12 @@ export default function MapPage() {
               const color = NODE_COLORS[type];
               return (
                 <button
-                  key={type}
-                  onClick={() => toggleFilterType(type)}
-                  className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-3xs font-medium border transition-all ${active
-                      ? 'bg-muted border-border text-text-primary'
-                      : 'border-transparent text-text-muted hover:bg-muted'
-                    }`}
+                   key={type}
+                   onClick={() => toggleFilterType(type)}
+                   className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-3xs font-medium border transition-all ${active
+                       ? 'bg-muted border-border text-text-primary'
+                       : 'border-transparent text-text-muted hover:bg-muted'
+                     }`}
                 >
                   <div className="flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
@@ -329,7 +329,7 @@ export default function MapPage() {
         <div className="space-y-2 pt-2 border-t border-border">
           <div className="flex items-center gap-1 text-text-muted text-3xs font-semibold uppercase tracking-wider">
             <AdjustmentsHorizontalIcon className="h-3 w-3" />
-            <span>Hiển thị luồng vận đơn</span>
+            <span>{t('map.showShipmentFlow')}</span>
           </div>
           <label className="flex items-center gap-2 px-1 text-3xs font-semibold text-text-secondary cursor-pointer">
             <input
@@ -351,23 +351,23 @@ export default function MapPage() {
         <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-text-secondary">
           <div className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-slate-700" />
-            <span>M: Sản xuất</span>
+            <span>{t('map.manufacturerLegend')}</span>
           </div>
           <div className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-            <span>D: Phân phối</span>
+            <span>{t('map.distributorLegend')}</span>
           </div>
           <div className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-            <span>W: Kho bãi</span>
+            <span>{t('map.warehouseLegend')}</span>
           </div>
           <div className="flex items-center gap-1">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            <span>R: Cửa hàng</span>
+            <span>{t('map.retailerLegend')}</span>
           </div>
           <div className="col-span-2 border-t border-border pt-1 mt-1 flex items-center gap-1">
             <span className="h-0.5 w-3.5 bg-indigo-600 border-t border-dashed" />
-            <span>Vận đơn đang chạy</span>
+            <span>{t('map.activeShipments')}</span>
           </div>
         </div>
       </div>
