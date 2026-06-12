@@ -221,7 +221,12 @@ export class UsersService {
     return result!;
   }
 
-  async toggleActive(id: string): Promise<UserEntity> {
+  async toggleActive(id: string, requesterId: string): Promise<UserEntity> {
+    // N-07 FIX: Ngăn Admin tự vô hiệu hóa tài khoản của chính mình
+    if (id === requesterId) {
+      throw new BadRequestException('Không thể vô hiệu hóa tài khoản của chính mình');
+    }
+
     const user = await this.findAdminDetail(id);
     if (!user) {
       throw new NotFoundException(`Tài khoản với ID ${id} không tồn tại`);

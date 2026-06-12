@@ -212,11 +212,11 @@ export default function IncidentsPage() {
       render: (inc) => {
         if (inc.status !== 'OPEN') return <span className="text-2xs text-zinc-400 dark:text-zinc-500">—</span>;
 
-        // Two-Man Rule: chỉ disable nếu chính Admin1 (người đã phê duyệt bước 1) muốn bấm bước 2
-        // Đặc tả chỉ yêu cầu Admin2 ≠ Admin1, không cấm người báo cáo phê duyệt lần 2
+        // Two-Man Rule: cả 2 admin phê duyệt phải khác admin tạo báo cáo (reportedBy)
+        // và phải khác nhau (Admin2 ≠ Admin1)
         const isLostDisabled = !!(
-          inc.firstApprovedBy &&
-          currentUserId === inc.firstApprovedBy
+          (currentUserId === inc.reportedBy) ||
+          (inc.firstApprovedBy && currentUserId === inc.firstApprovedBy)
         );
 
         return (

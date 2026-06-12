@@ -17,6 +17,7 @@ import { BatchQrCodeEntity } from './entities/batch-qr-code.entity';
 import { BatchEntity } from './entities/batch.entity';
 import { InventoryEntity } from './entities/inventory.entity';
 import { TimelineEventEntity } from './entities/timeline-event.entity';
+import { AuditLogEntity } from '../audit/entities/audit-log.entity';
 import { QrService } from './qr.service';
 
 @Injectable()
@@ -134,6 +135,26 @@ export class BatchesService {
       event.quantityDelta = quantity;
       event.notes = 'Khởi tạo lô hàng mới và sinh mã QR';
       await queryRunner.manager.save(TimelineEventEntity, event);
+
+      // N-08 FIX: Ghi audit_log CREATE_BATCH
+      const auditLog = new AuditLogEntity();
+      auditLog.actorId = currentUser.userId;
+      auditLog.action = 'CREATE_BATCH';
+      auditLog.entityType = 'batches';
+      auditLog.entityId = savedBatch.id;
+      auditLog.oldValues = null;
+      auditLog.newValues = {
+        batchCode,
+        productId,
+        quantity,
+        unit: batch.unit,
+        nodeId: targetNodeId,
+        manufactureDate: mDate.toISOString(),
+        expiryDate: eDate.toISOString(),
+      };
+      auditLog.ipAddress = null;
+      auditLog.userAgent = null;
+      await queryRunner.manager.save(AuditLogEntity, auditLog);
 
       await queryRunner.commitTransaction();
 
@@ -428,19 +449,19 @@ export class BatchesService {
 
     if (currentUser.role === RoleName.RETAILER) {
       if (costPrice === undefined || costPrice === null) {
-        throw new BadRequestException('Cost Price is required for Retailer');
+        throw new BadRequestException('Giá vốn (Cost Price) là bắt buộc khi bán lẻ');
       }
       if (salePrice === undefined || salePrice === null) {
-        throw new BadRequestException('Sale Price is required for Retailer');
+        throw new BadRequestException('Giá bán (Sale Price) là bắt buộc khi bán lẻ');
       }
       if (costPrice <= 0) {
-        throw new BadRequestException('Cost Price must be greater than 0');
+        throw new BadRequestException('Giá vốn phải lớn hơn 0');
       }
       if (salePrice <= 0) {
-        throw new BadRequestException('Sale Price must be greater than 0');
+        throw new BadRequestException('Giá bán phải lớn hơn 0');
       }
       if (salePrice < costPrice) {
-        throw new BadRequestException('Sale Price must be greater than or equal to Cost Price');
+        throw new BadRequestException('Giá bán phải lớn hơn hoặc bằng giá vốn');
       }
     }
 
@@ -455,6 +476,14 @@ export class BatchesService {
       });
       if (!batchForPrice) {
         throw new NotFoundException('Không tìm thấy lô hàng');
+      }
+
+      // N-03 FIX: Chỉ cho phép bán khi batch đang ở trạng thái RECEIVED tại node của Retailer
+      const sellableStatuses = [BatchStatus.RECEIVED, BatchStatus.SOLD];
+      if (!sellableStatuses.includes(batchForPrice.status as BatchStatus)) {
+        throw new BadRequestException(
+          `Lô hàng đang ở trạng thái "${batchForPrice.status}" và chưa được nhập kho để bán. Chỉ có thể bán hàng khi lô hàng ở trạng thái RECEIVED.`,
+        );
       }
 
       const costPriceNum = costPrice !== undefined ? Number(costPrice) : Number(batchForPrice.product?.unitPrice || 0);

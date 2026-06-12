@@ -7,6 +7,7 @@ import {
   Body,
   Param,
   Query,
+  Request,
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
@@ -73,8 +74,9 @@ export class UsersController {
   @Patch(':id/toggle-active')
   async toggleActive(
     @Param('id', new ParseUUIDPipe({ version: '4', errorHttpStatusCode: HttpStatus.BAD_REQUEST })) id: string,
+    @Request() req: any,
   ) {
-    const updatedUser = await this.usersService.toggleActive(id);
+    const updatedUser = await this.usersService.toggleActive(id, req.user.userId);
     return {
       message: updatedUser.isActive
         ? 'Kích hoạt tài khoản nhân sự thành công'

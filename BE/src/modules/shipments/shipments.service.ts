@@ -17,6 +17,8 @@ import { ShipmentStatus } from '../../common/enums/shipment-status.enum';
 import { BatchStatus } from '../../common/enums/batch-status.enum';
 import { TimelineEventType } from '../../common/enums/timeline-event-type.enum';
 import { ShipmentIssueEntity } from '../incidents/entities/shipment-issue.entity';
+import { IncidentReportEntity } from '../incidents/entities/incident-report.entity';
+import { AuditLogEntity } from '../audit/entities/audit-log.entity';
 import { RoleName } from '../../common/enums/role.enum';
 
 @Injectable()
@@ -159,6 +161,14 @@ export class ShipmentsService {
         throw new NotFoundException(`Lô hàng với ID ${createShipmentDto.batchId} không tồn tại`);
       }
 
+      // N-04 FIX: Block transfer khi batch đang INVESTIGATING / DELAYED / LOST (đặc tả A5)
+      const blockedStatuses = [BatchStatus.INVESTIGATING, BatchStatus.DELAYED, BatchStatus.LOST];
+      if (blockedStatuses.includes(batch.status as BatchStatus)) {
+        throw new BadRequestException(
+          `Lô hàng đang trong trạng thái ${batch.status} và không thể xuất kho. Vui lòng liên hệ Admin để xử lý sự cố trước.`,
+        );
+      }
+
       // Check destination node
       const destNode = await queryRunner.manager.findOne(NodeEntity, {
         where: { id: createShipmentDto.destinationNodeId, isActive: true },
@@ -227,6 +237,24 @@ export class ShipmentsService {
       event.notes = `Xuất kho tạo vận đơn: ${savedShipment.trackingCode}`;
       await queryRunner.manager.save(TimelineEventEntity, event);
 
+      // N-09 FIX: Ghi audit_log SHIP
+      const auditLog = new AuditLogEntity();
+      auditLog.actorId = currentUser.userId;
+      auditLog.action = 'SHIP';
+      auditLog.entityType = 'shipments';
+      auditLog.entityId = savedShipment.id;
+      auditLog.oldValues = { batchStatus: batch.status, inventoryBefore: Number(inventory.quantityAvailable) + createShipmentDto.quantityShipped };
+      auditLog.newValues = {
+        trackingCode: trackingCode,
+        quantityShipped: createShipmentDto.quantityShipped,
+        sourceNodeId,
+        destinationNodeId: createShipmentDto.destinationNodeId,
+        batchStatus: BatchStatus.IN_TRANSIT,
+      };
+      auditLog.ipAddress = null;
+      auditLog.userAgent = null;
+      await queryRunner.manager.save(AuditLogEntity, auditLog);
+
       await queryRunner.commitTransaction();
 
       // Return shipment with relations loaded
@@ -256,9 +284,11 @@ export class ShipmentsService {
         throw new NotFoundException(`Vận đơn với ID ${id} không tồn tại`);
       }
 
-      if (shipment.status !== ShipmentStatus.IN_TRANSIT) {
+      // N-05 FIX: Cho phép nhận cả shipment DELAYED (không chỉ IN_TRANSIT)
+      const receivableStatuses = [ShipmentStatus.IN_TRANSIT, ShipmentStatus.DELAYED];
+      if (!receivableStatuses.includes(shipment.status as ShipmentStatus)) {
         throw new BadRequestException(
-          `Vận đơn không ở trạng thái đang vận chuyển (IN_TRANSIT). Trạng thái hiện tại: ${shipment.status}`,
+          `Vận đơn không ở trạng thái có thể nhận hàng (IN_TRANSIT hoặc DELAYED). Trạng thái hiện tại: ${shipment.status}`,
         );
       }
 
@@ -266,11 +296,26 @@ export class ShipmentsService {
         throw new ForbiddenException('Bạn không thuộc Node nhận của vận đơn này');
       }
 
+      // N-06 FIX: Hỗ trợ quantityReceived < quantityShipped (DAMAGED flow)
+      const quantityReceived = receiveShipmentDto.quantityReceived !== undefined
+        ? receiveShipmentDto.quantityReceived
+        : shipment.quantityShipped;
 
+      if (quantityReceived <= 0) {
+        throw new BadRequestException('Số lượng nhận phải lớn hơn 0');
+      }
+      if (quantityReceived > shipment.quantityShipped) {
+        throw new BadRequestException(
+          `Số lượng nhận (${quantityReceived}) không được vượt quá số lượng gửi (${shipment.quantityShipped})`
+        );
+      }
+
+      const wasDelayed = shipment.status === ShipmentStatus.DELAYED;
       shipment.status = ShipmentStatus.RECEIVED;
       shipment.actualDeliveryDate = new Date();
       const savedShipment = await queryRunner.manager.save(ShipmentEntity, shipment);
 
+      // Cộng kho theo số lượng thực tế nhận
       await queryRunner.query(
         `INSERT INTO inventory (batch_id, node_id, quantity_available, last_updated_at, version)
          VALUES ($1, $2, $3, NOW(), 1)
@@ -279,7 +324,7 @@ export class ShipmentsService {
            quantity_available = inventory.quantity_available + EXCLUDED.quantity_available,
            last_updated_at = NOW(),
            version = inventory.version + 1`,
-        [shipment.batchId, shipment.destinationNodeId, shipment.quantityShipped],
+        [shipment.batchId, shipment.destinationNodeId, quantityReceived],
       );
 
       const batch = await queryRunner.manager.findOne(BatchEntity, {
@@ -297,10 +342,58 @@ export class ShipmentsService {
       event.nodeId = shipment.destinationNodeId;
       event.actorId = currentUser.userId;
       event.shipmentId = shipment.id;
-      event.quantityDelta = shipment.quantityShipped;
-      event.notes = `Đã nhận hàng thành công tại kho nhận. Mã vận đơn: ${shipment.trackingCode}`;
+      event.quantityDelta = quantityReceived;
+      event.notes = `Đã nhận hàng thành công tại kho nhận. Mã vận đơn: ${shipment.trackingCode}${quantityReceived < shipment.quantityShipped ? ` (Nhận thiếu: ${quantityReceived}/${shipment.quantityShipped})` : ''}`;
       await queryRunner.manager.save(TimelineEventEntity, event);
 
+      // N-06: Tạo shipment_issues(DAMAGED) nếu nhận thiếu
+      if (quantityReceived < shipment.quantityShipped) {
+        const damagedQty = shipment.quantityShipped - quantityReceived;
+        const issue = new ShipmentIssueEntity();
+        issue.shipmentId = shipment.id;
+        issue.issueType = 'DAMAGED';
+        issue.severity = 'HIGH';
+        issue.detectedBy = `USER:${currentUser.userId}`;
+        issue.reportedBy = currentUser.userId;
+        issue.notes = `Nhận thiếu ${damagedQty} sản phẩm so với số lượng gửi (${quantityReceived}/${shipment.quantityShipped}). Lý do: ${
+          receiveShipmentDto.damageReason || 'Không ghi nhận'
+        }`;
+        issue.isResolved = false;
+        await queryRunner.manager.save(ShipmentIssueEntity, issue);
+      }
+
+      // N-05: Nếu shipment đang DELAYED, tự động đóng incident liên quan
+      if (wasDelayed) {
+        const openIncident = await queryRunner.manager.findOne(IncidentReportEntity, {
+          where: { shipmentId: shipment.id, status: 'OPEN' },
+        });
+        if (openIncident) {
+          openIncident.status = 'CLOSED';
+          openIncident.resolution = 'Hàng đã được tiếp nhận sau khi trễ hạn';
+          openIncident.resolutionType = 'FOUND';
+          openIncident.resolvedAt = new Date();
+          openIncident.closedAt = new Date();
+          await queryRunner.manager.save(IncidentReportEntity, openIncident);
+        }
+      }
+
+      // N-10 FIX: Ghi audit_log RECEIVE
+      const auditLog = new AuditLogEntity();
+      auditLog.actorId = currentUser.userId;
+      auditLog.action = 'RECEIVE';
+      auditLog.entityType = 'shipments';
+      auditLog.entityId = shipment.id;
+      auditLog.oldValues = { status: wasDelayed ? 'DELAYED' : 'IN_TRANSIT' };
+      auditLog.newValues = {
+        status: 'RECEIVED',
+        quantityReceived,
+        quantityShipped: shipment.quantityShipped,
+        destinationNodeId: shipment.destinationNodeId,
+        incidentAutoClosed: wasDelayed,
+      };
+      auditLog.ipAddress = null;
+      auditLog.userAgent = null;
+      await queryRunner.manager.save(AuditLogEntity, auditLog);
 
       await queryRunner.commitTransaction();
 

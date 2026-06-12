@@ -16,8 +16,12 @@ export class AuthController {
   @Public()
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto, @Request() req: any) {
+    const meta = {
+      ip: req.ip || req.headers?.['x-forwarded-for'] || null,
+      userAgent: req.headers?.['user-agent'] || null,
+    };
+    return this.authService.login(loginDto, meta);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -43,9 +47,15 @@ export class AuthController {
     return { message: 'Thay đổi mật khẩu thành công' };
   }
 
+  @UseGuards(JwtAuthGuard)
   @Post('logout')
   @HttpCode(HttpStatus.OK)
-  async logout() {
+  async logout(@Request() req: any) {
+    const meta = {
+      ip: req.ip || req.headers?.['x-forwarded-for'] || null,
+      userAgent: req.headers?.['user-agent'] || null,
+    };
+    await this.authService.logout(req.user.userId, meta);
     return { message: 'Đăng xuất thành công' };
   }
 }
